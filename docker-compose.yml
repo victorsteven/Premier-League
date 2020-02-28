@@ -1,0 +1,25 @@
+version: '3'
+services:
+  app:
+    build: .
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    container_name: premier-league
+    restart: always
+    ports:
+      - 8080:8080
+      - 9229:9229
+    command: npm run dev
+    links:
+      - mongo
+      - redis
+  mongo:
+    container_name: mongo
+    image: mongo
+    ports:
+      - "27017:27017"
+  redis:
+    image: redis:alpine
+    volumes:
+      - /var/redis/data:/data 
