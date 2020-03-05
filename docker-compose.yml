@@ -1,25 +1,27 @@
 version: '3'
 services:
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
     container_name: premier-league
     restart: always
     ports:
-      - 8080:8080
+      - 8000:8000
       - 9229:9229
     command: npm run dev
-    links:
+    depends_on:
       - mongo
-      - redis
+      # - redis
   mongo:
     container_name: mongo
     image: mongo
     ports:
       - "27017:27017"
-  redis:
-    image: redis:alpine
-    volumes:
-      - /var/redis/data:/data 
+  # redis:
+  #   image: redis:alpine
+  #   volumes:
+  #     - /var/redis/data:/data 
