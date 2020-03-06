@@ -84,6 +84,24 @@ class TeamService {
       throw error;
     }
   }
+
+  static async deleteTeam(teamId) {
+
+    try {
+
+      let teamIdObj = new ObjectID(teamId)
+
+      //check if the team already exist
+      const deletedTeam = await Team.deleteOne({ _id: teamIdObj })
+      if (!deletedTeam) {
+        throw new Error('no record found');
+      }
+      return deletedTeam
+
+    } catch(error) {
+      throw error;
+    }
+  }
 }
 
 export default TeamService

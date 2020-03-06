@@ -53,12 +53,11 @@ class AdminService {
 
       //return admin details except email and password:
       const publicAdmin = {
-        adminId, 
+        _id: adminId, 
         firstname,
         lastname,
         role
       }
-
       return publicAdmin
 
     } catch(error) {

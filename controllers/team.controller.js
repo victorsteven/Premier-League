@@ -29,7 +29,6 @@ class TeamController {
         error: error.message
       })
     }
-
     const team =  _.pick(req.body, ['name', 'coach']) 
     if (!team.name) {
       return res.status(400).json({
@@ -51,7 +50,7 @@ class TeamController {
       //verify that the admin sending this request exist:
       const admin = await AdminService.getAdmin(adminId)
       
-      team.adminId = admin.adminId
+      team.adminId = admin._id
 
       const createTeam = await TeamService.createTeam(team)
       if(createTeam) {
@@ -95,7 +94,6 @@ class TeamController {
         error: "Team id is not valid"
       })
     }
-
     const request =  _.pick(req.body, ['name', 'coach']) 
     if (!request.name) {
       return res.status(400).json({
@@ -114,12 +112,16 @@ class TeamController {
 
       let adminId = tokenMetadata._id
 
-      //verify that the admin sending this request exist:
+      //verify that the admin updating the team exist and the creator of the team:
       const admin = await AdminService.getAdmin(adminId)
-
+      if (admin._id !== adminId) {
+        return res.status(401).json({
+          status: 401,
+          error: "unauthorized: you are not the owner"
+        })
+      }
       //get if the team exist before updating it:
       const team = await TeamService.getTeam(teamId)
-
       team.name = request.name
       team.coach = request.coach
       
@@ -130,7 +132,64 @@ class TeamController {
           data: updateTeam
         })
       }
-      
+    } catch(error) {
+      return res.status(500).json({
+        status: 500,
+        error: error.message
+      })
+    }
+  }
+
+  static async deleteTeam(req, res) {
+
+    let tokenMetadata
+
+    //Check, validate and get valid token metadata, or send an error 
+    try {
+      tokenMetadata = jwtDecode(req)
+      if(!tokenMetadata) {
+        return res.status(401).json({
+          status: 401,
+          error: "unauthorized, no userInfo"
+        })
+      }
+    } catch(error) {
+        return res.status(401).json({
+        status: 401,
+        error: error.message
+      })
+    }
+
+    var teamId = req.params.id;
+    if(!ObjectID.isValid(teamId)){
+      return res.status(400).json({
+        status: 400,
+        error: "Team id is not valid"
+      })
+    }
+
+    try {
+
+      let adminId = tokenMetadata._id
+
+      //verify that the admin sending this request exist:
+      const admin = await AdminService.getAdmin(adminId)
+
+      //check if the admin is the creator of the team he wants to delete:
+      if (admin._id !== adminId) {
+        return res.status(401).json({
+          status: 401,
+          error: "unauthorized: you are not the owner"
+        })
+      }
+      //Delete the team
+      const status = await TeamService.deleteTeam(teamId)
+      if (status) {
+        return res.status(200).json({
+          status: 200,
+          data: "Team deleted"
+        })
+      }
     } catch(error) {
       return res.status(500).json({
         status: 500,
