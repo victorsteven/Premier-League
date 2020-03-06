@@ -1,107 +1,113 @@
-import Team from '../models/team'
+import Fixture from '../models/fixture'
 import { ObjectID } from 'mongodb';
 
 
-class TeamService {
+class FixtureService {
 
-  static async createTeam(team) {
+  static async createFixture(fixture) {
 
     try {
 
-      //check if the team already exist
-      const record = await Team.findOne({ team: team.name })
+      const record = await Fixture.findOne({homeId: fixture.homeId }, { awayId: fixture.awayId })
+
       if (record) {
-        throw new Error('record already exist');
+        throw new Error('fixture already exist');
       }
 
-      const createdTeam = await Team.create(team);
+      const createdFixture = await Fixture.create(fixture);
 
-      const { name, coach, adminId } = createdTeam
+      const { homeId, awayId } = createdFixture
 
-      const publicTeam = { 
-        _id: createdTeam._id.toHexString(),
-        name,
-        coach,
-        adminId
+      const publicFixture = { 
+        _id: createdFixture._id.toHexString(),
+        homeId,
+        awayId,
       }
 
-      return publicTeam
+      return publicFixture
 
     } catch(error) {
       throw error;
     }
   }
 
-  static async getTeam(teamId) {
+  // static async getTeam(teamId) {
 
-    try {
+  //   console.log("this is the id passed: ", teamId)
 
-      let teamIdObj = new ObjectID(teamId)
+  //   try {
 
-      //check if the team already exist
-      const gottenTeam = await Team.findOne({ _id: teamIdObj })
-      if (!gottenTeam) {
-        throw new Error('no record found');
-      }
+  //     let teamIdObj = new ObjectID(teamId)
 
-      const { name, coach, adminId } = gottenTeam
+  //     console.log("this is the object passed: ", teamIdObj)
 
-      const publicTeam = { 
-        _id: teamId,
-        name,
-        coach,
-        adminId
-      }
 
-      return publicTeam
+  //     //check if the team already exist
+  //     const gottenTeam = await Team.findOne({ _id: teamIdObj })
+  //     if (!gottenTeam) {
+  //       throw new Error('no record found');
+  //     }
+  //     console.log("this is the gotten team: ", gottenTeam)
 
-    } catch(error) {
-      throw error;
-    }
-  }
+  //     const { name, coach, adminId } = gottenTeam
 
-  static async updateTeam(team) {
+  //     const publicTeam = { 
+  //       _id: teamId,
+  //       name,
+  //       coach,
+  //       adminId
+  //     }
 
-    try {
+  //     return publicTeam
 
-      const updatedTeam = await Team.findOneAndUpdate(
-        { _id: team._id}, 
-        { $set: team },
-        { "new": true},
-      );
-      const { name, coach, adminId } = updatedTeam
+  //   } catch(error) {
+  //     console.log("this is here", error.message)
+  //     throw error;
+  //   }
+  // }
 
-      const publicTeam = { 
-        _id: updatedTeam._id.toHexString(),
-        name,
-        coach,
-        adminId
-      }
+  // static async updateTeam(team) {
 
-      return publicTeam
+  //   try {
 
-    } catch(error) {
-      throw error;
-    }
-  }
+  //     const updatedTeam = await Team.findOneAndUpdate(
+  //       { _id: team._id}, 
+  //       { $set: team },
+  //       { "new": true},
+  //     );
+  //     const { name, coach, adminId } = updatedTeam
 
-  static async deleteTeam(teamId) {
+  //     const publicTeam = { 
+  //       _id: updatedTeam._id.toHexString(),
+  //       name,
+  //       coach,
+  //       adminId
+  //     }
 
-    try {
+  //     return publicTeam
 
-      let teamIdObj = new ObjectID(teamId)
+  //   } catch(error) {
+  //     throw error;
+  //   }
+  // }
 
-      //check if the team already exist
-      const deletedTeam = await Team.deleteOne({ _id: teamIdObj })
-      if (!deletedTeam) {
-        throw new Error('no record found');
-      }
-      return deletedTeam
+  // static async deleteTeam(teamId) {
 
-    } catch(error) {
-      throw error;
-    }
-  }
+  //   try {
+
+  //     let teamIdObj = new ObjectID(teamId)
+
+  //     //check if the team already exist
+  //     const deletedTeam = await Team.deleteOne({ _id: teamIdObj })
+  //     if (!deletedTeam) {
+  //       throw new Error('no record found');
+  //     }
+  //     return deletedTeam
+
+  //   } catch(error) {
+  //     throw error;
+  //   }
+  // }
 }
 
-export default TeamService
+export default FixtureService

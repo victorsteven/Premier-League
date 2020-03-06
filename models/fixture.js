@@ -4,10 +4,10 @@ import mongoose from 'mongoose'
 var Schema = mongoose.Schema;
 
 var FixtureSchema = new Schema({
-  home: {
+  homeId: {
    type: String, required: true, max: 255
   },
-  away: {
+  awayId: {
    type: String, required: true, max: 255
   },
   adminId: {

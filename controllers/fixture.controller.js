@@ -1,17 +1,18 @@
-import TeamService from '../services/team.service';
+import FixtureService from '../services/fixture.service';
 import _ from 'lodash'
 import jwt, { decode }  from 'jsonwebtoken'
 import  { jwtDecode }  from '../utils/jwtHelper'
 import AdminService from '../services/admin.service';
 import { ObjectID } from 'mongodb';
 import UserService from '../services/user.service';
+import TeamService from '../services/team.service';
 
 
 
 
-class TeamController {
+class FixtureController {
 
-  static async createTeam(req, res) {
+  static async createFixture(req, res) {
 
     let tokenMetadata
 
@@ -30,34 +31,51 @@ class TeamController {
         error: error.message
       })
     }
-    const team =  _.pick(req.body, ['name', 'coach']) 
-    if (!team.name) {
+    const fixture =  _.pick(req.body, ['homeId', 'awayId']) 
+    
+    if(!ObjectID.isValid(fixture.homeId)){
       return res.status(400).json({
         status: 400,
-        error: "Team name is required"
+        error: "A valid home team id is required"
       })
     }
-    if (!team.coach) {
+    if(!ObjectID.isValid(fixture.awayId)){
       return res.status(400).json({
         status: 400,
-        error: "Team coach is required"
+        error: "A valid away team id is required"
       })
     }
 
     try {
-
+      
       let adminId = tokenMetadata._id
 
       //verify that the admin sending this request exist:
       const admin = await AdminService.getAdmin(adminId)
-      
-      team.adminId = admin._id
+      if(admin) {
+        fixture.adminId = admin._id
+      }
+      //check if the home and away teams exists:
+      const homeTeam = await TeamService.getTeam(fixture.homeId)
+      if(!homeTeam){
+        return res.status(401).json({
+          status: 401,
+          error: "home team is not"
+        })
+      }
+      const awayTeam = await TeamService.getTeam(fixture.awayId)
+      if(!awayTeam){
+        return res.status(401).json({
+          status: 401,
+          error: "away team is not"
+        })
+      }
 
-      const createTeam = await TeamService.createTeam(team)
-      if(createTeam) {
+      const createFixture = await FixtureService.createFixture(fixture)
+      if(createFixture) {
         return res.status(201).json({
           status: 201,
-          data: createTeam
+          data: createFixture
         })
       }
     } catch(error) {
@@ -293,4 +311,4 @@ class TeamController {
   }
 }
 
-export default TeamController
+export default FixtureController

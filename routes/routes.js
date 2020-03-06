@@ -3,6 +3,7 @@ import UserController from '../controllers/user.controller'
 import AdminController from '../controllers/admin.controller'
 import LoginController from '../controllers/login.controller'
 import TeamController from '../controllers/team.controller';
+import FixtureController from '../controllers/fixture.controller';
 
 
 const router = Router();
@@ -24,8 +25,8 @@ router.get('/teams/:id', TeamController.getTeam)
 router.get('/teams', TeamController.getTeams)
 
 
-
-
+//fixtures
+router.post('/fixtures', FixtureController.createFixture)
 
 
 export default router
