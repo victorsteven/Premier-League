@@ -86,7 +86,7 @@ class FixtureController {
     }
   }
 
-  static async updateTeam(req, res) {
+  static async updateFixture(req, res) {
 
     let tokenMetadata
 
@@ -105,49 +105,66 @@ class FixtureController {
         error: error.message
       })
     }
-
-    var teamId = req.params.id;
-    if(!ObjectID.isValid(teamId)){
+    //check if the id passed to edit is valid
+    var fixtureId = req.params.id;
+    if(!ObjectID.isValid(fixtureId)){
       return res.status(400).json({
         status: 400,
-        error: "Team id is not valid"
+        error: "Fixture id is not valid"
       })
     }
-    const request =  _.pick(req.body, ['name', 'coach']) 
-    if (!request.name) {
+    const request =  _.pick(req.body, ['homeId', 'awayId']) 
+    
+    if(!ObjectID.isValid(request.homeId)){
       return res.status(400).json({
         status: 400,
-        error: "Team name is required"
+        error: "A valid home team id is required"
       })
     }
-    if (!request.coach) {
+    if(!ObjectID.isValid(request.awayId)){
       return res.status(400).json({
         status: 400,
-        error: "Team coach is required"
+        error: "A valid away team id is required"
       })
     }
 
     try {
-
+      
       let adminId = tokenMetadata._id
 
       //check if the team exist and if the owner is legit, before updating it:
-      const team = await TeamService.adminGetTeam(teamId)
-      if (team.adminId !== adminId) {
+      const fixture = await FixtureService.adminGetFixture(fixtureId)
+      if (fixture.adminId !== adminId) {
         return res.status(401).json({
           status: 401,
           error: "unauthorized: you are not the owner"
         })
       }
 
-      team.name = request.name
-      team.coach = request.coach
-      
-      const updateTeam = await TeamService.updateTeam(team)
-      if(updateTeam) {
+      //check if the home and away teams exists:
+      const homeTeam = await TeamService.getTeam(request.homeId)
+      if(!homeTeam){
+        return res.status(401).json({
+          status: 401,
+          error: "home team is not"
+        })
+      }
+      const awayTeam = await TeamService.getTeam(request.awayId)
+      if(!awayTeam){
+        return res.status(401).json({
+          status: 401,
+          error: "away team is not"
+        })
+      }
+      //update the fixtures
+      fixture.homeId = request.homeId
+      fixture.awayId = request.awayId
+
+      const updateFixture = await FixtureService.updateFixture(fixture)
+      if(updateFixture) {
         return res.status(200).json({
           status: 200,
-          data: updateTeam
+          data: updateFixture
         })
       }
     } catch(error) {
@@ -157,6 +174,78 @@ class FixtureController {
       })
     }
   }
+
+  // static async updateTeam(req, res) {
+
+  //   let tokenMetadata
+
+  //   //Check, validate and get valid token metadata, or send an error 
+  //   try {
+  //     tokenMetadata = jwtDecode(req)
+  //     if(!tokenMetadata) {
+  //       return res.status(401).json({
+  //         status: 401,
+  //         error: "unauthorized, no userInfo"
+  //       })
+  //     }
+  //   } catch(error) {
+  //       return res.status(401).json({
+  //       status: 401,
+  //       error: error.message
+  //     })
+  //   }
+
+  //   var teamId = req.params.id;
+  //   if(!ObjectID.isValid(teamId)){
+  //     return res.status(400).json({
+  //       status: 400,
+  //       error: "Team id is not valid"
+  //     })
+  //   }
+  //   const request =  _.pick(req.body, ['name', 'coach']) 
+  //   if (!request.name) {
+  //     return res.status(400).json({
+  //       status: 400,
+  //       error: "Team name is required"
+  //     })
+  //   }
+  //   if (!request.coach) {
+  //     return res.status(400).json({
+  //       status: 400,
+  //       error: "Team coach is required"
+  //     })
+  //   }
+
+  //   try {
+
+  //     let adminId = tokenMetadata._id
+
+  //     //check if the team exist and if the owner is legit, before updating it:
+  //     const team = await TeamService.adminGetTeam(teamId)
+  //     if (team.adminId !== adminId) {
+  //       return res.status(401).json({
+  //         status: 401,
+  //         error: "unauthorized: you are not the owner"
+  //       })
+  //     }
+
+  //     team.name = request.name
+  //     team.coach = request.coach
+      
+  //     const updateTeam = await TeamService.updateTeam(team)
+  //     if(updateTeam) {
+  //       return res.status(200).json({
+  //         status: 200,
+  //         data: updateTeam
+  //       })
+  //     }
+  //   } catch(error) {
+  //     return res.status(500).json({
+  //       status: 500,
+  //       error: error.message
+  //     })
+  //   }
+  // }
 
   static async deleteTeam(req, res) {
 

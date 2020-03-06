@@ -8,8 +8,11 @@ class FixtureService {
 
     try {
 
-      const record = await Fixture.findOne({homeId: fixture.homeId }, { awayId: fixture.awayId })
-
+      const record = await Fixture.findOne({
+        $and: [
+          { homeId: fixture.homeId }, { awayId: fixture.awayId }
+        ]
+      })
       if (record) {
         throw new Error('fixture already exist');
       }
@@ -20,6 +23,71 @@ class FixtureService {
 
       const publicFixture = { 
         _id: createdFixture._id.toHexString(),
+        homeId,
+        awayId,
+      }
+
+      return publicFixture
+
+    } catch(error) {
+      throw error;
+    }
+  }
+
+  //this is only used by the admin when he want to do things like update or delete
+  static async adminGetFixture(fixtureId) {
+
+    try {
+
+      let fixtureIdObj = new ObjectID(fixtureId)
+
+      //check if the fixture already exist
+      const gottenFixture = await Fixture.findOne({ _id: fixtureIdObj })
+      if (!gottenFixture) {
+        throw new Error('no record found');
+      }
+
+      const { homeId, awayId, adminId } = gottenFixture
+
+      const fixture = { 
+        _id: fixtureId,
+        homeId,
+        awayId,
+        adminId
+      }
+
+      return fixture
+
+    } catch(error) {
+      throw error;
+    }
+  }
+
+  static async updateFixture(fixture) {
+
+    try {
+
+      const record = await Fixture.findOne({
+        $and: [
+          { homeId: fixture.homeId }, { awayId: fixture.awayId }
+        ]
+      })
+
+      //If the same record is passed to be updated for a particular given fixture id, allow it, else throw already exist error
+      if (record._id.toHexString() !== fixture._id) {
+        throw new Error('fixture already exist');
+      }
+
+      const updatedFixture = await Fixture.findOneAndUpdate(
+        { _id: fixture._id}, 
+        { $set: fixture },
+        { "new": true},
+      );
+
+      const { homeId, awayId } = updatedFixture
+
+      const publicFixture = { 
+        _id: updatedFixture._id.toHexString(),
         homeId,
         awayId,
       }

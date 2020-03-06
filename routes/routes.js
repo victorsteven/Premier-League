@@ -27,6 +27,7 @@ router.get('/teams', TeamController.getTeams)
 
 //fixtures
 router.post('/fixtures', FixtureController.createFixture)
+router.put('/fixtures/:id', FixtureController.updateFixture)
 
 
 export default router
