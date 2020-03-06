@@ -1,5 +1,6 @@
 import User from '../models/user'
 import { hashPassword } from '../utils/password';
+import { ObjectID } from 'mongodb';
 
 
 class UserService {
@@ -26,6 +27,36 @@ class UserService {
       //return user details except email and password:
       const publicUser = { 
         _id: createdUser._id.toHexString(),
+        firstname,
+        lastname,
+        role
+      }
+
+      return publicUser
+
+    } catch(error) {
+      throw error;
+    }
+  }
+
+  //This user can either be an "admin" or a "normal user"
+  static async getUser(userId) {
+
+    let userObjID = new ObjectID(userId)
+
+    try {
+
+      //check if the user already exist
+      const gottenUser = await User.findOne({ _id: userObjID })
+      if (!gottenUser) {
+        throw new Error('no record found, you are not authenticated');
+      }
+
+      const { firstname, lastname, role } = gottenUser;
+
+      //return user details except email and password:
+      const publicUser = { 
+        _id: gottenUser._id.toHexString(),
         firstname,
         lastname,
         role

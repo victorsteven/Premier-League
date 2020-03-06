@@ -20,6 +20,8 @@ router.post('/login', LoginController.login)
 router.post('/teams', TeamController.createTeam)
 router.put('/teams/:id', TeamController.updateTeam)
 router.delete('/teams/:id', TeamController.deleteTeam)
+router.get('/teams/:id', TeamController.getTeam)
+router.get('/teams', TeamController.getTeams)
 
 
 

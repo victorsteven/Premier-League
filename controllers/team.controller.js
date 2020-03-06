@@ -4,6 +4,7 @@ import jwt, { decode }  from 'jsonwebtoken'
 import  { jwtDecode }  from '../utils/jwtHelper'
 import AdminService from '../services/admin.service';
 import { ObjectID } from 'mongodb';
+import UserService from '../services/user.service';
 
 
 
@@ -112,16 +113,15 @@ class TeamController {
 
       let adminId = tokenMetadata._id
 
-      //verify that the admin updating the team exist and the creator of the team:
-      const admin = await AdminService.getAdmin(adminId)
-      if (admin._id !== adminId) {
+      //check if the team exist and if the owner is legit, before updating it:
+      const team = await TeamService.adminGetTeam(teamId)
+      if (team.adminId !== adminId) {
         return res.status(401).json({
           status: 401,
           error: "unauthorized: you are not the owner"
         })
       }
-      //get if the team exist before updating it:
-      const team = await TeamService.getTeam(teamId)
+
       team.name = request.name
       team.coach = request.coach
       
@@ -189,6 +189,101 @@ class TeamController {
           status: 200,
           data: "Team deleted"
         })
+      }
+    } catch(error) {
+      return res.status(500).json({
+        status: 500,
+        error: error.message
+      })
+    }
+  }
+
+  static async getTeam(req, res) {
+
+    let tokenMetadata
+
+    //Check, validate and get valid token metadata, or send an error 
+    try {
+      tokenMetadata = jwtDecode(req)
+      if(!tokenMetadata) {
+        return res.status(401).json({
+          status: 401,
+          error: "unauthorized, no userInfo"
+        })
+      }
+    } catch(error) {
+        return res.status(401).json({
+        status: 401,
+        error: error.message
+      })
+    }
+
+    var teamId = req.params.id;
+    if(!ObjectID.isValid(teamId)){
+      return res.status(400).json({
+        status: 400,
+        error: "Team id is not valid"
+      })
+    }
+
+    try {
+
+      let authId = tokenMetadata._id
+
+      //verify if the account that want to view this team exists(weather admin or normal user) 
+      const user = await UserService.getUser(authId)
+      if(user) {
+        const team = await TeamService.getTeam(teamId)
+        if (team) {
+          return res.status(200).json({
+            status: 200,
+            data: team
+          })
+        }
+      }
+    } catch(error) {
+      return res.status(500).json({
+        status: 500,
+        error: error.message
+      })
+    }
+  }
+
+  static async getTeams(req, res) {
+
+    let tokenMetadata
+
+    //Check, validate and get valid token metadata, or send an error 
+    try {
+      tokenMetadata = jwtDecode(req)
+      if(!tokenMetadata) {
+        return res.status(401).json({
+          status: 401,
+          error: "unauthorized, no userInfo"
+        })
+      }
+    } catch(error) {
+        return res.status(401).json({
+        status: 401,
+        error: error.message
+      })
+    }
+
+
+    try {
+
+      let authId = tokenMetadata._id
+
+      //verify if the account that want to view this team exists(weather admin or normal user) 
+      const user = await UserService.getUser(authId)
+      if (user) {
+        const teams = await TeamService.getTeams()
+        if (teams) {
+          return res.status(200).json({
+            status: 200,
+            data: teams
+          })
+        }
       }
     } catch(error) {
       return res.status(500).json({

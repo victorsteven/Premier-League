@@ -11,13 +11,13 @@ var UserSchema = new Schema({
    type: String, required: true, max: 100
   },
   email: {
-   type: String, required: true, max: 100
+   type: String, required: true, max: 100, unique: true
   },
   password: {
    type: String, required: true, max: 100
   },
   role: {
-    type: String, max: 100
+    type: String, required: true, max: 100
    },
 });
 
