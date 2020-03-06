@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile.dev
     volumes:
-      - .:/usr/src/app
+      - premier-app:/usr/src/app
       - /usr/src/app/node_modules
     container_name: premier-league
     restart: always
@@ -16,12 +16,27 @@ services:
     depends_on:
       - mongo
       # - redis
+    networks:
+      - premier
+      
   mongo:
     container_name: mongo
     image: mongo
     ports:
       - "27017:27017"
+    volumes:
+      - database_mongo:/data/db
+    networks:
+      - premier
+  
   # redis:
   #   image: redis:alpine
   #   volumes:
   #     - /var/redis/data:/data 
+
+volumes: 
+  premier-app:
+  database_mongo:
+
+networks:
+  premier:

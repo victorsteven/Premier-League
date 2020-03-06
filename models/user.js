@@ -4,10 +4,10 @@ import mongoose from 'mongoose'
 var Schema = mongoose.Schema;
 
 var UserSchema = new Schema({
-  firstName: {
+  firstname: {
    type: String, required: true, max: 100
   },
-  lastName: {
+  lastname: {
    type: String, required: true, max: 100
   },
   email: {
@@ -18,4 +18,4 @@ var UserSchema = new Schema({
   },
 });
 
-export default UserSchema
+export default mongoose.model('User', UserSchema)
