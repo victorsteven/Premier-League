@@ -13,6 +13,10 @@ export const jwtDecode = req => {
 
     const bearToken = req.headers["authorization"];
 
+    if(!bearToken) {
+      throw new Error('unathorized: no token')
+    }
+
     //split the bearToken and get the token
     const token = bearToken.split(' ', 2)[1]
 

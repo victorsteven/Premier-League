@@ -1,4 +1,5 @@
 import Team from '../models/team'
+import { ObjectID } from 'mongodb';
 
 
 class TeamService {
@@ -15,7 +16,69 @@ class TeamService {
 
       const createdTeam = await Team.create(team);
 
-      return createdTeam
+      const { name, coach, adminId } = createdTeam
+
+      const publicTeam = { 
+        _id: createdTeam._id.toHexString(),
+        name,
+        coach,
+        adminId
+      }
+
+      return publicTeam
+
+    } catch(error) {
+      throw error;
+    }
+  }
+
+  static async getTeam(teamId) {
+
+    try {
+
+      let teamIdObj = new ObjectID(teamId)
+
+      //check if the team already exist
+      const gottenTeam = await Team.findOne({ _id: teamIdObj })
+      if (!gottenTeam) {
+        throw new Error('no record found');
+      }
+
+      const { name, coach, adminId } = gottenTeam
+
+      const publicTeam = { 
+        _id: teamId,
+        name,
+        coach,
+        adminId
+      }
+
+      return publicTeam
+
+    } catch(error) {
+      throw error;
+    }
+  }
+
+  static async updateTeam(team) {
+
+    try {
+
+      const updatedTeam = await Team.findOneAndUpdate(
+        { _id: team._id}, 
+        { $set: team },
+        { "new": true},
+      );
+      const { name, coach, adminId } = updatedTeam
+
+      const publicTeam = { 
+        _id: updatedTeam._id.toHexString(),
+        name,
+        coach,
+        adminId
+      }
+
+      return publicTeam
 
     } catch(error) {
       throw error;

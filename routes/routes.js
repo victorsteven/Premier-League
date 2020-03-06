@@ -18,6 +18,8 @@ router.post('/login', LoginController.login)
 
 //team
 router.post('/teams', TeamController.createTeam)
+router.put('/teams/:id', TeamController.updateTeam)
+
 
 
 
