@@ -1,29 +1,33 @@
 import User from '../models/user'
-import hashPassword from '../utils/password';
+import { hashPassword } from '../utils/password';
 
 
 class UserService {
 
   static async createUser(user) {
-    // console.log("we entered the store house with; ", user)
+
     try {
 
       //check if the user already exist
-      const isUser = await User.findOne({ email: user.email })
-      if (isUser) {
-        throw new Error('user already exist');
+      const record = await User.findOne({ email: user.email })
+      if (record) {
+        throw new Error('record already exist');
       }
       //proceed with the user
       user.password = hashPassword(user.password)
 
+      //assign role:
+      user.role = "user"
+
       const createdUser = await User.create(user);
 
-      const { firstname, lastname } = createdUser;
+      const { firstname, lastname, role } = createdUser;
 
       //return user details except email and password:
       const publicUser = { 
         firstname,
-        lastname
+        lastname,
+        role
       }
 
       return publicUser

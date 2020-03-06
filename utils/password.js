@@ -1,10 +1,13 @@
 import bcrypt from 'bcryptjs'
 
-const hashPassword = (password) => {
+export const hashPassword = (password) => {
   const salt = bcrypt.genSaltSync(15);
   password = bcrypt.hashSync(password, salt)
 
   return password
 };
 
-export default hashPassword;
+export const validPassword = (password, userPassword) => {
+  const isValid = bcrypt.compareSync(password, userPassword);
+  return isValid;
+};

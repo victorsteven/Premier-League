@@ -16,6 +16,9 @@ var UserSchema = new Schema({
   password: {
    type: String, required: true, max: 100
   },
+  role: {
+    type: String, max: 100
+   },
 });
 
 export default mongoose.model('User', UserSchema)
