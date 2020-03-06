@@ -5,6 +5,8 @@ class LoginController {
 
   static async login(req, res) {
 
+    console.log("we entered login")
+
     //take only what we need
     const request = _.pick(req.body, ['email', 'password'])
 
@@ -23,9 +25,9 @@ class LoginController {
     try {
       const token = await LoginService.login(request)
       if(!token) {
-        return res.status(400).json({
-          status: 401,
-          error: "unauthorized"
+        return res.status(500).json({
+          status: 500,
+          error: "invalid user credentials"
         })
       }
       return res.status(200).json({
@@ -33,9 +35,9 @@ class LoginController {
         token
       })
     } catch (error) {
-      return res.status(401).json({
-        status: 401,
-        error:  error
+      return res.status(500).json({
+        status: 500,
+        error:  error.message
       })
     }
   }

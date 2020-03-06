@@ -25,6 +25,7 @@ class UserService {
 
       //return user details except email and password:
       const publicUser = { 
+        _id: createdUser._id.toHexString(),
         firstname,
         lastname,
         role

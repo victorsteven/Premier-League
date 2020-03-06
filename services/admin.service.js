@@ -1,5 +1,6 @@
 import User from '../models/user'
-import hashPassword from '../utils/password';
+import { hashPassword } from '../utils/password';
+import { ObjectID } from 'mongodb'
 
 
 class AdminService {
@@ -25,6 +26,34 @@ class AdminService {
 
       //return admin details except email and password:
       const publicAdmin = { 
+        _id: createdAdmin._id.toHexString(),
+        firstname,
+        lastname,
+        role
+      }
+
+      return publicAdmin
+
+    } catch(error) {
+      throw error;
+    }
+  }
+
+  static async getAdmin(adminId) {
+
+    try {
+
+      let adminObjID = new ObjectID(adminId)
+      
+      const gottenAdmin = await User.findOne({ _id: adminObjID })
+      if (!gottenAdmin || gottenAdmin.role !== 'admin') {
+        throw new Error('admin does not exist');
+      }
+      const { firstname, lastname, role } = gottenAdmin;
+
+      //return admin details except email and password:
+      const publicAdmin = {
+        adminId, 
         firstname,
         lastname,
         role

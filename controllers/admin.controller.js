@@ -1,6 +1,4 @@
 import AdminService from '../services/admin.service';
-// import Response  from '../utils/response' 
-// const response = new Response();
 
 class AdminController {
 
@@ -39,7 +37,7 @@ class AdminController {
           data: createAdmin
         })
       }
-    }catch(error) {
+    } catch(error) {
       return res.status(500).json({
         status: 500,
         error: error.message
