@@ -15,6 +15,14 @@ var FixtureSchema = new Schema({
     required: true,
     ref: 'Team' 
   },
+  matchday: {
+    type: String,
+    required: true,
+  },
+  matchtime: {
+    type: String,
+    required: true,
+  },
   admin: { 
     type: mongoose.Schema.Types.ObjectId, 
     required: true,

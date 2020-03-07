@@ -31,10 +31,10 @@ class FixtureController {
         error: `unauthorized: ${error.message}`
       })
     }
-    const request =  _.pick(req.body, ['home', 'away']) 
+    const request =  _.pick(req.body, ['home', 'away', 'matchday', 'matchtime']) 
 
     const validator = new Validator();
-    validator.validate(request, 'required|string');
+    validator.validate(request, 'required|objectid|string|matchday|matchtime');
     if (validator.hasErrors) {
       return res.status(400).json({
         status: 400,
@@ -42,18 +42,18 @@ class FixtureController {
       });
     }
     
-    if(!ObjectID.isValid(request.home)){
-      return res.status(400).json({
-        status: 400,
-        error: "A valid home team id is required"
-      })
-    }    
-    if(!ObjectID.isValid(request.away)){
-      return res.status(400).json({
-        status: 400,
-        error: "A valid away team id is required"
-      })
-    }
+    // if(!ObjectID.isValid(request.home)){
+    //   return res.status(400).json({
+    //     status: 400,
+    //     error: "A valid home team id is required"
+    //   })
+    // }    
+    // if(!ObjectID.isValid(request.away)){
+    //   return res.status(400).json({
+    //     status: 400,
+    //     error: "A valid away team id is required"
+    //   })
+    // }
     //the teams must be different
     if(request.home === request.away){
       return res.status(400).json({
@@ -76,7 +76,9 @@ class FixtureController {
       const fixture = new Fixture({
         home: homeTeam._id,
         away: awayTeam._id,
-        admin: admin._id
+        admin: admin._id,
+        matchday: request.matchday,
+        matchtime: request.matchtime,
       })
 
       const createFixture = await FixtureService.createFixture(fixture)
@@ -121,29 +123,28 @@ class FixtureController {
         error: "Fixture id is not valid"
       })
     }
-    const request = _.pick(req.body, ['home', 'away']) 
+    const request = _.pick(req.body, ['home', 'away', 'matchday', 'matchtime']) 
 
     const validator = new Validator();
-    validator.validate(request, 'required|string');
+    validator.validate(request, 'required|string|objectid|matchday|matchtime');
     if (validator.hasErrors) {
       return res.status(400).json({
         status: 400,
         messages: validator.getErrors(),
       });
     }
-    
-    if(!ObjectID.isValid(request.home)){
-      return res.status(400).json({
-        status: 400,
-        error: "A valid home team id is required"
-      })
-    }
-    if(!ObjectID.isValid(request.away)){
-      return res.status(400).json({
-        status: 400,
-        error: "A valid away team id is required"
-      })
-    }
+    // if(!ObjectID.isValid(request.home)){
+    //   return res.status(400).json({
+    //     status: 400,
+    //     error: "A valid home team id is required"
+    //   })
+    // }
+    // if(!ObjectID.isValid(request.away)){
+    //   return res.status(400).json({
+    //     status: 400,
+    //     error: "A valid away team id is required"
+    //   })
+    // }
     //the teams must be different
     if(request.home === request.away){
       return res.status(400).json({
@@ -171,6 +172,8 @@ class FixtureController {
       //update the fixtures
       fixture.home = request.home
       fixture.away = request.away
+      fixture.matchday = request.matchday
+      fixture.matchtime = request.matchtime
 
       const updateFixture = await FixtureService.updateFixture(fixture)
       if(updateFixture) {

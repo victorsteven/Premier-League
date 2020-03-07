@@ -1,5 +1,5 @@
 import validator from  "email-validator"
-
+import { ObjectID } from 'mongodb';
 
 
 class Validator {
@@ -39,15 +39,50 @@ class Validator {
     }
   }
 
- email(value, key) {
+  email(value, key) {
    if(key === 'email'){
       if (!validator.validate(value)){
         this.hasErrors = true;
-          this.errors.push(`${key} is invalid`);
+        this.errors.push(`${key} is invalid`);
       }
     }
   }
 
+  objectid(value, key){
+    if (key == "home" || key === "away"){
+      if(!ObjectID.isValid(value)){
+        this.hasErrors = true;
+        this.errors.push(`${key} id is invalid`);
+      }
+    }
+  }
+
+
+  matchday(value, key) {
+
+    let day = /^(0?[1-9]|[12][0-9]|3[01])[\-](0?[1-9]|1[012])[\-]\d{4}$/
+
+    if(key === 'matchday'){
+      if (!day.test(value)){
+        console.log(value)
+        this.hasErrors = true;
+        this.errors.push(`${key} must be of the format: "mm-dd-yyyy"`);
+      }
+    }
+  }
+
+   matchtime(value, key) {
+
+    let time = /^$|^(([01][0-9])|(2[0-3])):[0-5][0-9]$/
+
+    if(key === 'matchtime'){
+      if (!time.test(value)){
+        this.hasErrors = true;
+        this.errors.push(`${key} must be of the format: "10:30 or 07:00"`);
+      }
+    }
+  }
+ 
   getErrors() {
     return this.errors;
   }

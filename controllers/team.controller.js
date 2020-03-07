@@ -51,7 +51,7 @@ class TeamController {
       const admin = await AdminService.getAdmin(adminId)
       
       const team = new Team({
-        name: request.name,
+        name: request.name.trim(),
         admin:  admin._id
       })
 
