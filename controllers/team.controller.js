@@ -1,11 +1,11 @@
 import TeamService from '../services/team.service';
 import _ from 'lodash'
-import jwt, { decode }  from 'jsonwebtoken'
 import  { jwtDecode }  from '../utils/jwtHelper'
 import AdminService from '../services/admin.service';
 import { ObjectID } from 'mongodb';
 import UserService from '../services/user.service';
 import Team from '../models/team'
+import Validator from '../utils/inputValidator';
 
 
 
@@ -31,12 +31,16 @@ class TeamController {
         error: `unauthorized: ${error.message}`
       })
     }
+
     const request =  _.pick(req.body, 'name') 
-    if (!request.name) {
+
+    const validator = new Validator();
+    validator.validate(request, 'required|string');
+    if (validator.hasErrors) {
       return res.status(400).json({
         status: 400,
-        error: "Team name is required"
-      })
+        messages: validator.getErrors(),
+      });
     }
 
     try {
@@ -94,11 +98,15 @@ class TeamController {
       })
     }
     const request =  _.pick(req.body, 'name') 
-    if (!request.name) {
+
+    const validator = new Validator();
+    validator.validate(request, 'required|string');
+
+    if (validator.hasErrors) {
       return res.status(400).json({
         status: 400,
-        error: "Team name is required"
-      })
+        messages: validator.getErrors(),
+      });
     }
 
     try {

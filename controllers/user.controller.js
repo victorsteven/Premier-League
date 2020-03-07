@@ -1,42 +1,31 @@
 import UserService from '../services/user.service';
-import { validateUser } from '../models/user'
+import User from '../models/user'
+import _ from 'lodash'
+import Validator from '../utils/inputValidator';
+
+
+
 class UserController {
 
   static async createUser(req, res) {
-    const user = req.body
-    if (!user.firstname) {
+
+    const request =  _.pick(req.body, ['firstname', 'lastname', 'email', 'password']) 
+
+    const validator = new Validator();
+    validator.validate(request, 'required|string|email');
+    if (validator.hasErrors) {
       return res.status(400).json({
         status: 400,
-        error: "First name is required"
-      })
-    }
-    if (!user.lastname) {
-      return res.status(400).json({
-        status: 400,
-        error: "Last name is required"
-      })
-    }
-    if (!user.email) {
-      return res.status(400).json({
-        status: 400,
-        error: "email is required"
-      })
-    }
-    if (!user.password) {
-      return res.status(400).json({
-        status: 400,
-        error: "password is required"
-      })
+        messages: validator.getErrors(),
+      });
     }
 
-    // let ans = validateUser(user)
-    // if(ans) {
-    //   // console.log("the ans: ", ans)
-    //   return res.status(400).json({
-    //     status: 400,
-    //     data: ans.error.details
-    //   })
-    // }
+    let user = new User({
+      firstname: request.firstname.trim(),
+      lastname: request.lastname.trim(),
+      email: request.email.trim(),
+      password: request.password.trim(),
+    })
 
     try {
       const createUser = await UserService.createUser(user)

@@ -1,14 +1,12 @@
 import FixtureService from '../services/fixture.service';
 import _ from 'lodash'
-import jwt, { decode }  from 'jsonwebtoken'
 import  { jwtDecode }  from '../utils/jwtHelper'
 import AdminService from '../services/admin.service';
 import { ObjectID } from 'mongodb';
 import UserService from '../services/user.service';
 import TeamService from '../services/team.service';
 import Fixture from '../models/fixture';
-
-
+import Validator from '../utils/inputValidator';
 
 
 
@@ -34,6 +32,15 @@ class FixtureController {
       })
     }
     const request =  _.pick(req.body, ['home', 'away']) 
+
+    const validator = new Validator();
+    validator.validate(request, 'required|string');
+    if (validator.hasErrors) {
+      return res.status(400).json({
+        status: 400,
+        messages: validator.getErrors(),
+      });
+    }
     
     if(!ObjectID.isValid(request.home)){
       return res.status(400).json({
@@ -115,6 +122,15 @@ class FixtureController {
       })
     }
     const request = _.pick(req.body, ['home', 'away']) 
+
+    const validator = new Validator();
+    validator.validate(request, 'required|string');
+    if (validator.hasErrors) {
+      return res.status(400).json({
+        status: 400,
+        messages: validator.getErrors(),
+      });
+    }
     
     if(!ObjectID.isValid(request.home)){
       return res.status(400).json({
@@ -142,16 +158,15 @@ class FixtureController {
 
       //check if the team exist and if the owner is legit, before updating it:
       const fixture = await FixtureService.adminGetFixture(requestId)
-      console.log("the fixture: ", fixture)
       if (fixture.admin._id.toHexString() !== adminId) {
         return res.status(401).json({
           status: 401,
           error: "unauthorized: you are not the owner"
         })
       }
-      //check if the home and away teams exists:
-      const homeTeam = await TeamService.getTeam(request.home)
-      const awayTeam = await TeamService.getTeam(request.away)
+      //check if the home and away teams exists, any error will be handled in the catch block
+      await TeamService.getTeam(request.home)
+      await TeamService.getTeam(request.away)
       
       //update the fixtures
       fixture.home = request.home

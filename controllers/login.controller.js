@@ -1,5 +1,7 @@
 import LoginService from '../services/login.service'
 import _ from 'lodash'
+import Validator from '../utils/inputValidator';
+
 
 class LoginController {
 
@@ -8,18 +10,15 @@ class LoginController {
     //take only what we need
     const request = _.pick(req.body, ['email', 'password'])
 
-    if (!request.email) {
+    const validator = new Validator();
+    validator.validate(request, 'required|string|email');
+    if (validator.hasErrors) {
       return res.status(400).json({
         status: 400,
-        error: "Email is required"
-      })
+        messages: validator.getErrors(),
+      });
     }
-    if (!request.password) {
-      return res.status(400).json({
-        status: 400,
-        error: "Password is required"
-      })
-    }
+
     try {
       const token = await LoginService.login(request)
       if(!token) {

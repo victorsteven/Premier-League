@@ -1,23 +1,77 @@
-import jwt from "jsonwebtoken"
-// const config = require("config");
+import jwt from 'jsonwebtoken'
+import config from 'dotenv'
 
 
-const auth = (req, res, next) => {
+config.config()
 
-  //get the token from the header if present
-  const token = req.headers["authorization"];
-  
-  if (!token) return res.status(401).send("unauthorized");
+export const auth = (req, res, next) => {
 
   try {
-    //if can verify the token, set req.user and pass to next middleware
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
-    next();
-  } catch (err) {
-    //if invalid token
-    res.status(400).send("unauthorized" + err);
+
+    const bearToken = req.headers['authorization'];
+    if(!bearToken) {
+      res.status(401).json({
+        status: 401,
+        message: 'unauthorized, you need to be unauthenticated'
+      })
+    }
+    //split the bearToken and get the token
+    const token = bearToken.split(' ', 2)[1]
+    if (!token) {
+      res.status(401).json({
+        status: 401,
+        message: 'unauthorized: you need to be unauthenticated'
+      })
+    }
+    let tokenMetadata = jwt.verify(token, process.env.JWT_SECRET);
+    if (tokenMetadata && (tokenMetadata === 'user' || 'admin')){
+      next()
+    } else {
+      res.status(401).json({
+        status: 401,
+        message: 'unauthorized: you need to be unauthenticated'
+      })
+    }
+  } catch(error) {
+    res.status(401).json({
+      status: 401,
+      message: `unauthorized ${error.message}`
+    })
   }
 }
 
-export default auth
+export const adminAuth = (req, res, next) => {
+
+  try {
+
+    const bearToken = req.headers['authorization'];
+    if(!bearToken) {
+      res.status(401).json({
+        status: 401,
+        message: 'unauthorized: you are not an admin'
+      })
+    }
+    //split the bearToken and get the token
+    const token = bearToken.split(' ', 2)[1]
+    if (!token) {
+      res.status(401).json({
+        status: 401,
+        message: 'unauthorized: you are not an admin'
+      })
+    }
+    let tokenMetadata = jwt.verify(token, process.env.JWT_SECRET);
+    if (tokenMetadata && (tokenMetadata.role === 'admin')){
+      next()
+    } else {
+      res.status(401).json({
+        status: 401,
+        message: 'unauthorized: you are not an admin'
+      })
+    }
+  } catch(error) {
+    res.status(401).json({
+      status: 401,
+      message: `unauthorized: ${error.message}`
+    })
+  }
+}
