@@ -14,14 +14,14 @@ export const jwtDecode = req => {
     const bearToken = req.headers["authorization"];
 
     if(!bearToken) {
-      throw new Error('unathorized: no token')
+      throw new Error('no token')
     }
 
     //split the bearToken and get the token
     const token = bearToken.split(' ', 2)[1]
 
     if (!token) {
-      throw new Error('unathorized: no token')
+      throw new Error('no token')
     }
 
     let tokenMetadata = jwt.verify(token, secret);

@@ -4,15 +4,22 @@ import mongoose from 'mongoose'
 var Schema = mongoose.Schema;
 
 var FixtureSchema = new Schema({
-  homeId: {
-   type: String, required: true, max: 255
+
+  home: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    required: true,
+    ref: 'Team' 
   },
-  awayId: {
-   type: String, required: true, max: 255
+  away: { 
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: 'Team' 
   },
-  adminId: {
-   type: String, required: true, max: 100
-  }
+  admin: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    required: true,
+    ref: 'User' 
+  },
 });
 
 export default mongoose.model('Fixture', FixtureSchema)

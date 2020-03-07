@@ -22,11 +22,11 @@ class AdminService {
 
       const createdAdmin = await User.create(admin);
 
-      const { firstname, lastname, role } = createdAdmin;
+      const { _id, firstname, lastname, role } = createdAdmin;
 
       //return admin details except email and password:
       const publicAdmin = { 
-        _id: createdAdmin._id.toHexString(),
+        _id,
         firstname,
         lastname,
         role
@@ -49,16 +49,8 @@ class AdminService {
       if (!gottenAdmin || gottenAdmin.role !== 'admin') {
         throw new Error('admin does not exist');
       }
-      const { firstname, lastname, role } = gottenAdmin;
-
-      //return admin details except email and password:
-      const publicAdmin = {
-        _id: adminId, 
-        firstname,
-        lastname,
-        role
-      }
-      return publicAdmin
+      
+      return gottenAdmin
 
     } catch(error) {
       throw error;

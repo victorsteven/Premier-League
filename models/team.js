@@ -5,14 +5,16 @@ var Schema = mongoose.Schema;
 
 var TeamSchema = new Schema({
   name: {
-   type: String, required: true, max: 255, unique: true,
+    type: String, 
+    required: true, 
+    max: 255, 
+    unique: true,
   },
-  coach: {
-   type: String, required: true, max: 100
+  admin: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    required: true, 
+    ref: 'User' 
   },
-  adminId: {
-   type: String, required: true, max: 100
-  }
 });
 
 export default mongoose.model('Team', TeamSchema)

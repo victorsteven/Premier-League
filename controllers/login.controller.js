@@ -5,8 +5,6 @@ class LoginController {
 
   static async login(req, res) {
 
-    console.log("we entered login")
-
     //take only what we need
     const request = _.pick(req.body, ['email', 'password'])
 

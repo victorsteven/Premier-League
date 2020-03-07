@@ -1,5 +1,5 @@
 import UserService from '../services/user.service';
-
+import { validateUser } from '../models/user'
 class UserController {
 
   static async createUser(req, res) {
@@ -29,6 +29,15 @@ class UserController {
       })
     }
 
+    // let ans = validateUser(user)
+    // if(ans) {
+    //   // console.log("the ans: ", ans)
+    //   return res.status(400).json({
+    //     status: 400,
+    //     data: ans.error.details
+    //   })
+    // }
+
     try {
       const createUser = await UserService.createUser(user)
       if(createUser) {
@@ -37,7 +46,7 @@ class UserController {
           data: createUser
         })
       }
-    }catch(error) {
+    } catch(error) {
       return res.status(500).json({
         status: 500,
         error: error.message

@@ -16,16 +16,7 @@ class TeamService {
 
       const createdTeam = await Team.create(team);
 
-      const { name, coach, adminId } = createdTeam
-
-      const publicTeam = { 
-        _id: createdTeam._id.toHexString(),
-        name,
-        coach,
-        adminId
-      }
-
-      return publicTeam
+      return createdTeam
 
     } catch(error) {
       throw error;
@@ -33,29 +24,18 @@ class TeamService {
   }
 
 
-  //this is only used by the admin when he want to do things like update or delete
+  //we will need to confirm if the admin to update or delete a team or fixture exist
   static async adminGetTeam(teamId) {
 
     try {
 
       let teamIdObj = new ObjectID(teamId)
 
-      //check if the team already exist
       const gottenTeam = await Team.findOne({ _id: teamIdObj })
       if (!gottenTeam) {
         throw new Error('no record found');
       }
-
-      const { name, coach, adminId } = gottenTeam
-
-      const team = { 
-        _id: teamId,
-        name,
-        coach,
-        adminId
-      }
-
-      return team
+      return gottenTeam
 
     } catch(error) {
       throw error;
@@ -69,21 +49,11 @@ class TeamService {
 
       let teamIdObj = new ObjectID(teamId)
 
-      //check if the team already exist
-      const gottenTeam = await Team.findOne({ _id: teamIdObj })
+      const gottenTeam = await Team.findOne({ _id: teamIdObj }, { admin: 0}).select('-__v')
       if (!gottenTeam) {
         throw new Error('no record found');
       }
-
-      const { name, coach } = gottenTeam
-
-      const publicTeam = { 
-        _id: teamId,
-        name,
-        coach,
-      }
-
-      return publicTeam
+      return gottenTeam
 
     } catch(error) {
       throw error;
@@ -94,19 +64,11 @@ class TeamService {
 
     try {
 
-      //check if the team already exist
-      const gottenTeams = await Team.find({})
+      const gottenTeams = await Team.find().select('-admin').select('-__v')
       if (!gottenTeams) {
         throw new Error('no record found');
       }
-      let publicTeams = []
-
-      gottenTeams.map(team => {
-        const { name, coach } = team
-        publicTeams.push({ _id: team._id.toHexString(), name, coach })
-      })
-
-      return publicTeams
+      return gottenTeams
 
     } catch(error) {
       throw error;
@@ -128,16 +90,8 @@ class TeamService {
         { $set: team },
         { "new": true},
       );
-      const { name, coach, adminId } = updatedTeam
 
-      const publicTeam = { 
-        _id: updatedTeam._id.toHexString(),
-        name,
-        coach,
-        adminId
-      }
-
-      return publicTeam
+      return updatedTeam
 
     } catch(error) {
       if(error.message.includes("duplicate")){
@@ -153,7 +107,6 @@ class TeamService {
 
       let teamIdObj = new ObjectID(teamId)
 
-      //check if the team already exist
       const deletedTeam = await Team.deleteOne({ _id: teamIdObj })
       if (!deletedTeam) {
         throw new Error('no record found');

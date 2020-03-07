@@ -20,13 +20,14 @@ class UserService {
       //assign role:
       user.role = "user"
 
+      //create the user
       const createdUser = await User.create(user);
 
-      const { firstname, lastname, role } = createdUser;
+      const { _id, firstname, lastname, role } = createdUser;
 
       //return user details except email and password:
       const publicUser = { 
-        _id: createdUser._id.toHexString(),
+        _id,
         firstname,
         lastname,
         role
@@ -40,13 +41,13 @@ class UserService {
   }
 
   //This user can either be an "admin" or a "normal user"
+  //This function is used to check if a user is authenticated
   static async getUser(userId) {
 
     let userObjID = new ObjectID(userId)
 
     try {
 
-      //check if the user already exist
       const gottenUser = await User.findOne({ _id: userObjID })
       if (!gottenUser) {
         throw new Error('no record found, you are not authenticated');
@@ -56,7 +57,7 @@ class UserService {
 
       //return user details except email and password:
       const publicUser = { 
-        _id: gottenUser._id.toHexString(),
+        _id: gottenUser._id,
         firstname,
         lastname,
         role

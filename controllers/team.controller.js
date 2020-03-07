@@ -5,6 +5,7 @@ import  { jwtDecode }  from '../utils/jwtHelper'
 import AdminService from '../services/admin.service';
 import { ObjectID } from 'mongodb';
 import UserService from '../services/user.service';
+import Team from '../models/team'
 
 
 
@@ -21,26 +22,20 @@ class TeamController {
       if(!tokenMetadata) {
         return res.status(401).json({
           status: 401,
-          error: "unauthorized, no userInfo"
+          error: error.message
         })
       }
     } catch(error) {
         return res.status(401).json({
         status: 401,
-        error: error.message
+        error: `unauthorized: ${error.message}`
       })
     }
-    const team =  _.pick(req.body, ['name', 'coach']) 
-    if (!team.name) {
+    const request =  _.pick(req.body, 'name') 
+    if (!request.name) {
       return res.status(400).json({
         status: 400,
         error: "Team name is required"
-      })
-    }
-    if (!team.coach) {
-      return res.status(400).json({
-        status: 400,
-        error: "Team coach is required"
       })
     }
 
@@ -51,7 +46,10 @@ class TeamController {
       //verify that the admin sending this request exist:
       const admin = await AdminService.getAdmin(adminId)
       
-      team.adminId = admin._id
+      const team = new Team({
+        name: request.name,
+        admin:  admin._id
+      })
 
       const createTeam = await TeamService.createTeam(team)
       if(createTeam) {
@@ -78,13 +76,13 @@ class TeamController {
       if(!tokenMetadata) {
         return res.status(401).json({
           status: 401,
-          error: "unauthorized, no userInfo"
+          error: error.message
         })
       }
     } catch(error) {
         return res.status(401).json({
         status: 401,
-        error: error.message
+        error: `unauthorized: ${error.message}`
       })
     }
 
@@ -95,17 +93,11 @@ class TeamController {
         error: "Team id is not valid"
       })
     }
-    const request =  _.pick(req.body, ['name', 'coach']) 
+    const request =  _.pick(req.body, 'name') 
     if (!request.name) {
       return res.status(400).json({
         status: 400,
         error: "Team name is required"
-      })
-    }
-    if (!request.coach) {
-      return res.status(400).json({
-        status: 400,
-        error: "Team coach is required"
       })
     }
 
@@ -115,7 +107,7 @@ class TeamController {
 
       //check if the team exist and if the owner is legit, before updating it:
       const team = await TeamService.adminGetTeam(teamId)
-      if (team.adminId !== adminId) {
+      if (team.admin._id.toHexString() !== adminId) {
         return res.status(401).json({
           status: 401,
           error: "unauthorized: you are not the owner"
@@ -123,7 +115,6 @@ class TeamController {
       }
 
       team.name = request.name
-      team.coach = request.coach
       
       const updateTeam = await TeamService.updateTeam(team)
       if(updateTeam) {
@@ -150,13 +141,13 @@ class TeamController {
       if(!tokenMetadata) {
         return res.status(401).json({
           status: 401,
-          error: "unauthorized, no userInfo"
+          error: error.message
         })
       }
     } catch(error) {
         return res.status(401).json({
         status: 401,
-        error: error.message
+        error: `unauthorized: ${error.message}`
       })
     }
 
@@ -174,7 +165,7 @@ class TeamController {
 
       //check if the team exist and if the owner is legit, before updating it:
       const team = await TeamService.adminGetTeam(teamId)
-      if (team.adminId !== adminId) {
+      if (team.admin._id.toHexString() !== adminId) {
         return res.status(401).json({
           status: 401,
           error: "unauthorized: you are not the owner"
@@ -207,13 +198,13 @@ class TeamController {
       if(!tokenMetadata) {
         return res.status(401).json({
           status: 401,
-          error: "unauthorized, no userInfo"
+          error: error.message
         })
       }
     } catch(error) {
         return res.status(401).json({
         status: 401,
-        error: error.message
+        error: `unauthorized: ${error.message}`
       })
     }
 
@@ -230,15 +221,19 @@ class TeamController {
       let authId = tokenMetadata._id
 
       //verify if the account that want to view this team exists(weather admin or normal user) 
-      const user = await UserService.getUser(authId)
-      if(user) {
-        const team = await TeamService.getTeam(teamId)
-        if (team) {
+      //if an error, it will be handled in the catch block
+      await UserService.getUser(authId)
+      
+      try {
+        const gottenTeam = await TeamService.getTeam(teamId)
+        if (gottenTeam) {
           return res.status(200).json({
             status: 200,
-            data: team
+            data: gottenTeam
           })
         }
+      } catch(error) {
+        throw error;
       }
     } catch(error) {
       return res.status(500).json({
@@ -258,13 +253,13 @@ class TeamController {
       if(!tokenMetadata) {
         return res.status(401).json({
           status: 401,
-          error: "unauthorized, no userInfo"
+          error: error.message
         })
       }
     } catch(error) {
         return res.status(401).json({
         status: 401,
-        error: error.message
+        error: `unauthorized: ${error.message}`
       })
     }
 

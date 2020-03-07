@@ -6,6 +6,8 @@ import AdminService from '../services/admin.service';
 import { ObjectID } from 'mongodb';
 import UserService from '../services/user.service';
 import TeamService from '../services/team.service';
+import Fixture from '../models/fixture';
+
 
 
 
@@ -22,27 +24,34 @@ class FixtureController {
       if(!tokenMetadata) {
         return res.status(401).json({
           status: 401,
-          error: "unauthorized, no userInfo"
+          error: error.message
         })
       }
     } catch(error) {
         return res.status(401).json({
         status: 401,
-        error: error.message
+        error: `unauthorized: ${error.message}`
       })
     }
-    const fixture =  _.pick(req.body, ['homeId', 'awayId']) 
+    const request =  _.pick(req.body, ['home', 'away']) 
     
-    if(!ObjectID.isValid(fixture.homeId)){
+    if(!ObjectID.isValid(request.home)){
       return res.status(400).json({
         status: 400,
         error: "A valid home team id is required"
       })
-    }
-    if(!ObjectID.isValid(fixture.awayId)){
+    }    
+    if(!ObjectID.isValid(request.away)){
       return res.status(400).json({
         status: 400,
         error: "A valid away team id is required"
+      })
+    }
+    //the teams must be different
+    if(request.home === request.away){
+      return res.status(400).json({
+        status: 400,
+        error: "You can't create a fixture with the same team"
       })
     }
 
@@ -52,24 +61,16 @@ class FixtureController {
 
       //verify that the admin sending this request exist:
       const admin = await AdminService.getAdmin(adminId)
-      if(admin) {
-        fixture.adminId = admin._id
-      }
+      
       //check if the home and away teams exists:
-      const homeTeam = await TeamService.getTeam(fixture.homeId)
-      if(!homeTeam){
-        return res.status(401).json({
-          status: 401,
-          error: "home team is not"
-        })
-      }
-      const awayTeam = await TeamService.getTeam(fixture.awayId)
-      if(!awayTeam){
-        return res.status(401).json({
-          status: 401,
-          error: "away team is not"
-        })
-      }
+      const homeTeam = await TeamService.getTeam(request.home)
+      const awayTeam = await TeamService.getTeam(request.away)
+      
+      const fixture = new Fixture({
+        home: homeTeam._id,
+        away: awayTeam._id,
+        admin: admin._id
+      })
 
       const createFixture = await FixtureService.createFixture(fixture)
       if(createFixture) {
@@ -96,35 +97,42 @@ class FixtureController {
       if(!tokenMetadata) {
         return res.status(401).json({
           status: 401,
-          error: "unauthorized, no userInfo"
+          error: error.message
         })
       }
     } catch(error) {
         return res.status(401).json({
         status: 401,
-        error: error.message
+        error: `unauthorized: ${error.message}`
       })
     }
     //check if the id passed to edit is valid
-    var fixtureId = req.params.id;
-    if(!ObjectID.isValid(fixtureId)){
+    var requestId = req.params.id;
+    if(!ObjectID.isValid(requestId)){
       return res.status(400).json({
         status: 400,
         error: "Fixture id is not valid"
       })
     }
-    const request =  _.pick(req.body, ['homeId', 'awayId']) 
+    const request = _.pick(req.body, ['home', 'away']) 
     
-    if(!ObjectID.isValid(request.homeId)){
+    if(!ObjectID.isValid(request.home)){
       return res.status(400).json({
         status: 400,
         error: "A valid home team id is required"
       })
     }
-    if(!ObjectID.isValid(request.awayId)){
+    if(!ObjectID.isValid(request.away)){
       return res.status(400).json({
         status: 400,
         error: "A valid away team id is required"
+      })
+    }
+    //the teams must be different
+    if(request.home === request.away){
+      return res.status(400).json({
+        status: 400,
+        error: "You can't update a fixture with the same team"
       })
     }
 
@@ -133,32 +141,21 @@ class FixtureController {
       let adminId = tokenMetadata._id
 
       //check if the team exist and if the owner is legit, before updating it:
-      const fixture = await FixtureService.adminGetFixture(fixtureId)
-      if (fixture.adminId !== adminId) {
+      const fixture = await FixtureService.adminGetFixture(requestId)
+      console.log("the fixture: ", fixture)
+      if (fixture.admin._id.toHexString() !== adminId) {
         return res.status(401).json({
           status: 401,
           error: "unauthorized: you are not the owner"
         })
       }
-
       //check if the home and away teams exists:
-      const homeTeam = await TeamService.getTeam(request.homeId)
-      if(!homeTeam){
-        return res.status(401).json({
-          status: 401,
-          error: "home team is not"
-        })
-      }
-      const awayTeam = await TeamService.getTeam(request.awayId)
-      if(!awayTeam){
-        return res.status(401).json({
-          status: 401,
-          error: "away team is not"
-        })
-      }
+      const homeTeam = await TeamService.getTeam(request.home)
+      const awayTeam = await TeamService.getTeam(request.away)
+      
       //update the fixtures
-      fixture.homeId = request.homeId
-      fixture.awayId = request.awayId
+      fixture.home = request.home
+      fixture.away = request.away
 
       const updateFixture = await FixtureService.updateFixture(fixture)
       if(updateFixture) {
@@ -175,79 +172,8 @@ class FixtureController {
     }
   }
 
-  // static async updateTeam(req, res) {
 
-  //   let tokenMetadata
-
-  //   //Check, validate and get valid token metadata, or send an error 
-  //   try {
-  //     tokenMetadata = jwtDecode(req)
-  //     if(!tokenMetadata) {
-  //       return res.status(401).json({
-  //         status: 401,
-  //         error: "unauthorized, no userInfo"
-  //       })
-  //     }
-  //   } catch(error) {
-  //       return res.status(401).json({
-  //       status: 401,
-  //       error: error.message
-  //     })
-  //   }
-
-  //   var teamId = req.params.id;
-  //   if(!ObjectID.isValid(teamId)){
-  //     return res.status(400).json({
-  //       status: 400,
-  //       error: "Team id is not valid"
-  //     })
-  //   }
-  //   const request =  _.pick(req.body, ['name', 'coach']) 
-  //   if (!request.name) {
-  //     return res.status(400).json({
-  //       status: 400,
-  //       error: "Team name is required"
-  //     })
-  //   }
-  //   if (!request.coach) {
-  //     return res.status(400).json({
-  //       status: 400,
-  //       error: "Team coach is required"
-  //     })
-  //   }
-
-  //   try {
-
-  //     let adminId = tokenMetadata._id
-
-  //     //check if the team exist and if the owner is legit, before updating it:
-  //     const team = await TeamService.adminGetTeam(teamId)
-  //     if (team.adminId !== adminId) {
-  //       return res.status(401).json({
-  //         status: 401,
-  //         error: "unauthorized: you are not the owner"
-  //       })
-  //     }
-
-  //     team.name = request.name
-  //     team.coach = request.coach
-      
-  //     const updateTeam = await TeamService.updateTeam(team)
-  //     if(updateTeam) {
-  //       return res.status(200).json({
-  //         status: 200,
-  //         data: updateTeam
-  //       })
-  //     }
-  //   } catch(error) {
-  //     return res.status(500).json({
-  //       status: 500,
-  //       error: error.message
-  //     })
-  //   }
-  // }
-
-  static async deleteTeam(req, res) {
+  static async deleteFixture(req, res) {
 
     let tokenMetadata
 
@@ -257,18 +183,18 @@ class FixtureController {
       if(!tokenMetadata) {
         return res.status(401).json({
           status: 401,
-          error: "unauthorized, no userInfo"
+          error: error.message
         })
       }
     } catch(error) {
         return res.status(401).json({
         status: 401,
-        error: error.message
+        error: `unauthorized: ${error.message}`
       })
     }
 
-    var teamId = req.params.id;
-    if(!ObjectID.isValid(teamId)){
+    var requestId = req.params.id;
+    if(!ObjectID.isValid(requestId)){
       return res.status(400).json({
         status: 400,
         error: "Team id is not valid"
@@ -280,8 +206,8 @@ class FixtureController {
       let adminId = tokenMetadata._id
 
       //check if the team exist and if the owner is legit, before updating it:
-      const team = await TeamService.adminGetTeam(teamId)
-      if (team.adminId !== adminId) {
+      const fixture = await FixtureService.adminGetFixture(requestId)
+      if (fixture.admin._id.toHexString() !== adminId) {
         return res.status(401).json({
           status: 401,
           error: "unauthorized: you are not the owner"
@@ -289,7 +215,7 @@ class FixtureController {
       }
 
       //Delete the team
-      const status = await TeamService.deleteTeam(teamId)
+      const status = await FixtureService.deleteFixture(fixture._id)
       if (status) {
         return res.status(200).json({
           status: 200,
@@ -304,7 +230,7 @@ class FixtureController {
     }
   }
 
-  static async getTeam(req, res) {
+  static async getFixture(req, res) {
 
     let tokenMetadata
 
@@ -314,21 +240,21 @@ class FixtureController {
       if(!tokenMetadata) {
         return res.status(401).json({
           status: 401,
-          error: "unauthorized, no userInfo"
+          error: error.message
         })
       }
     } catch(error) {
         return res.status(401).json({
         status: 401,
-        error: error.message
+        error: `unauthorized: ${error.message}`
       })
     }
 
-    var teamId = req.params.id;
-    if(!ObjectID.isValid(teamId)){
+    var requestId = req.params.id;
+    if(!ObjectID.isValid(requestId)){
       return res.status(400).json({
         status: 400,
-        error: "Team id is not valid"
+        error: "Feature id is not valid"
       })
     }
 
@@ -339,11 +265,11 @@ class FixtureController {
       //verify if the account that want to view this team exists(weather admin or normal user) 
       const user = await UserService.getUser(authId)
       if(user) {
-        const team = await TeamService.getTeam(teamId)
-        if (team) {
+        const fixture = await FixtureService.getFixture(requestId)
+        if (fixture) {
           return res.status(200).json({
             status: 200,
-            data: team
+            data: fixture
           })
         }
       }
@@ -355,7 +281,7 @@ class FixtureController {
     }
   }
 
-  static async getTeams(req, res) {
+  static async getFixtures(req, res) {
 
     let tokenMetadata
 
@@ -365,16 +291,15 @@ class FixtureController {
       if(!tokenMetadata) {
         return res.status(401).json({
           status: 401,
-          error: "unauthorized, no userInfo"
+          error: error.message
         })
       }
     } catch(error) {
         return res.status(401).json({
         status: 401,
-        error: error.message
+        error: `unauthorized: ${error.message}`
       })
     }
-
 
     try {
 
@@ -383,11 +308,11 @@ class FixtureController {
       //verify if the account that want to view this team exists(weather admin or normal user) 
       const user = await UserService.getUser(authId)
       if (user) {
-        const teams = await TeamService.getTeams()
-        if (teams) {
+        const fixtures = await FixtureService.getFixtures()
+        if (fixtures) {
           return res.status(200).json({
             status: 200,
-            data: teams
+            data: fixtures
           })
         }
       }
