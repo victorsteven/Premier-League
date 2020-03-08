@@ -14,23 +14,9 @@ class FixtureController {
 
   static async createFixture(req, res) {
 
-    let tokenMetadata
-
-    //Check, validate and get valid token metadata, or send an error 
-    try {
-      tokenMetadata = jwtDecode(req)
-      if(!tokenMetadata) {
-        return res.status(401).json({
-          status: 401,
-          error: error.message
-        })
-      }
-    } catch(error) {
-        return res.status(401).json({
-        status: 401,
-        error: `unauthorized: ${error.message}`
-      })
-    }
+    //The tokenMetadata has already been set in the request when the middleware attached to this route ran
+    let tokenMetadata = req.tokenMetadata
+    
     const request =  _.pick(req.body, ['home', 'away', 'matchday', 'matchtime']) 
 
     const validator = new Validator();
@@ -42,18 +28,6 @@ class FixtureController {
       });
     }
     
-    // if(!ObjectID.isValid(request.home)){
-    //   return res.status(400).json({
-    //     status: 400,
-    //     error: "A valid home team id is required"
-    //   })
-    // }    
-    // if(!ObjectID.isValid(request.away)){
-    //   return res.status(400).json({
-    //     status: 400,
-    //     error: "A valid away team id is required"
-    //   })
-    // }
     //the teams must be different
     if(request.home === request.away){
       return res.status(400).json({
@@ -98,23 +72,9 @@ class FixtureController {
 
   static async updateFixture(req, res) {
 
-    let tokenMetadata
+    //The tokenMetadata has already been set in the request when the middleware attached to this route ran
+    let tokenMetadata = req.tokenMetadata
 
-    //Check, validate and get valid token metadata, or send an error 
-    try {
-      tokenMetadata = jwtDecode(req)
-      if(!tokenMetadata) {
-        return res.status(401).json({
-          status: 401,
-          error: error.message
-        })
-      }
-    } catch(error) {
-        return res.status(401).json({
-        status: 401,
-        error: `unauthorized: ${error.message}`
-      })
-    }
     //check if the id passed to edit is valid
     var requestId = req.params.id;
     if(!ObjectID.isValid(requestId)){
@@ -133,18 +93,7 @@ class FixtureController {
         messages: validator.getErrors(),
       });
     }
-    // if(!ObjectID.isValid(request.home)){
-    //   return res.status(400).json({
-    //     status: 400,
-    //     error: "A valid home team id is required"
-    //   })
-    // }
-    // if(!ObjectID.isValid(request.away)){
-    //   return res.status(400).json({
-    //     status: 400,
-    //     error: "A valid away team id is required"
-    //   })
-    // }
+  
     //the teams must be different
     if(request.home === request.away){
       return res.status(400).json({
@@ -193,23 +142,8 @@ class FixtureController {
 
   static async deleteFixture(req, res) {
 
-    let tokenMetadata
-
-    //Check, validate and get valid token metadata, or send an error 
-    try {
-      tokenMetadata = jwtDecode(req)
-      if(!tokenMetadata) {
-        return res.status(401).json({
-          status: 401,
-          error: error.message
-        })
-      }
-    } catch(error) {
-        return res.status(401).json({
-        status: 401,
-        error: `unauthorized: ${error.message}`
-      })
-    }
+     //The tokenMetadata has already been set in the request when the middleware attached to this route ran
+     let tokenMetadata = req.tokenMetadata
 
     var requestId = req.params.id;
     if(!ObjectID.isValid(requestId)){
@@ -250,23 +184,8 @@ class FixtureController {
 
   static async getFixture(req, res) {
 
-    let tokenMetadata
-
-    //Check, validate and get valid token metadata, or send an error 
-    try {
-      tokenMetadata = jwtDecode(req)
-      if(!tokenMetadata) {
-        return res.status(401).json({
-          status: 401,
-          error: error.message
-        })
-      }
-    } catch(error) {
-        return res.status(401).json({
-        status: 401,
-        error: `unauthorized: ${error.message}`
-      })
-    }
+    //The tokenMetadata has already been set in the request when the middleware attached to this route ran
+    let tokenMetadata = req.tokenMetadata
 
     var requestId = req.params.id;
     if(!ObjectID.isValid(requestId)){
@@ -301,23 +220,8 @@ class FixtureController {
 
   static async getFixtures(req, res) {
 
-    let tokenMetadata
-
-    //Check, validate and get valid token metadata, or send an error 
-    try {
-      tokenMetadata = jwtDecode(req)
-      if(!tokenMetadata) {
-        return res.status(401).json({
-          status: 401,
-          error: error.message
-        })
-      }
-    } catch(error) {
-        return res.status(401).json({
-        status: 401,
-        error: `unauthorized: ${error.message}`
-      })
-    }
+    //The tokenMetadata has already been set in the request when the middleware attached to this route ran
+    let tokenMetadata = req.tokenMetadata
 
     try {
 

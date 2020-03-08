@@ -14,23 +14,8 @@ class TeamController {
 
   static async createTeam(req, res) {
 
-    let tokenMetadata
-
-    //Check, validate and get valid token metadata, or send an error 
-    try {
-      tokenMetadata = jwtDecode(req)
-      if(!tokenMetadata) {
-        return res.status(401).json({
-          status: 401,
-          error: error.message
-        })
-      }
-    } catch(error) {
-        return res.status(401).json({
-        status: 401,
-        error: `unauthorized: ${error.message}`
-      })
-    }
+    //The tokenMetadata has already been set in the request when the middleware attached to this route ran
+    let tokenMetadata = req.tokenMetadata
 
     const request =  _.pick(req.body, 'name') 
 
@@ -72,23 +57,8 @@ class TeamController {
 
   static async updateTeam(req, res) {
 
-    let tokenMetadata
-
-    //Check, validate and get valid token metadata, or send an error 
-    try {
-      tokenMetadata = jwtDecode(req)
-      if(!tokenMetadata) {
-        return res.status(401).json({
-          status: 401,
-          error: error.message
-        })
-      }
-    } catch(error) {
-        return res.status(401).json({
-        status: 401,
-        error: `unauthorized: ${error.message}`
-      })
-    }
+    //The tokenMetadata has already been set in the request when the middleware attached to this route ran
+    let tokenMetadata = req.tokenMetadata
 
     var teamId = req.params.id;
     if(!ObjectID.isValid(teamId)){
@@ -141,23 +111,8 @@ class TeamController {
 
   static async deleteTeam(req, res) {
 
-    let tokenMetadata
-
-    //Check, validate and get valid token metadata, or send an error 
-    try {
-      tokenMetadata = jwtDecode(req)
-      if(!tokenMetadata) {
-        return res.status(401).json({
-          status: 401,
-          error: error.message
-        })
-      }
-    } catch(error) {
-        return res.status(401).json({
-        status: 401,
-        error: `unauthorized: ${error.message}`
-      })
-    }
+    //The tokenMetadata has already been set in the request when the middleware attached to this route ran
+    let tokenMetadata = req.tokenMetadata
 
     var teamId = req.params.id;
     if(!ObjectID.isValid(teamId)){
@@ -198,23 +153,8 @@ class TeamController {
 
   static async getTeam(req, res) {
 
-    let tokenMetadata
-
-    //Check, validate and get valid token metadata, or send an error 
-    try {
-      tokenMetadata = jwtDecode(req)
-      if(!tokenMetadata) {
-        return res.status(401).json({
-          status: 401,
-          error: error.message
-        })
-      }
-    } catch(error) {
-        return res.status(401).json({
-        status: 401,
-        error: `unauthorized: ${error.message}`
-      })
-    }
+    //The tokenMetadata has already been set in the request when the middleware attached to this route ran
+    let tokenMetadata = req.tokenMetadata
 
     var teamId = req.params.id;
     if(!ObjectID.isValid(teamId)){
@@ -253,24 +193,8 @@ class TeamController {
 
   static async getTeams(req, res) {
 
-    let tokenMetadata
-
-    //Check, validate and get valid token metadata, or send an error 
-    try {
-      tokenMetadata = jwtDecode(req)
-      if(!tokenMetadata) {
-        return res.status(401).json({
-          status: 401,
-          error: error.message
-        })
-      }
-    } catch(error) {
-        return res.status(401).json({
-        status: 401,
-        error: `unauthorized: ${error.message}`
-      })
-    }
-
+    //The tokenMetadata has already been set in the request when the middleware attached to this route ran
+    let tokenMetadata = req.tokenMetadata
 
     try {
 

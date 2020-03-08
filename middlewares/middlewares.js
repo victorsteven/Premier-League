@@ -25,6 +25,7 @@ export const auth = (req, res, next) => {
     }
     let tokenMetadata = jwt.verify(token, process.env.JWT_SECRET);
     if (tokenMetadata && (tokenMetadata === 'user' || 'admin')){
+      req.tokenMetadata = tokenMetadata
       next()
     } else {
       res.status(401).json({
@@ -61,6 +62,7 @@ export const adminAuth = (req, res, next) => {
     }
     let tokenMetadata = jwt.verify(token, process.env.JWT_SECRET);
     if (tokenMetadata && (tokenMetadata.role === 'admin')){
+      req.tokenMetadata = tokenMetadata
       next()
     } else {
       res.status(401).json({
