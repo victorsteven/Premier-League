@@ -1,27 +1,34 @@
 import User from '../models/user'
-import { validPassword } from '../utils/password'
 import  { jwtSign }  from '../utils/jwtHelper'
+import jwt from 'jsonwebtoken';
+import config from 'dotenv'
+
+config.config()
+
 
 class LoginService {
-  constructor() {
+  constructor(password) {
     this.user = User
+    this.pass = password
   }
 
   async login(email, password) {
 
     try {
-      const user = await this.user.findOne({ email: email });
 
+      const user = await this.user.findOne({ email: email });
       if(!user) {
         throw new Error('record not found');
       }
-      const correctPass = await validPassword(password, user.password);
+      const correctPass = this.pass.validPassword(password, user.password);
       if (correctPass) {
         let userCred = {
           _id: user._id.toHexString(),
           role: user.role
         }
-        const token = jwtSign(userCred);
+
+       const token = jwt.sign(userCred, process.env.JWT_SECRET, { expiresIn: '24h' }).toString();
+        // const token = jwtSign(userCred);
 
         return token;
       } else {

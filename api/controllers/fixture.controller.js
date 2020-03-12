@@ -65,9 +65,6 @@ class FixtureController {
     let d = new Date();
     let now = ((d.getDate() > 9) ? d.getDate() : ('0' + d.getDate())) + '-' +  ((d.getMonth() > 9) ? (d.getMonth() + 1) : ('0' + (d.getMonth() + 1))) + '-' + d.getFullYear();
 
-    console.log("match day: ", matchday)
-    console.log("now day: ", now)
-
     if(matchday !== now && matchday < now || (matchday.split("-")[2] < now.split("-")[2])){
       return res.status(400).json({
         status: 400,

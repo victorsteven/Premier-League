@@ -7,16 +7,23 @@ import User from '../models/user'
 import  Password from '../utils/password';
 
 chai.use(require('chai-as-promised'))
-const { expect, assert } = chai
+const { expect } = chai
 
 
 describe('AdminService', () => {
 
+  let sandbox = null
+
   let passService
 
   beforeEach(() => {
+    sandbox = sinon.createSandbox();
     passService = new Password()
   });
+
+  afterEach(() => {
+    sandbox.restore()
+  })
 
   describe('createAdmin', () => {
 
@@ -28,21 +35,13 @@ describe('AdminService', () => {
         role: 'admin',
       };
 
-      let sandbox = sinon.createSandbox();
+      const checkStub = sandbox.stub(User, 'findOne').returns(record);
+  
+      const adminService = new AdminService(passService);
 
-      before( async () => {
+      await expect(adminService.createAdmin(record)).to.be.rejectedWith(Error, "record already exist")
+      expect(checkStub.calledOnce).to.be.true;
 
-        const checkStub = sandbox.stub(User, 'findOne').returns(record);
-    
-        const adminService = new AdminService(passService);
-
-        await expect(adminService.createAdmin(record)).to.be.rejectedWith(Error, "record already exist")
-        expect(checkStub.calledOnce).to.be.true;
-
-      });
-      after(() => {
-        sandbox.restore();
-      })
     });
 
     it('should create a new admin', async () => {
@@ -55,28 +54,21 @@ describe('AdminService', () => {
 
       const hash = 'jksdnfkjsdnfskdnfklsdjfkjdsf'
 
-      let sandbox = sinon.createSandbox();
+      const checkStub = sandbox.stub(User, 'findOne').returns(false);
 
-      before( async () => {
+      const passStub = sandbox.stub(passService, 'hashPassword').returns(hash);
+      const createStub = sandbox.stub(User, 'create').returns(stubValue);
 
-        const checkStub = sandbox.stub(User, 'findOne').returns(false);
+      const adminService = new AdminService(passService);
+      const admin = await adminService.createAdmin(stubValue);
 
-        const passStub = sinon.stub(passService, 'hashPassword').returns(hash);
-        const createStub = sinon.stub(User, 'create').returns(stubValue);
+      expect(passStub.calledOnce).to.be.true;
+      expect(checkStub.calledOnce).to.be.true;
+      expect(createStub.calledOnce).to.be.true;
+      expect(admin._id).to.equal(stubValue._id);
+      expect(admin.name).to.equal(stubValue.name);
+      expect(admin.role).to.equal(stubValue.role);
 
-        const adminService = new AdminService(passService);
-        const admin = await adminService.createAdmin(stubValue);
-
-        expect(passStub.calledOnce).to.be.true;
-        expect(checkStub.calledOnce).to.be.true;
-        expect(createStub.calledOnce).to.be.true;
-        expect(admin._id).to.equal(stubValue._id);
-        expect(admin.name).to.equal(stubValue.name);
-        expect(admin.role).to.equal(stubValue.role);
-      })
-      after(() => {
-        sandbox.restore();
-      })
     });
   });
 
@@ -88,21 +80,12 @@ describe('AdminService', () => {
       //any id, fields that the service accepts is assumed to have been  checkedin the controller. That is, only valid data can find there way here. So the "adminId" must be valid
       let adminObjID = new ObjectID("5e682d0d580b5a6fb795b842")
 
-      let sandbox = sinon.createSandbox();
-
-      before( async () => {
-
       const getStub = sandbox.stub(User, 'findOne').returns(false);
       const adminService = new AdminService(passService);
 
       await expect(adminService.getAdmin(adminObjID)).to.be.rejectedWith(Error, "admin does not exist")
       expect(getStub.calledOnce).to.be.true;
-
-      })
-
-      after(() => {
-        sandbox.restore();
-      })
+     
     });
 
     it('should get an admin', async () => {
@@ -115,25 +98,16 @@ describe('AdminService', () => {
 
       let adminObjID = new ObjectID("5e682d0d580b5a6fb795b842")
 
-      let sandbox = sinon.createSandbox();
+      const adminStub = sandbox.stub(User, 'findOne').returns(stubValue);
 
-      before( async () => {
+      const adminService = new AdminService(passService);
+      const admin = await adminService.getAdmin(adminObjID);
 
-        const adminStub = sandbox.stub(User, 'findOne').returns(stubValue);
+      expect(adminStub.calledOnce).to.be.true;
+      expect(admin._id).to.equal(stubValue._id);
+      expect(admin.name).to.equal(stubValue.name);
+      expect(admin.role).to.equal(stubValue.role);
 
-        const adminService = new AdminService(passService);
-        const admin = await adminService.getAdmin(adminObjID);
-
-        expect(adminStub.calledOnce).to.be.true;
-        expect(admin._id).to.equal(stubValue._id);
-        expect(admin.name).to.equal(stubValue.name);
-        expect(admin.role).to.equal(stubValue.role);
-
-      });
-
-      after(() => {
-        sandbox.restore();
-      });
     });
   });
 });

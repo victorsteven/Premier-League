@@ -19,8 +19,9 @@ class UserController {
       (!password || typeof password !== "string")
     ) {
       return res.status(400).json({
+        status: 400,
         error: "ensure that correct details are sent"
-      });
+      })
     }
     if (!validator.validate(email)){
       return res.status(400).json({

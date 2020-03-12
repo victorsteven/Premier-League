@@ -15,7 +15,7 @@ import Password from '../utils/password'
 const pass = new Password()
 const userService = new UserService(pass)
 const adminService = new AdminService(pass)
-const loginService = new LoginService()
+const loginService = new LoginService(pass)
 const teamService = new TeamService()
 const fixtureService = new FixtureService()
 
