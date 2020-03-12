@@ -1,5 +1,4 @@
 import chai from 'chai'
-import chatHttp from 'chai-http';
 import sinon from 'sinon'
 import faker from 'faker'
 
@@ -7,8 +6,6 @@ import AdminController from './admin.controller'
 import AdminService from '../services/admin.service'
 
 
- 
-chai.use(chatHttp);
 const { expect } = chai;
 
 describe("AdminController", () => {

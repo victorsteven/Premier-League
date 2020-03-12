@@ -71,8 +71,8 @@ describe("TeamController", () => {
       };
       const stubAdmin = {
         _id: faker.random.uuid(),
-        firstname: faker.name.findName(),
-        lastname: faker.name.findName()
+        name: faker.name.findName()
+        
       }
 
       const adminStub = sinon.stub(adminService, "getAdmin").returns(stubAdmin);
@@ -413,8 +413,8 @@ describe("TeamController", () => {
 
       const user = {
         _id: faker.random.uuid(),
-        firstname: faker.name.findName(),
-        lastname: faker.name.findName(),
+        name: faker.name.findName()
+        ,
       }
 
       const team = {
@@ -477,8 +477,8 @@ describe("TeamController", () => {
 
       const user = {
         _id: faker.random.uuid(),
-        firstname: faker.name.findName(),
-        lastname: faker.name.findName(),
+        name: faker.name.findName()
+        ,
       }
 
       const teams = [

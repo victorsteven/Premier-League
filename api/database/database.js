@@ -5,9 +5,9 @@ mongoose.Promise = global.Promise;
 
 // var dockerConn = 'mongodb://mongo:27017/premier-league' //using docker
 
-var dockerConn = 'mongodb://localhost:27017/premier-league' //using docker
+const dockerConn = 'mongodb://localhost:27017/premier-league' //using docker
 
-var mongoDB = process.env.MONGODB_URI || dockerConn;
+const mongoDB = process.env.MONGODB_URI || dockerConn;
 
 mongoose.connect(mongoDB, {useNewUrlParser: true});
 
