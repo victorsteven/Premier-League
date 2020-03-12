@@ -13,7 +13,7 @@ import FixtureService from '../services/fixture.service'
 import Password from '../utils/password'
 
 const pass = new Password()
-const userService = new UserService()
+const userService = new UserService(pass)
 const adminService = new AdminService(pass)
 const loginService = new LoginService()
 const teamService = new TeamService()
