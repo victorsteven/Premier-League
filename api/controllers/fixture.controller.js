@@ -1,35 +1,81 @@
-import FixtureService from '../services/fixture.service';
 import _ from 'lodash'
-import  { jwtDecode }  from '../utils/jwtHelper'
-import AdminService from '../services/admin.service';
 import { ObjectID } from 'mongodb';
-import UserService from '../services/user.service';
-import TeamService from '../services/team.service';
 import Fixture from '../models/fixture';
-import Validator from '../utils/inputValidator';
 
 
 
 class FixtureController {
 
-  static async createFixture(req, res) {
+  constructor(userService, adminService, teamService, fixtureService){
+    this.adminService = adminService
+    this.userService = userService
+    this.teamService = teamService
+    this.fixtureService = fixtureService
+  }
+
+  async createFixture(req, res) {
 
     //The tokenMetadata has already been set in the request when the middleware attached to this route ran
     let tokenMetadata = req.tokenMetadata
-    
-    const request =  _.pick(req.body, ['home', 'away', 'matchday', 'matchtime']) 
-
-    const validator = new Validator();
-    validator.validate(request, 'required|objectid|string|matchday|matchtime');
-    if (validator.hasErrors) {
-      return res.status(400).json({
-        status: 400,
-        messages: validator.getErrors(),
+    if(!tokenMetadata) {
+      return res.status(401).json({
+        status: 401,
+        error: "unauthorized",
       });
     }
     
+    const { home, away, matchday, matchtime } = req.body
+
+    if (
+      (!home || typeof home !== "string") || (!away || typeof away !== "string") ||
+      (!matchday || typeof matchday !== "string") || (!matchtime || typeof matchtime !== "string")
+    ) {
+      return res.status(400).json({
+        error: "ensure that correct details are sent"
+      });
+    }
+    if(!ObjectID.isValid(home)){
+      return res.status(400).json({
+        status: 400,
+        error: "home id is not valid"
+      })
+    }
+    if(!ObjectID.isValid(away)){
+      return res.status(400).json({
+        status: 400,
+        error: "away id is not valid"
+      })
+    }
+
+    let day = /^(0[1-9]|[12][0-9]|3[01])[- /.](0[1-9]|1[012])[- /.](19|20)\d\d$/
+    if(!day.test(matchday)){
+      return res.status(400).json({
+        status: 400,
+        error: `matchday must be of the format: 'dd-mm-yyyy'`
+      })
+    }
+    let time = /^$|^(([01][0-9])|(2[0-3])):[0-5][0-9]$/
+    if(!time.test(matchtime)){
+      return res.status(400).json({
+        status: 400,
+        error: `matchtime must be of the format: '10:30 or 07:00'`
+      })
+    }
+
+    let d = new Date();
+    let now = ((d.getDate() > 9) ? d.getDate() : ('0' + d.getDate())) + '-' +  ((d.getMonth() > 9) ? (d.getMonth() + 1) : ('0' + (d.getMonth() + 1))) + '-' + d.getFullYear();
+
+    console.log("match day: ", matchday)
+    console.log("now day: ", now)
+
+    if(matchday !== now && matchday < now || (matchday.split("-")[2] < now.split("-")[2])){
+      return res.status(400).json({
+        status: 400,
+        error: "cannot create a fixture with a past date"
+      })
+    } 
     //the teams must be different
-    if(request.home === request.away){
+    if(home === away){
       return res.status(400).json({
         status: 400,
         error: "You can't create a fixture with the same team"
@@ -41,21 +87,20 @@ class FixtureController {
       let adminId = tokenMetadata._id
 
       //verify that the admin sending this request exist:
-      const admin = await AdminService.getAdmin(adminId)
+      const admin = await this.adminService.getAdmin(adminId)
       
       //check if the home and away teams exists:
-      const homeTeam = await TeamService.getTeam(request.home)
-      const awayTeam = await TeamService.getTeam(request.away)
-      
+      const gottenTeams = await this.teamService.checkTeams(home, away)
+
       const fixture = new Fixture({
-        home: homeTeam._id,
-        away: awayTeam._id,
+        home: gottenTeams.home._id,
+        away: gottenTeams.away._id,
         admin: admin._id,
-        matchday: request.matchday,
-        matchtime: request.matchtime,
+        matchday: matchday,
+        matchtime: matchtime,
       })
 
-      const createFixture = await FixtureService.createFixture(fixture)
+      const createFixture = await this.fixtureService.createFixture(fixture)
       if(createFixture) {
         return res.status(201).json({
           status: 201,
@@ -70,32 +115,72 @@ class FixtureController {
     }
   }
 
-  static async updateFixture(req, res) {
+  async updateFixture(req, res) {
 
     //The tokenMetadata has already been set in the request when the middleware attached to this route ran
     let tokenMetadata = req.tokenMetadata
+    if(!tokenMetadata) {
+      return res.status(401).json({
+        status: 401,
+        error: "unauthorized",
+      });
+    }
 
     //check if the id passed to edit is valid
     var requestId = req.params.id;
     if(!ObjectID.isValid(requestId)){
       return res.status(400).json({
         status: 400,
-        error: "Fixture id is not valid"
+        error: "fixture id is not valid"
       })
     }
-    const request = _.pick(req.body, ['home', 'away', 'matchday', 'matchtime']) 
 
-    const validator = new Validator();
-    validator.validate(request, 'required|string|objectid|matchday|matchtime');
-    if (validator.hasErrors) {
+    const { home, away, matchday, matchtime } = req.body
+
+    if (
+      (!home || typeof home !== "string") || (!away || typeof away !== "string") ||
+      (!matchday || typeof matchday !== "string") || (!matchtime || typeof matchtime !== "string")
+    ) {
       return res.status(400).json({
-        status: 400,
-        messages: validator.getErrors(),
+        error: "ensure that correct details are sent"
       });
     }
-  
+    if(!ObjectID.isValid(home)){
+      return res.status(400).json({
+        status: 400,
+        error: "home id is not valid"
+      })
+    }
+    if(!ObjectID.isValid(away)){
+      return res.status(400).json({
+        status: 400,
+        error: "away id is not valid"
+      })
+    }
+    let day = /^(0[1-9]|[12][0-9]|3[01])[- /.](0[1-9]|1[012])[- /.](19|20)\d\d$/
+    if(!day.test(matchday)){
+      return res.status(400).json({
+        status: 400,
+        error: `matchday must be of the format: 'dd-mm-yyyy'`
+      })
+    }
+    let time = /^$|^(([01][0-9])|(2[0-3])):[0-5][0-9]$/
+    if(!time.test(matchtime)){
+      return res.status(400).json({
+        status: 400,
+        error: `matchtime must be of the format: '10:30 or 07:00'`
+      })
+    }
+    let d = new Date();
+    let now = ((d.getDate() > 9) ? d.getDate() : ('0' + d.getDate())) + '-' +  ((d.getMonth() > 9) ? (d.getMonth() + 1) : ('0' + (d.getMonth() + 1))) + '-' + d.getFullYear();
+    if(matchday !== now && matchday < now || (matchday.split("-")[2] < now.split("-")[2])){
+      return res.status(400).json({
+        status: 400,
+        error: "cannot update a fixture with a past date"
+      })
+    } 
     //the teams must be different
-    if(request.home === request.away){
+    if(home === away){
       return res.status(400).json({
         status: 400,
         error: "You can't update a fixture with the same team"
@@ -107,7 +192,7 @@ class FixtureController {
       let adminId = tokenMetadata._id
 
       //check if the team exist and if the owner is legit, before updating it:
-      const fixture = await FixtureService.adminGetFixture(requestId)
+      const fixture = await this.fixtureService.adminGetFixture(requestId)
       if (fixture.admin._id.toHexString() !== adminId) {
         return res.status(401).json({
           status: 401,
@@ -115,16 +200,15 @@ class FixtureController {
         })
       }
       //check if the home and away teams exists, any error will be handled in the catch block
-      await TeamService.getTeam(request.home)
-      await TeamService.getTeam(request.away)
+      await this.teamService.checkTeams(home, away)
       
       //update the fixtures
-      fixture.home = request.home
-      fixture.away = request.away
-      fixture.matchday = request.matchday
-      fixture.matchtime = request.matchtime
+      fixture.home = home
+      fixture.away = away
+      fixture.matchday = matchday
+      fixture.matchtime = matchtime
 
-      const updateFixture = await FixtureService.updateFixture(fixture)
+      const updateFixture = await this.fixtureService.updateFixture(fixture)
       if(updateFixture) {
         return res.status(200).json({
           status: 200,
@@ -140,16 +224,22 @@ class FixtureController {
   }
 
 
-  static async deleteFixture(req, res) {
+  async deleteFixture(req, res) {
 
      //The tokenMetadata has already been set in the request when the middleware attached to this route ran
-     let tokenMetadata = req.tokenMetadata
+    let tokenMetadata = req.tokenMetadata
+    if(!tokenMetadata) {
+      return res.status(401).json({
+        status: 401,
+        error: "unauthorized",
+      });
+    }
 
     var requestId = req.params.id;
     if(!ObjectID.isValid(requestId)){
       return res.status(400).json({
         status: 400,
-        error: "Team id is not valid"
+        error: "fixture id is not valid"
       })
     }
 
@@ -157,8 +247,8 @@ class FixtureController {
 
       let adminId = tokenMetadata._id
 
-      //check if the team exist and if the owner is legit, before updating it:
-      const fixture = await FixtureService.adminGetFixture(requestId)
+      //check if the fixture exist and if the owner is legit, before updating it:
+      const fixture = await this.fixtureService.adminGetFixture(requestId)
       if (fixture.admin._id.toHexString() !== adminId) {
         return res.status(401).json({
           status: 401,
@@ -166,12 +256,12 @@ class FixtureController {
         })
       }
 
-      //Delete the team
-      const status = await FixtureService.deleteFixture(fixture._id)
+      //Delete the fixture
+      const status = await this.fixtureService.deleteFixture(fixture._id)
       if (status) {
         return res.status(200).json({
           status: 200,
-          data: "Team deleted"
+          data: "fixture deleted"
         })
       }
     } catch(error) {
@@ -182,16 +272,22 @@ class FixtureController {
     }
   }
 
-  static async getFixture(req, res) {
+  async getFixture(req, res) {
 
     //The tokenMetadata has already been set in the request when the middleware attached to this route ran
     let tokenMetadata = req.tokenMetadata
+    if(!tokenMetadata) {
+      return res.status(401).json({
+        status: 401,
+        error: "unauthorized",
+      });
+    }
 
     var requestId = req.params.id;
     if(!ObjectID.isValid(requestId)){
       return res.status(400).json({
         status: 400,
-        error: "Feature id is not valid"
+        error: "fixture id is not valid"
       })
     }
 
@@ -199,10 +295,10 @@ class FixtureController {
 
       let authId = tokenMetadata._id
 
-      //verify if the account that want to view this team exists(weather admin or normal user) 
-      const user = await UserService.getUser(authId)
+      //verify if the account that want to view this fixture exists(weather admin or normal user) 
+      const user = await this.userService.getUser(authId)
       if(user) {
-        const fixture = await FixtureService.getFixture(requestId)
+        const fixture = await this.fixtureService.getFixture(requestId)
         if (fixture) {
           return res.status(200).json({
             status: 200,
@@ -218,19 +314,25 @@ class FixtureController {
     }
   }
 
-  static async getFixtures(req, res) {
+  async getFixtures(req, res) {
 
     //The tokenMetadata has already been set in the request when the middleware attached to this route ran
     let tokenMetadata = req.tokenMetadata
+    if(!tokenMetadata) {
+      return res.status(401).json({
+        status: 401,
+        error: "unauthorized",
+      });
+    }
 
     try {
 
       let authId = tokenMetadata._id
 
-      //verify if the account that want to view this team exists(weather admin or normal user) 
-      const user = await UserService.getUser(authId)
+      //verify if the account that want to view this fixture exists(weather admin or normal user) 
+      const user = await this.userService.getUser(authId)
       if (user) {
-        const fixtures = await FixtureService.getFixtures()
+        const fixtures = await this.fixtureService.getFixtures()
         if (fixtures) {
           return res.status(200).json({
             status: 200,

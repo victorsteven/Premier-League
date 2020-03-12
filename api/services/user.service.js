@@ -5,12 +5,16 @@ import { ObjectID } from 'mongodb';
 
 class UserService {
 
-  static async createUser(user) {
+  constructor() {
+    this.user = User;
+  }
+
+  async createUser(user) {
 
     try {
 
       //check if the user already exist
-      const record = await User.findOne({ email: user.email })
+      const record = await this.user.findOne({ email: user.email })
       if (record) {
         throw new Error('record already exist');
       }
@@ -21,15 +25,14 @@ class UserService {
       user.role = "user"
 
       //create the user
-      const createdUser = await User.create(user);
+      const createdUser = await this.user.create(user);
 
-      const { _id, firstname, lastname, role } = createdUser;
+      const { _id, name, role } = createdUser;
 
       //return user details except email and password:
       const publicUser = { 
         _id,
-        firstname,
-        lastname,
+        name,
         role
       }
 
@@ -42,24 +45,23 @@ class UserService {
 
   //This user can either be an "admin" or a "normal user"
   //This function is used to check if a user is authenticated
-  static async getUser(userId) {
+  async getUser(userId) {
 
     let userObjID = new ObjectID(userId)
 
     try {
 
-      const gottenUser = await User.findOne({ _id: userObjID })
+      const gottenUser = await this.user.findOne({ _id: userObjID })
       if (!gottenUser) {
         throw new Error('no record found, you are not authenticated');
       }
 
-      const { firstname, lastname, role } = gottenUser;
+      const { name, role } = gottenUser;
 
       //return user details except email and password:
       const publicUser = { 
         _id: gottenUser._id,
-        firstname,
-        lastname,
+        name,
         role
       }
 

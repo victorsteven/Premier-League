@@ -12,7 +12,7 @@ export const auth = (req, res, next) => {
     if(!bearToken) {
       res.status(401).json({
         status: 401,
-        message: 'unauthorized, you need to be unauthenticated'
+        error: 'unauthorized, you need to be unauthenticated'
       })
     }
     //split the bearToken and get the token
@@ -20,23 +20,23 @@ export const auth = (req, res, next) => {
     if (!token) {
       res.status(401).json({
         status: 401,
-        message: 'unauthorized: you need to be unauthenticated'
+        error: 'unauthorized: you need to be unauthenticated'
       })
     }
     let tokenMetadata = jwt.verify(token, process.env.JWT_SECRET);
-    if (tokenMetadata && (tokenMetadata === 'user' || 'admin')){
+    if (tokenMetadata && (tokenMetadata.role === 'user' || 'admin')){
       req.tokenMetadata = tokenMetadata
       next()
     } else {
       res.status(401).json({
         status: 401,
-        message: 'unauthorized: you need to be unauthenticated'
+        error: 'unauthorized: you need to be unauthenticated'
       })
     }
   } catch(error) {
     res.status(401).json({
       status: 401,
-      message: `unauthorized ${error.message}`
+      error: `unauthorized ${error.message}`
     })
   }
 }
@@ -49,7 +49,7 @@ export const adminAuth = (req, res, next) => {
     if(!bearToken) {
       res.status(401).json({
         status: 401,
-        message: 'unauthorized: you are not an admin'
+        error: 'unauthorized: you are not an admin'
       })
     }
     //split the bearToken and get the token
@@ -57,7 +57,7 @@ export const adminAuth = (req, res, next) => {
     if (!token) {
       res.status(401).json({
         status: 401,
-        message: 'unauthorized: you are not an admin'
+        error: 'unauthorized: you are not an admin'
       })
     }
     let tokenMetadata = jwt.verify(token, process.env.JWT_SECRET);
@@ -67,13 +67,13 @@ export const adminAuth = (req, res, next) => {
     } else {
       res.status(401).json({
         status: 401,
-        message: 'unauthorized: you are not an admin'
+        error: 'unauthorized: you are not an admin'
       })
     }
   } catch(error) {
     res.status(401).json({
       status: 401,
-      message: `unauthorized: ${error.message}`
+      error: `unauthorized: ${error.message}`
     })
   }
 }

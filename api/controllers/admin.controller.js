@@ -1,35 +1,42 @@
-import AdminService from '../services/admin.service';
-import _ from 'lodash'
+import validator from  "email-validator"
 import User from '../models/user'
-import Validator from '../utils/inputValidator';
 
 
 
 class AdminController {
+  constructor(adminService) {
+    this.adminService = adminService
+  }
 
-  static async createAdmin(req, res) {
+  async createAdmin(req, res) {
 
-    const request =  _.pick(req.body, ['firstname', 'lastname', 'email', 'password'])
-    
-    const validator = new Validator();
-    validator.validate(request, 'required|string|email');
-    if (validator.hasErrors) {
+    const { name, email, password } =  req.body
+
+    if (
+      (!name || typeof name !== "string") ||
+      (!email || typeof email !== "string") ||
+      (!password || typeof password !== "string")
+    ) {
       return res.status(400).json({
         status: 400,
-        messages: validator.getErrors(),
-      });
+        error: "ensure that correct details are sent"
+      })
     }
-
+    if (!validator.validate(email)){
+      return res.status(400).json({
+        status: 400,
+        error: "invalid email"
+      })
+    }
+    
     let admin = new User({
-      firstname: request.firstname.trim(),
-      lastname: request.lastname.trim(),
-      email: request.email.trim(),
-      password: request.password.trim(),
+      name: name.trim(),
+      email: email.trim(),
+      password: password.trim(),
     })
 
-
     try {
-      const createAdmin = await AdminService.createAdmin(admin)
+      const createAdmin = await this.adminService.createAdmin(admin)
       if(createAdmin) {
         return res.status(201).json({
           status: 201,

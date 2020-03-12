@@ -1,34 +1,41 @@
-import UserService from '../services/user.service';
+import validator from  "email-validator"
 import User from '../models/user'
-import _ from 'lodash'
-import Validator from '../utils/inputValidator';
 
 
 
 class UserController {
 
-  static async createUser(req, res) {
+  constructor(userService){
+    this.userService = userService
+  }
 
-    const request =  _.pick(req.body, ['firstname', 'lastname', 'email', 'password']) 
+  async createUser(req, res) {
 
-    const validator = new Validator();
-    validator.validate(request, 'required|string|email');
-    if (validator.hasErrors) {
+    const { name, email, password } =  req.body
+
+    if (
+      (!name || typeof name !== "string") ||
+      (!email || typeof email !== "string") ||
+      (!password || typeof password !== "string")
+    ) {
       return res.status(400).json({
-        status: 400,
-        messages: validator.getErrors(),
+        error: "ensure that correct details are sent"
       });
     }
-
+    if (!validator.validate(email)){
+      return res.status(400).json({
+        error: "invalid email"
+      });
+    }
+    
     let user = new User({
-      firstname: request.firstname.trim(),
-      lastname: request.lastname.trim(),
-      email: request.email.trim(),
-      password: request.password.trim(),
+      name: name.trim(),
+      email: email.trim(),
+      password: password.trim(),
     })
 
     try {
-      const createUser = await UserService.createUser(user)
+      const createUser = await this.userService.createUser(user)
       if(createUser) {
         return res.status(201).json({
           status: 201,
@@ -43,5 +50,6 @@ class UserController {
     }
   }
 }
+
 
 export default UserController

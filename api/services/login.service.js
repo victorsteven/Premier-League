@@ -3,16 +3,19 @@ import { validPassword } from '../utils/password'
 import  { jwtSign }  from '../utils/jwtHelper'
 
 class LoginService {
+  constructor() {
+    this.user = User
+  }
 
-  static async login(login) {
+  async login(email, password) {
 
     try {
-      const user = await User.findOne({ email: login.email });
+      const user = await this.user.findOne({ email: email });
 
       if(!user) {
         throw new Error('record not found');
       }
-      const correctPass = await validPassword(login.password, user.password);
+      const correctPass = await validPassword(password, user.password);
       if (correctPass) {
         let userCred = {
           _id: user._id.toHexString(),

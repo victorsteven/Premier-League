@@ -4,10 +4,7 @@ import mongoose from 'mongoose'
 var Schema = mongoose.Schema;
 
 var UserSchema = new Schema({
-  firstname: {
-    type: String, required: true, max: 100
-  },
-  lastname: {
+  name: {
     type: String, required: true, max: 100
   },
   email: {

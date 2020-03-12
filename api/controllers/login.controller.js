@@ -1,26 +1,33 @@
-import LoginService from '../services/login.service'
-import _ from 'lodash'
-import Validator from '../utils/inputValidator';
+import validator from  "email-validator"
 
 
 class LoginController {
+  constructor(loginService) {
+    this.loginService = loginService
+  }
 
-  static async login(req, res) {
+  async login(req, res) {
 
-    //take only what we need
-    const request = _.pick(req.body, ['email', 'password'])
+    const { email, password } =  req.body
 
-    const validator = new Validator();
-    validator.validate(request, 'required|string|email');
-    if (validator.hasErrors) {
+    if (
+      (!email || typeof email !== "string") ||
+      (!password || typeof password !== "string")
+    ) {
       return res.status(400).json({
         status: 400,
-        messages: validator.getErrors(),
-      });
+        error: "ensure that correct details are sent"
+      })
     }
-
+    if (!validator.validate(email)){
+      return res.status(400).json({
+        status: 400,
+        error: "invalid email"
+      })
+    }
+    
     try {
-      const token = await LoginService.login(request)
+      const token = await this.loginService.login(email, password)
       if(!token) {
         return res.status(500).json({
           status: 500,

@@ -1,30 +1,30 @@
-import TeamService from '../services/team.service';
-import _ from 'lodash'
-import  { jwtDecode }  from '../utils/jwtHelper'
-import AdminService from '../services/admin.service';
 import { ObjectID } from 'mongodb';
-import UserService from '../services/user.service';
 import Team from '../models/team'
-import Validator from '../utils/inputValidator';
-
 
 
 
 class TeamController {
+  constructor(userService, adminService, teamService){
+    this.adminService = adminService
+    this.userService = userService
+    this.teamService = teamService
+  }
 
-  static async createTeam(req, res) {
+  async createTeam(req, res) {
 
     //The tokenMetadata has already been set in the request when the middleware attached to this route ran
     let tokenMetadata = req.tokenMetadata
+    if(!tokenMetadata) {
+      return res.status(401).json({
+        status: 401,
+        error: "unauthorized",
+      });
+    }
+    const { name } = req.body
 
-    const request =  _.pick(req.body, 'name') 
-
-    const validator = new Validator();
-    validator.validate(request, 'required|string');
-    if (validator.hasErrors) {
+    if (!name || typeof name !== "string") {
       return res.status(400).json({
-        status: 400,
-        messages: validator.getErrors(),
+        error: "a valid team name is required"
       });
     }
 
@@ -33,14 +33,14 @@ class TeamController {
       let adminId = tokenMetadata._id
 
       //verify that the admin sending this request exist:
-      const admin = await AdminService.getAdmin(adminId)
+      const admin = await this.adminService.getAdmin(adminId)
       
       const team = new Team({
-        name: request.name.trim(),
+        name: name.trim(),
         admin:  admin._id
       })
 
-      const createTeam = await TeamService.createTeam(team)
+      const createTeam = await this.teamService.createTeam(team)
       if(createTeam) {
         return res.status(201).json({
           status: 201,
@@ -55,27 +55,30 @@ class TeamController {
     }
   }
 
-  static async updateTeam(req, res) {
+  async updateTeam(req, res) {
 
     //The tokenMetadata has already been set in the request when the middleware attached to this route ran
     let tokenMetadata = req.tokenMetadata
+    if(!tokenMetadata) {
+      return res.status(401).json({
+        status: 401,
+        error: "unauthorized",
+      });
+    }
 
     var teamId = req.params.id;
     if(!ObjectID.isValid(teamId)){
       return res.status(400).json({
         status: 400,
-        error: "Team id is not valid"
+        error: "team id is not valid"
       })
     }
-    const request =  _.pick(req.body, 'name') 
 
-    const validator = new Validator();
-    validator.validate(request, 'required|string');
+    const { name } = req.body
 
-    if (validator.hasErrors) {
+    if (!name || typeof name !== "string") {
       return res.status(400).json({
-        status: 400,
-        messages: validator.getErrors(),
+        error: "a valid team name is required"
       });
     }
 
@@ -84,7 +87,8 @@ class TeamController {
       let adminId = tokenMetadata._id
 
       //check if the team exist and if the owner is legit, before updating it:
-      const team = await TeamService.adminGetTeam(teamId)
+      const team = await this.teamService.adminGetTeam(teamId)
+
       if (team.admin._id.toHexString() !== adminId) {
         return res.status(401).json({
           status: 401,
@@ -92,9 +96,9 @@ class TeamController {
         })
       }
 
-      team.name = request.name
+      team.name = name
       
-      const updateTeam = await TeamService.updateTeam(team)
+      const updateTeam = await this.teamService.updateTeam(team)
       if(updateTeam) {
         return res.status(200).json({
           status: 200,
@@ -109,16 +113,22 @@ class TeamController {
     }
   }
 
-  static async deleteTeam(req, res) {
+  async deleteTeam(req, res) {
 
     //The tokenMetadata has already been set in the request when the middleware attached to this route ran
     let tokenMetadata = req.tokenMetadata
+    if(!tokenMetadata) {
+      return res.status(401).json({
+        status: 401,
+        error: "unauthorized",
+      });
+    }
 
     var teamId = req.params.id;
     if(!ObjectID.isValid(teamId)){
       return res.status(400).json({
         status: 400,
-        error: "Team id is not valid"
+        error: "team id is not valid"
       })
     }
 
@@ -127,7 +137,7 @@ class TeamController {
       let adminId = tokenMetadata._id
 
       //check if the team exist and if the owner is legit, before updating it:
-      const team = await TeamService.adminGetTeam(teamId)
+      const team = await this.teamService.adminGetTeam(teamId)
       if (team.admin._id.toHexString() !== adminId) {
         return res.status(401).json({
           status: 401,
@@ -136,11 +146,11 @@ class TeamController {
       }
 
       //Delete the team
-      const status = await TeamService.deleteTeam(teamId)
+      const status = await this.teamService.deleteTeam(teamId)
       if (status) {
         return res.status(200).json({
           status: 200,
-          data: "Team deleted"
+          data: "team deleted"
         })
       }
     } catch(error) {
@@ -151,16 +161,22 @@ class TeamController {
     }
   }
 
-  static async getTeam(req, res) {
+  async getTeam(req, res) {
 
     //The tokenMetadata has already been set in the request when the middleware attached to this route ran
     let tokenMetadata = req.tokenMetadata
+    if(!tokenMetadata) {
+      return res.status(401).json({
+        status: 401,
+        error: "unauthorized",
+      });
+    }
 
     var teamId = req.params.id;
     if(!ObjectID.isValid(teamId)){
       return res.status(400).json({
         status: 400,
-        error: "Team id is not valid"
+        error: "team id is not valid"
       })
     }
 
@@ -170,10 +186,10 @@ class TeamController {
 
       //verify if the account that want to view this team exists(weather admin or normal user) 
       //if an error, it will be handled in the catch block
-      await UserService.getUser(authId)
+      await this.userService.getUser(authId)
       
       try {
-        const gottenTeam = await TeamService.getTeam(teamId)
+        const gottenTeam = await this.teamService.getTeam(teamId)
         if (gottenTeam) {
           return res.status(200).json({
             status: 200,
@@ -191,19 +207,26 @@ class TeamController {
     }
   }
 
-  static async getTeams(req, res) {
+
+  async getTeams(req, res) {
 
     //The tokenMetadata has already been set in the request when the middleware attached to this route ran
     let tokenMetadata = req.tokenMetadata
+    if(!tokenMetadata) {
+      return res.status(401).json({
+        status: 401,
+        error: "unauthorized",
+      });
+    }
 
     try {
 
       let authId = tokenMetadata._id
 
       //verify if the account that want to view this team exists(weather admin or normal user) 
-      const user = await UserService.getUser(authId)
+      const user = await this.userService.getUser(authId)
       if (user) {
-        const teams = await TeamService.getTeams()
+        const teams = await this.teamService.getTeams()
         if (teams) {
           return res.status(200).json({
             status: 200,

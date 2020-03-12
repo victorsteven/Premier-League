@@ -4,13 +4,16 @@ import { ObjectID } from 'mongodb'
 
 
 class AdminService {
+  constructor() {
+    this.user = User
+  }
 
-  static async createAdmin(admin) {
+  async createAdmin(admin) {
 
     try {
 
       //check if the admin already exist
-      const record = await User.findOne({ email: admin.email })
+      const record = await this.user.findOne({ email: admin.email })
       if (record) {
         throw new Error('record already exist');
       }
@@ -20,15 +23,14 @@ class AdminService {
       //The admin have the role of admin
       admin.role = "admin"
 
-      const createdAdmin = await User.create(admin);
+      const createdAdmin = await this.user.create(admin);
 
-      const { _id, firstname, lastname, role } = createdAdmin;
+      const { _id, name, role } = createdAdmin;
 
       //return admin details except email and password:
       const publicAdmin = { 
         _id,
-        firstname,
-        lastname,
+        name,
         role
       }
 
@@ -39,13 +41,13 @@ class AdminService {
     }
   }
 
-  static async getAdmin(adminId) {
+  async getAdmin(adminId) {
 
     try {
 
       let adminObjID = new ObjectID(adminId)
       
-      const gottenAdmin = await User.findOne({ _id: adminObjID })
+      const gottenAdmin = await this.user.findOne({ _id: adminObjID })
       if (!gottenAdmin || gottenAdmin.role !== 'admin') {
         throw new Error('admin does not exist');
       }

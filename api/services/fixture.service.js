@@ -4,11 +4,15 @@ import { ObjectID } from 'mongodb';
 
 class FixtureService {
 
-  static async createFixture(fixture) {
+  constructor() {
+    this.fixture = Fixture;
+  }
+
+   async createFixture(fixture) {
 
     try {
 
-      const record = await Fixture.findOne({
+      const record = await this.fixture.findOne({
         $and: [
           { home: fixture.home }, { away: fixture.away }
         ]
@@ -17,7 +21,7 @@ class FixtureService {
         throw new Error('fixture already exist');
       }
 
-      const createdFixture = await Fixture.create(fixture);
+      const createdFixture = await this.fixture.create(fixture);
 
       return createdFixture
 
@@ -27,13 +31,13 @@ class FixtureService {
   }
 
   //this is only used by the admin when he want to do things like update or delete
-  static async adminGetFixture(fixtureId) {
+   async adminGetFixture(fixtureId) {
 
     try {
 
       let fixtureIdObj = new ObjectID(fixtureId)
 
-      const gottenFixture = await Fixture.findOne({ _id: fixtureIdObj })
+      const gottenFixture = await this.fixture.findOne({ _id: fixtureIdObj })
       if (!gottenFixture) {
         throw new Error('no record found');
       }
@@ -46,13 +50,13 @@ class FixtureService {
   }
 
   //This fixture can both be seen by the user and the admin
-  static async getFixture(fixtureId) {
+   async getFixture(fixtureId) {
 
     try {
 
       let fixtureIdObj = new ObjectID(fixtureId)
 
-      const gottenFixture = await Fixture.findOne({ _id: fixtureIdObj }, { admin: 0 })
+      const gottenFixture = await this.fixture.findOne({ _id: fixtureIdObj }, { admin: 0 })
                                           .select('-__v')
                                           .populate('home', '_id name')
                                           .populate('away', '_id name')
@@ -66,11 +70,11 @@ class FixtureService {
     }
   }
 
-  static async updateFixture(fixture) {
+   async updateFixture(fixture) {
 
     try {
 
-      const record = await Fixture.findOne({
+      const record = await this.fixture.findOne({
         $and: [
           { home: fixture.home }, { away: fixture.away }
         ]
@@ -79,7 +83,7 @@ class FixtureService {
       if (record && record._id.toHexString() !== fixture._id.toHexString()) {
         throw new Error('fixture already exist');
       } 
-      const updatedFixture = await Fixture.findOneAndUpdate(
+      const updatedFixture = await this.fixture.findOneAndUpdate(
         { _id: fixture._id}, 
         { $set: fixture },
         { "new": true},
@@ -92,11 +96,11 @@ class FixtureService {
     }
   }
 
-  static async getFixtures() {
+   async getFixtures() {
 
     try {
 
-      const gottenFixtures = await Fixture.find()
+      const gottenFixtures = await this.fixture.find()
                                           .select('-admin')
                                           .select('-__v')
                                           .populate('home', '_id name')
@@ -112,15 +116,15 @@ class FixtureService {
     }
   }
 
-  static async deleteFixture(fixtureId) {
+   async deleteFixture(fixtureId) {
 
     try {
 
-      const deletedFixture = await Fixture.deleteOne({ _id: fixtureId })
-      if (!deletedFixture) {
+      const deleted = await this.fixture.deleteOne({ _id: fixtureId })
+      if (!deleted) {
         throw new Error('no record found');
       }
-      return deletedFixture
+      return deleted
 
     } catch(error) {
       throw error;
