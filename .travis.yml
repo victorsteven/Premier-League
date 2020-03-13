@@ -19,7 +19,10 @@ install:
   - mkdir -p data/db
   - mongod --dbpath=data/db &
   - sleep 3
-script:
 
+script:
   - mongo --eval 'db.hostInfo()'
   - npm test
+
+after_success:
+  - npm run coverage
