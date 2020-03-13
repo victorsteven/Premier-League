@@ -1,6 +1,7 @@
 import chai from 'chai'
 import sinon from 'sinon'
 import faker from 'faker'
+import jwt from 'jsonwebtoken';
 import { ObjectID } from 'mongodb'
 import User from '../models/user'
 import  Password from '../utils/password';
@@ -74,18 +75,22 @@ describe('LoginService', () => {
         _id:  new ObjectID("5e682d0d580b5a6fb795b842"), //we need to make sure this is valid
         name: faker.name.findName(),
       };
+      let stubToken = "jkndndfnskdjnfskjdnfjksdnf"
 
       const checkStub = sandbox.stub(User, 'findOne').returns(stubValue); //the have the user
-
       const passStub = sandbox.stub(passService, 'validPassword').returns(true); //the passwords match
+      const jwtStub = sandbox.stub(jwt, 'sign').returns(stubToken); //our fake token
 
       const loginService = new LoginService(passService);
       const token = await loginService.login(email, password);
 
       expect(passStub.calledOnce).to.be.true;
       expect(checkStub.calledOnce).to.be.true;
+      expect(jwtStub.calledOnce).to.be.true;
+
       expect(token).to.not.be.null;
       expect(token).to.have.length.greaterThan(0);
+      expect(token).to.equal(stubToken);
     });
   });
 });
