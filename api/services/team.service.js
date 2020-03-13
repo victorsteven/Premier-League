@@ -52,7 +52,7 @@ class TeamService {
 
       let teamIdObj = new ObjectID(teamId)
 
-      const gottenTeam = await this.team.findOne({ _id: teamIdObj }, { admin: 0}).select('-__v')
+      const gottenTeam = await this.team.findOne({ _id: teamIdObj }, { admin: 0}).select('-__v').exec()
       if (!gottenTeam) {
         throw new Error('no record found');
       }
@@ -67,7 +67,7 @@ class TeamService {
 
     try {
 
-      const gottenTeams = await this.team.find().select('-admin').select('-__v')
+      const gottenTeams = await this.team.find().select('-admin').select('-__v').exec()
       if (!gottenTeams) {
         throw new Error('no record found');
       }
@@ -110,38 +110,34 @@ class TeamService {
 
       let teamIdObj = new ObjectID(teamId)
 
-      const deletedTeam = await this.team.deleteOne({ _id: teamIdObj })
-      if (!deletedTeam) {
+      const deleted = await this.team.deleteOne({ _id: teamIdObj })
+      if (!deleted) {
         throw new Error('no record found');
       }
-      return deletedTeam
+      return deleted
 
     } catch(error) {
       throw error;
     }
   }
 
+  //use to confirm if the teams exist before a fixture can be created
   async checkTeams(homeId, awayId) {
+
     try {
 
-      let homeIdObj = new ObjectID(homeId)
-      let awayIdObj = new ObjectID(awayId)
+      const ids = [
+        new ObjectID(homeId),
+        new ObjectID(awayId)
+      ];
 
-      const homeTeam = await this.team.findOne({ _id: homeIdObj }, { admin: 0}).select('-__v')
-      if (!homeTeam) {
-        throw new Error('home team not found');
+      let records = await this.team.find().where('_id').in(ids).exec();
+
+      if(records.length !== 2) { //the record must be two
+        throw new Error('make sure that both teams exist');
       }
-      const awayTeam = await this.team.findOne({ _id: awayIdObj }, { admin: 0}).select('-__v')
-      if (!awayTeam) {
-        throw new Error('away team not found');
-      }
 
-      let gottenTeams = {
-                home: homeTeam,
-                away: awayTeam
-              }
-
-      return  gottenTeams
+      return records
 
     } catch(error) {
       throw error;

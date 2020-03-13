@@ -221,8 +221,6 @@ describe("TeamController", () => {
 
       await teamController.updateTeam(req, res);
 
-      console.log("the res: ", json.args[0][0])
-
       expect(formerStub.calledOnce).to.be.true;
       expect(stub.calledOnce).to.be.true;
       expect(status.calledOnce).to.be.true;

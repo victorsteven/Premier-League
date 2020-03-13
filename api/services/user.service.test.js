@@ -75,7 +75,7 @@ describe('UserService', () => {
 
   describe('getUser', () => {
 
-    it('should not get a new user if record does not exists', async () => {
+    it('should not get a user if record does not exists', async () => {
 
       //any id, fields that the service accepts is assumed to have been  checkedin the controller. That is, only valid data can find there way here. So the "userId" must be valid
       let userObjID = new ObjectID("5e682d0d580b5a6fb795b842")

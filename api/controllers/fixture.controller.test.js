@@ -184,6 +184,28 @@ describe("FixtureController", () => {
       expect(json.args[0][0].error).to.equal("matchtime must be of the format: '10:30 or 07:00'");
     });
 
+    it("should not create a fixture with past date", async () => {
+
+      const req = {
+        body: { 
+          home: "5e67f24197392c3415b5cf92",
+          away: "5e67f24197392c3415b5cf92",
+          matchday: "15-12-1988",
+          matchtime: "10:30"
+        },
+        tokenMetadata: { _id: faker.random.uuid() }
+      };
+
+      fixtureController = new FixtureController(userService, adminService, teamService, fixtureService);
+
+      await fixtureController.createFixture(req, res);
+
+      expect(status.calledOnce).to.be.true;
+      expect(status.args[0][0]).to.equal(400);
+      expect(json.calledOnce).to.be.true;
+      expect(json.args[0][0].error).to.equal("can't create a fixture with a past date");
+    });
+
 
     it("should create a fixture successfully", async () => {
 
@@ -260,7 +282,7 @@ describe("FixtureController", () => {
         body: { 
           home: "5e67f24197392c3415b5cf92",
           away: "5e6435c01386fbcaba160b89",
-          matchday: "12-12-2020",
+          matchday: "12-12-2050",
           matchtime: "10:30",
         },
         params: { id: "5e6403c9e4ca0f9fce20b1b3"} //this id is valid
@@ -281,7 +303,7 @@ describe("FixtureController", () => {
         body: { 
           home: "5e67f24197392c3415b5cf92",
           away: "5e6435c01386fbcaba160b89",
-          matchday: "12-12-2020",
+          matchday: "12-12-2050",
           matchtime: "10:30",
         },
         tokenMetadata: { _id: faker.random.uuid() },
@@ -330,7 +352,7 @@ describe("FixtureController", () => {
         body: { 
           home: "5e67f24197392c3415b5cf92xxxx",
           away: "5e6435c01386fbcaba160b89",
-          matchday: "20-12-2020",
+          matchday: "20-12-2050",
           matchtime: "10:30"
         },
         tokenMetadata: { _id: faker.random.uuid() },
@@ -354,7 +376,7 @@ describe("FixtureController", () => {
         body: { 
           home: "5e67f24197392c3415b5cf92",
           away: "5e6435c01386fbcaba160b89xxxx",
-          matchday: "20-12-2020",
+          matchday: "20-12-2050",
           matchtime: "10:30"
         },
         tokenMetadata: { _id: faker.random.uuid() },
@@ -379,7 +401,7 @@ describe("FixtureController", () => {
         body: { 
           home: "5e67f24197392c3415b5cf92", //the home is the same as the away
           away: "5e67f24197392c3415b5cf92",
-          matchday: "12-12-2020",
+          matchday: "12-12-2050",
           matchtime: "10:30"
         },
         tokenMetadata: { _id: faker.random.uuid() },
@@ -404,7 +426,7 @@ describe("FixtureController", () => {
         body: { 
           home: "5e67f24197392c3415b5cf92",
           away: "5e6435c01386fbcaba160b89",
-          matchday: "20-14-2020", //the month is invalid (format used: dd-mm-yyyy)
+          matchday: "20-14-2050", //the month is invalid (format used: dd-mm-yyyy)
           matchtime: "10:30"
         },
         tokenMetadata: { _id: faker.random.uuid() },
@@ -429,7 +451,7 @@ describe("FixtureController", () => {
         body: { 
           home: "5e67f24197392c3415b5cf92",
           away: "5e6435c01386fbcaba160b89",
-          matchday: "20-06-2020", 
+          matchday: "20-06-2050", 
           matchtime: "7:pm" //the time is invalid (format used: 10:30 or 07:00)
         },
         tokenMetadata: { _id: faker.random.uuid() },
@@ -447,13 +469,37 @@ describe("FixtureController", () => {
       expect(json.args[0][0].error).to.equal("matchtime must be of the format: '10:30 or 07:00'");
     });
 
+    it("should not update a fixture with past date", async () => {
+
+      const req = {
+        body: { 
+          home: "5e67f24197392c3415b5cf92",
+          away: "5e6435c01386fbcaba160b89",
+          matchday: "20-06-1999", //the year is in the past
+          matchtime: "07:00" 
+        },
+        tokenMetadata: { _id: faker.random.uuid() },
+        
+        params: { id: "5e6403c9e4ca0f9fce20b1b3"} //this id is valid
+      };
+
+      fixtureController = new FixtureController(userService, adminService, teamService, fixtureService);
+
+      await fixtureController.updateFixture(req, res);
+
+      expect(status.calledOnce).to.be.true;
+      expect(status.args[0][0]).to.equal(400);
+      expect(json.calledOnce).to.be.true;
+      expect(json.args[0][0].error).to.equal("can't update a fixture with a past date");
+    });
+
     it("should not update a fixture with unauthorized admin", async () => {
 
       const req = {
         body: { 
           home: "5e642cbbf0833bc1c47429d4",
           away: "5e642be7f0833bc1c47429d1",
-          matchday: "20-03-2020",
+          matchday: "20-03-2050",
           matchtime: "03:30"
         },
         //we need to make sure that the id matches with the one from the fixture
@@ -490,7 +536,7 @@ describe("FixtureController", () => {
         body: { 
           home: "5e642cbbf0833bc1c47429d4",
           away: "5e642be7f0833bc1c47429d1",
-          matchday: "20-03-2020",
+          matchday: "20-03-2050",
           matchtime: "03:30"
         },
         //we need to make sure that the id matches with the one from the fixture
@@ -659,8 +705,6 @@ describe("FixtureController", () => {
       fixtureController = new FixtureController(userService, adminService, teamService, fixtureService);
 
       await fixtureController.deleteFixture(req, res);
-
-      console.log("the one: ", json.args[0][0])
 
       expect(formerStub.calledOnce).to.be.true;
       expect(stub.calledOnce).to.be.true;

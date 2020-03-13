@@ -18,7 +18,7 @@ class FixtureService {
         ]
       })
       if (record) {
-        throw new Error('fixture already exist');
+        throw new Error('record already exist');
       }
 
       const createdFixture = await this.fixture.create(fixture);
@@ -60,6 +60,7 @@ class FixtureService {
                                           .select('-__v')
                                           .populate('home', '_id name')
                                           .populate('away', '_id name')
+                                          .exec()
       if (!gottenFixture) {
         throw new Error('no record found');
       }
@@ -79,10 +80,12 @@ class FixtureService {
           { home: fixture.home }, { away: fixture.away }
         ]
       })
+
       //If the same record is passed to be updated for a particular given fixture id, allow it, else throw already exist error
-      if (record && record._id.toHexString() !== fixture._id.toHexString()) {
-        throw new Error('fixture already exist');
+      if (record && (record._id.toHexString() !== fixture._id.toHexString())) {
+        throw new Error('record already exist');
       } 
+      
       const updatedFixture = await this.fixture.findOneAndUpdate(
         { _id: fixture._id}, 
         { $set: fixture },
@@ -101,10 +104,11 @@ class FixtureService {
     try {
 
       const gottenFixtures = await this.fixture.find()
-                                          .select('-admin')
-                                          .select('-__v')
-                                          .populate('home', '_id name')
-                                          .populate('away', '_id name')
+                                                .select('-admin')
+                                                .select('-__v')
+                                                .populate('home', '_id name')
+                                                .populate('away', '_id name')
+                                                .exec()
 
       if (!gottenFixtures) {
         throw new Error('no record found');

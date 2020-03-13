@@ -68,8 +68,6 @@ describe("UserController", () => {
 
       await userController.createUser(req, res);
 
-      console.log("the res: ", json.args[0][0])
-
       expect(stub.calledOnce).to.be.true;
       expect(status.calledOnce).to.be.true;
       expect(status.args[0][0]).to.equal(201);

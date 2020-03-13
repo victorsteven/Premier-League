@@ -62,15 +62,19 @@ class FixtureController {
       })
     }
 
-    let d = new Date();
-    let now = ((d.getDate() > 9) ? d.getDate() : ('0' + d.getDate())) + '-' +  ((d.getMonth() > 9) ? (d.getMonth() + 1) : ('0' + (d.getMonth() + 1))) + '-' + d.getFullYear();
+    let date = new Date();
 
-    if(matchday !== now && matchday < now || (matchday.split("-")[2] < now.split("-")[2])){
+    let matchdate = matchday.split("-")[2] + "-" + matchday.split("-")[1] + "-" + matchday.split("-")[0] + ":" + matchtime
+
+    let matchd = new Date(matchdate)
+
+    if (matchd !== date && matchd < date ){
       return res.status(400).json({
         status: 400,
-        error: "cannot create a fixture with a past date"
+        error: "can't create a fixture with a past date"
       })
-    } 
+    }
+
     //the teams must be different
     if(home === away){
       return res.status(400).json({
@@ -86,12 +90,12 @@ class FixtureController {
       //verify that the admin sending this request exist:
       const admin = await this.adminService.getAdmin(adminId)
       
-      //check if the home and away teams exists:
-      const gottenTeams = await this.teamService.checkTeams(home, away)
+      //check if the home and away teams exists, if any error, it will handled in the catch block
+      await this.teamService.checkTeams(home, away)
 
       const fixture = new Fixture({
-        home: gottenTeams.home._id,
-        away: gottenTeams.away._id,
+        home: home,
+        away: away,
         admin: admin._id,
         matchday: matchday,
         matchtime: matchtime,
@@ -168,14 +172,19 @@ class FixtureController {
         error: `matchtime must be of the format: '10:30 or 07:00'`
       })
     }
-    let d = new Date();
-    let now = ((d.getDate() > 9) ? d.getDate() : ('0' + d.getDate())) + '-' +  ((d.getMonth() > 9) ? (d.getMonth() + 1) : ('0' + (d.getMonth() + 1))) + '-' + d.getFullYear();
-    if(matchday !== now && matchday < now || (matchday.split("-")[2] < now.split("-")[2])){
+    let date = new Date();
+
+    let matchdate = matchday.split("-")[2] + "-" + matchday.split("-")[1] + "-" + matchday.split("-")[0] + ":" + matchtime
+
+    let matchd = new Date(matchdate)
+
+    if (matchd !== date && matchd < date ){
       return res.status(400).json({
         status: 400,
-        error: "cannot update a fixture with a past date"
+        error: "can't update a fixture with a past date"
       })
-    } 
+    }
+
     //the teams must be different
     if(home === away){
       return res.status(400).json({

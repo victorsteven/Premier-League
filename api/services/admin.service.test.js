@@ -75,7 +75,7 @@ describe('AdminService', () => {
 
   describe('getAdmin', () => {
 
-    it('should not get a new admin if record does not exists', async () => {
+    it('should not get an admin if record does not exists', async () => {
 
       //any id, fields that the service accepts is assumed to have been  checkedin the controller. That is, only valid data can find there way here. So the "adminId" must be valid
       let adminObjID = new ObjectID("5e682d0d580b5a6fb795b842")

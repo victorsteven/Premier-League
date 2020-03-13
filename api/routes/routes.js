@@ -4,13 +4,14 @@ import AdminController from '../controllers/admin.controller'
 import LoginController from '../controllers/login.controller'
 import TeamController from '../controllers/team.controller';
 import FixtureController from '../controllers/fixture.controller';
-import { auth, adminAuth } from '../middlewares/middlewares'
 import UserService from '../services/user.service'
 import LoginService from '../services/login.service'
 import AdminService from '../services/admin.service'
 import TeamService from '../services/team.service'
 import FixtureService from '../services/fixture.service'
 import Password from '../utils/password'
+import { auth, adminAuth } from '../middlewares/middlewares'
+
 
 const pass = new Password()
 const userService = new UserService(pass)
@@ -23,7 +24,7 @@ const fixtureService = new FixtureService()
 const userController = new UserController(userService)
 const adminController = new AdminController(adminService)
 const loginController = new LoginController(loginService)
-const teamController = new TeamController(userService, adminService, teamService)
+const teamController = new TeamController(userService, adminService, teamService, fixtureService)
 const fixtureController = new FixtureController(userService, adminService, teamService, fixtureService)
 
 

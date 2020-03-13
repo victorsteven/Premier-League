@@ -1,5 +1,4 @@
 import User from '../models/user'
-import  { jwtSign }  from '../utils/jwtHelper'
 import jwt from 'jsonwebtoken';
 import config from 'dotenv'
 
@@ -28,7 +27,6 @@ class LoginService {
         }
 
        const token = jwt.sign(userCred, process.env.JWT_SECRET, { expiresIn: '24h' }).toString();
-        // const token = jwtSign(userCred);
 
         return token;
       } else {
