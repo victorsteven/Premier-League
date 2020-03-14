@@ -12,9 +12,6 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 const port = process.env.PORT || 8000;
 
-// app.get('*', (req, res) => res.status(200).send({
-//  error: 'Welcome to this API.'
-// }));
 
 app.use('/api/v1', routes)
 
