@@ -1,14 +1,17 @@
 import { Router } from 'express'
-import UserController from '../controllers/user.controller'
-import AdminController from '../controllers/admin.controller'
-import LoginController from '../controllers/login.controller'
-import TeamController from '../controllers/team.controller';
-import FixtureController from '../controllers/fixture.controller';
+
 import UserService from '../services/user.service'
 import LoginService from '../services/login.service'
 import AdminService from '../services/admin.service'
 import TeamService from '../services/team.service'
 import FixtureService from '../services/fixture.service'
+import SearchService from '../services/search.service'
+import UserController from '../controllers/user.controller'
+import AdminController from '../controllers/admin.controller'
+import LoginController from '../controllers/login.controller'
+import TeamController from '../controllers/team.controller';
+import FixtureController from '../controllers/fixture.controller';
+import SearchController from '../controllers/search.controller';
 import { auth, adminAuth } from '../middlewares/middlewares'
 
 const userService = new UserService()
@@ -16,7 +19,9 @@ const adminService = new AdminService()
 const loginService = new LoginService()
 const teamService = new TeamService()
 const fixtureService = new FixtureService()
+const searchService = new SearchService()
 
+const searchController = new SearchController(searchService)
 const userController = new UserController(userService)
 const adminController = new AdminController(adminService)
 const loginController = new LoginController(loginService)
@@ -48,6 +53,9 @@ router.put('/fixtures/:id', adminAuth, (req, res) => fixtureController.updateFix
 router.delete('/fixtures/:id', adminAuth, (req, res) => fixtureController.deleteFixture(req, res))
 router.get('/fixtures/:id', auth, (req, res) => fixtureController.getFixture(req, res))
 router.get('/fixtures', auth, (req, res) => fixtureController.getFixtures(req, res))
+
+// router.get('/search/teams', (req, res) => searchController.searchTeam(req, res))
+router.get('/search/fixture', (req, res) => searchController.searchFixture(req, res))
 
 
 export default router

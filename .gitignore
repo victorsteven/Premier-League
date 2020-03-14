@@ -7,3 +7,5 @@ coverage/
 
 # nyc directory
 .nyc_output
+
+/dist
