@@ -9,17 +9,13 @@ import LoginService from '../services/login.service'
 import AdminService from '../services/admin.service'
 import TeamService from '../services/team.service'
 import FixtureService from '../services/fixture.service'
-import Password from '../utils/password'
 import { auth, adminAuth } from '../middlewares/middlewares'
 
-
-const pass = new Password()
-const userService = new UserService(pass)
-const adminService = new AdminService(pass)
-const loginService = new LoginService(pass)
+const userService = new UserService()
+const adminService = new AdminService()
+const loginService = new LoginService()
 const teamService = new TeamService()
 const fixtureService = new FixtureService()
-
 
 const userController = new UserController(userService)
 const adminController = new AdminController(adminService)

@@ -4,7 +4,7 @@ import faker from 'faker'
 import { ObjectID } from 'mongodb'
 import UserService from './user.service'
 import User from '../models/user'
-import  Password from '../utils/password';
+import password from '../utils/password';
 
 chai.use(require('chai-as-promised'))
 const { expect } = chai
@@ -14,11 +14,8 @@ describe('UserService', () => {
 
   let sandbox = null
 
-  let passService
-
   beforeEach(() => {
     sandbox = sinon.createSandbox();
-    passService = new Password()
   });
 
   afterEach(() => {
@@ -37,13 +34,14 @@ describe('UserService', () => {
 
       const checkStub = sandbox.stub(User, 'findOne').returns(record);
   
-      const userService = new UserService(passService);
+      const userService = new UserService();
 
       await expect(userService.createUser(record)).to.be.rejectedWith(Error, "record already exist")
       expect(checkStub.calledOnce).to.be.true;
 
     });
     
+
     it('should create a new user', async () => {
 
       const stubValue = {
@@ -55,11 +53,10 @@ describe('UserService', () => {
       const hash = 'jksdnfkjsdnfskdnfklsdjfkjdsf'
 
       const checkStub = sandbox.stub(User, 'findOne').returns(false);
-
-      const passStub = sandbox.stub(passService, 'hashPassword').returns(hash);
+      const passStub = sandbox.stub(password, 'hashPassword').returns(hash);
       const createStub = sandbox.stub(User, 'create').returns(stubValue);
 
-      const userService = new UserService(passService);
+      const userService = new UserService();
       const user = await userService.createUser(stubValue);
 
       expect(passStub.calledOnce).to.be.true;
@@ -68,7 +65,7 @@ describe('UserService', () => {
       expect(user._id).to.equal(stubValue._id);
       expect(user.name).to.equal(stubValue.name);
       expect(user.role).to.equal(stubValue.role);
-      
+
     });
   });
 
@@ -81,7 +78,7 @@ describe('UserService', () => {
       let userObjID = new ObjectID("5e682d0d580b5a6fb795b842")
 
       const getStub = sandbox.stub(User, 'findOne').returns(false);
-      const userService = new UserService(passService);
+      const userService = new UserService();
 
       await expect(userService.getUser(userObjID)).to.be.rejectedWith(Error, "no record found, you are not authenticated")
       expect(getStub.calledOnce).to.be.true;
@@ -100,7 +97,7 @@ describe('UserService', () => {
 
         const userStub = sandbox.stub(User, 'findOne').returns(stubValue);
 
-        const userService = new UserService(passService);
+        const userService = new UserService();
         const user = await userService.getUser(userObjID);
 
         expect(userStub.calledOnce).to.be.true;

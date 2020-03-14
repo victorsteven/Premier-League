@@ -1,5 +1,5 @@
-import validator from  "email-validator"
 import User from '../models/user'
+import validate from '../utils/validate'
 
 
 
@@ -10,25 +10,16 @@ class AdminController {
 
   async createAdmin(req, res) {
 
-    const { name, email, password } =  req.body
+    const errors = validate.registerValidate(req)
+    if (errors.length > 0) {
+      return res.status(400).json({
+        status: 400,
+        errors: errors
+      })
+    }
 
-    if (
-      (!name || typeof name !== "string") ||
-      (!email || typeof email !== "string") ||
-      (!password || typeof password !== "string")
-    ) {
-      return res.status(400).json({
-        status: 400,
-        error: "ensure that correct details are sent"
-      })
-    }
-    if (!validator.validate(email)){
-      return res.status(400).json({
-        status: 400,
-        error: "invalid email"
-      })
-    }
-    
+    const { name, email, password } = req.body
+
     let admin = new User({
       name: name.trim(),
       email: email.trim(),

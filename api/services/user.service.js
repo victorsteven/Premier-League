@@ -1,13 +1,12 @@
 import User from '../models/user'
-import { hashPassword } from '../utils/password';
+import password from '../utils/password';
 import { ObjectID } from 'mongodb';
 
 
 class UserService {
 
-  constructor(password) {
+  constructor() {
     this.user = User
-    this.pass = password
   }
 
   async createUser(user) {
@@ -20,7 +19,7 @@ class UserService {
         throw new Error('record already exist');
       }
       //proceed with the user
-      user.password = this.pass.hashPassword(user.password)
+      user.password = password.hashPassword(user.password)
 
       //assign role:
       user.role = "user"

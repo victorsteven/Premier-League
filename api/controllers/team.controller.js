@@ -1,6 +1,6 @@
 import { ObjectID } from 'mongodb';
 import Team from '../models/team'
-
+import validate from '../utils/validate'
 
 
 class TeamController {
@@ -20,13 +20,16 @@ class TeamController {
         error: "unauthorized",
       });
     }
-    const { name } = req.body
 
-    if (!name || typeof name !== "string") {
+    const errors = validate.teamValidate(req)
+    if (errors.length > 0) {
       return res.status(400).json({
-        error: "a valid team name is required"
-      });
+        status: 400,
+        errors: errors
+      })
     }
+
+    const { name } = req.body
 
     try {
 
@@ -66,28 +69,31 @@ class TeamController {
       });
     }
 
-    var teamId = req.params.id;
-    if(!ObjectID.isValid(teamId)){
+    //check the request param
+    const { id } = req.params 
+    if(!ObjectID.isValid(id)){
       return res.status(400).json({
         status: 400,
         error: "team id is not valid"
       })
     }
 
-    const { name } = req.body
-
-    if (!name || typeof name !== "string") {
+    const errors = validate.teamValidate(req)
+    if (errors.length > 0) {
       return res.status(400).json({
-        error: "a valid team name is required"
-      });
+        status: 400,
+        errors: errors
+      })
     }
+
+    const { name } = req.body
 
     try {
 
       let adminId = tokenMetadata._id
 
       //check if the team exist and if the owner is legit, before updating it:
-      const team = await this.teamService.adminGetTeam(teamId)
+      const team = await this.teamService.adminGetTeam(id)
 
       if (team.admin._id.toHexString() !== adminId) {
         return res.status(401).json({
@@ -124,8 +130,9 @@ class TeamController {
       });
     }
 
-    var teamId = req.params.id;
-    if(!ObjectID.isValid(teamId)){
+    //check the request param
+    const { id } = req.params 
+    if(!ObjectID.isValid(id)){
       return res.status(400).json({
         status: 400,
         error: "team id is not valid"
@@ -137,7 +144,7 @@ class TeamController {
       let adminId = tokenMetadata._id
 
       //check if the team exist and if the owner is legit, before updating it:
-      const team = await this.teamService.adminGetTeam(teamId)
+      const team = await this.teamService.adminGetTeam(id)
       if (team.admin._id.toHexString() !== adminId) {
         return res.status(401).json({
           status: 401,
@@ -146,7 +153,7 @@ class TeamController {
       }
 
       //Delete the team
-      const status = await this.teamService.deleteTeam(teamId)
+      const status = await this.teamService.deleteTeam(id)
       if (status) {
         return res.status(200).json({
           status: 200,
@@ -172,8 +179,9 @@ class TeamController {
       });
     }
 
-    var teamId = req.params.id;
-    if(!ObjectID.isValid(teamId)){
+    //check the request param
+    const { id } = req.params 
+    if(!ObjectID.isValid(id)){
       return res.status(400).json({
         status: 400,
         error: "team id is not valid"
@@ -189,7 +197,7 @@ class TeamController {
       await this.userService.getUser(authId)
       
       try {
-        const gottenTeam = await this.teamService.getTeam(teamId)
+        const gottenTeam = await this.teamService.getTeam(id)
         if (gottenTeam) {
           return res.status(200).json({
             status: 200,

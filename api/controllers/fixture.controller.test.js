@@ -7,15 +7,21 @@ import UserService from '../services/user.service'
 import FixtureService from '../services/fixture.service'
 import faker from 'faker'
 import { ObjectID } from 'mongodb';
+import validate from '../utils/validate'
 
 
 const { expect } = chai;
 
 describe("FixtureController", () => {
 
+
+  //WE WILL MOCK ALL REQUEST BODY VALIDATION  IN THIS TEST. WE HAVE ALREADY TESTED ALL REQUEST BODY VALIDATIONS IN THE validate.test.js FILE, SO WE WILL ONLY FOCUS ON UNIT TESTING THE CONTROLLER
+
   describe("createFixture", () => {
 
     let status, json, res, fixtureController, adminService, userService, teamService, fixtureService;
+
+    let sandbox = null
 
     beforeEach(() => {
       status = sinon.stub();
@@ -26,15 +32,19 @@ describe("FixtureController", () => {
       teamService = new TeamService();
       userService = new UserService();
       fixtureService = new FixtureService();
+      sandbox = sinon.createSandbox();
     });
 
+    afterEach(() => {
+      sandbox.restore()
+    })
 
     it("should return unauthorized if no token is provided", async () => {
       const req = {
         body: { 
           home: "5e67f24197392c3415b5cf92",
           away: "5e6435c01386fbcaba160b89",
-          matchday: "12-12-2020",
+          matchday: "12-12-2050",
           matchtime: "10:30"
         },
       };
@@ -49,163 +59,38 @@ describe("FixtureController", () => {
       expect(json.args[0][0].error).to.equal("unauthorized");
     });
 
-
-    it("should not create a fixture with empty details", async () => {
-
-      const req = {
-        body: { 
-          home: "",
-          away: "",
-          matchday: "",
-          matchtime: ""
-        },
-        tokenMetadata: { _id: faker.random.uuid() }
-      };
-
-      fixtureController = new FixtureController(userService, adminService, teamService, fixtureService);
-
-      await fixtureController.createFixture(req, res);
-
-      expect(status.calledOnce).to.be.true;
-      expect(status.args[0][0]).to.equal(400);
-      expect(json.calledOnce).to.be.true;
-      expect(json.args[0][0].error).to.equal("ensure that correct details are sent");
-    });
-
-    it("should not create a fixture with invalid home team", async () => {
+    //Since we have already unit tested all validations in the validate.test.js file, we can just consider any scenerio here where validation fails so as to improve coverage
+    it("should return error(s) when validation fails", async () => {
 
       const req = {
         body: { 
-          home: "5e67f24197392c3415b5cf92XXXX",
+          home: "5e67f24197392c3415b5cf92XX", //this is invalid
           away: "5e6435c01386fbcaba160b89",
-          matchday: "20-12-2020",
+          matchday: "12-12-1998", //this date is in the past
           matchtime: "10:30"
         },
         tokenMetadata: { _id: faker.random.uuid() }
       };
 
-      fixtureController = new FixtureController(userService, adminService, teamService, fixtureService);
+      //this is a mock response, it can be anything you want
+      const errors = [
+        { "home": "a valid home team is required" },
+        { "matchday": "can't create a fixture in the past"}
+      ]
 
-      await fixtureController.createFixture(req, res);
-
-      expect(status.calledOnce).to.be.true;
-      expect(status.args[0][0]).to.equal(400);
-      expect(json.calledOnce).to.be.true;
-      expect(json.args[0][0].error).to.equal("home id is not valid");
-    });
-
-    it("should not create a fixture with invalid away team", async () => {
-
-      const req = {
-        body: { 
-          home: "5e67f24197392c3415b5cf92",
-          away: "5e6435c01386fbcaba160b89XXXX",
-          matchday: "20-12-2020",
-          matchtime: "10:30"
-        },
-        tokenMetadata: { _id: faker.random.uuid() }
-      };
+      const stub = sandbox.stub(validate, "fixtureValidate").returns(errors);
 
       fixtureController = new FixtureController(userService, adminService, teamService, fixtureService);
 
       await fixtureController.createFixture(req, res);
 
+      expect(stub.calledOnce).to.be.true;
       expect(status.calledOnce).to.be.true;
       expect(status.args[0][0]).to.equal(400);
       expect(json.calledOnce).to.be.true;
-      expect(json.args[0][0].error).to.equal("away id is not valid");
+      expect(json.args[0][0].errors).to.equal(errors);
+
     });
-
-
-    it("should not create a fixture with same team", async () => {
-
-      const req = {
-        body: { 
-          home: "5e67f24197392c3415b5cf92",
-          away: "5e67f24197392c3415b5cf92",
-          matchday: "15-12-2020",
-          matchtime: "10:30"
-        },
-        tokenMetadata: { _id: faker.random.uuid() }
-      };
-
-      fixtureController = new FixtureController(userService, adminService, teamService, fixtureService);
-
-      await fixtureController.createFixture(req, res);
-
-      expect(status.calledOnce).to.be.true;
-      expect(status.args[0][0]).to.equal(400);
-      expect(json.calledOnce).to.be.true;
-      expect(json.args[0][0].error).to.equal("You can't create a fixture with the same team");
-    });
-
-    it("should not create a fixture with invalid matchday", async () => {
-
-      const req = {
-        body: { 
-          home: "5e67f24197392c3415b5cf92",
-          away: "5e6435c01386fbcaba160b89",
-          matchday: "20-14-2020", //the month is invalid (format used: dd-mm-yyyy)
-          matchtime: "10:30"
-        },
-        tokenMetadata: { _id: faker.random.uuid() }
-      };
-      
-      fixtureController = new FixtureController(userService, adminService, teamService, fixtureService);
-
-      await fixtureController.createFixture(req, res);
-
-      expect(status.calledOnce).to.be.true;
-      expect(status.args[0][0]).to.equal(400);
-      expect(json.calledOnce).to.be.true;
-      expect(json.args[0][0].error).to.equal("matchday must be of the format: 'dd-mm-yyyy'");
-    });
-
-
-    it("should not create a fixture with invalid matchtime", async () => {
-
-      const req = {
-        body: { 
-          home: "5e67f24197392c3415b5cf92",
-          away: "5e6435c01386fbcaba160b89",
-          matchday: "20-06-2020", 
-          matchtime: "7:pm" //the time is invalid (format used: 10:30 or 07:00)
-        },
-        tokenMetadata: { _id: faker.random.uuid() }
-      };
-
-      fixtureController = new FixtureController(userService, adminService, teamService, fixtureService);
-
-      await fixtureController.createFixture(req, res);
-
-      expect(status.calledOnce).to.be.true;
-      expect(status.args[0][0]).to.equal(400);
-      expect(json.calledOnce).to.be.true;
-      expect(json.args[0][0].error).to.equal("matchtime must be of the format: '10:30 or 07:00'");
-    });
-
-    it("should not create a fixture with past date", async () => {
-
-      const req = {
-        body: { 
-          home: "5e67f24197392c3415b5cf92",
-          away: "5e67f24197392c3415b5cf92",
-          matchday: "15-12-1988",
-          matchtime: "10:30"
-        },
-        tokenMetadata: { _id: faker.random.uuid() }
-      };
-
-      fixtureController = new FixtureController(userService, adminService, teamService, fixtureService);
-
-      await fixtureController.createFixture(req, res);
-
-      expect(status.calledOnce).to.be.true;
-      expect(status.args[0][0]).to.equal(400);
-      expect(json.calledOnce).to.be.true;
-      expect(json.args[0][0].error).to.equal("can't create a fixture with a past date");
-    });
-
 
     it("should create a fixture successfully", async () => {
 
@@ -213,7 +98,7 @@ describe("FixtureController", () => {
         body: { 
           home: "5e67f24197392c3415b5cf92",
           away: "5e6435c01386fbcaba160b89",
-          matchday: "20-12-2020",
+          matchday: "20-12-2050",
           matchtime: "10:30"
         },
         tokenMetadata: { _id: faker.random.uuid() }
@@ -238,18 +123,22 @@ describe("FixtureController", () => {
       const stubValue = {
         home: "5e67f24197392c3415b5cf92",
         away: "5e6435c01386fbcaba160b89",
-        matchday: "20-12-2020",
+        matchday: "20-12-2050",
         matchtime: "10:30"
       }
 
-      const adminStub = sinon.stub(adminService, "getAdmin").returns(stubAdmin);
-      const checkTeamStub = sinon.stub(teamService, "checkTeams").returns(gottenTeams);
-      const stub = sinon.stub(fixtureService, "createFixture").returns(stubValue);
+      //the error is empty. We have tested validation in the validate.test.js file, so we will only mock the response to be empty
+      const errorStub = sandbox.stub(validate, "fixtureValidate").returns([]);
+
+      const adminStub = sandbox.stub(adminService, "getAdmin").returns(stubAdmin);
+      const checkTeamStub = sandbox.stub(teamService, "checkTeams").returns(gottenTeams);
+      const stub = sandbox.stub(fixtureService, "createFixture").returns(stubValue);
 
       fixtureController = new FixtureController(userService, adminService, teamService, fixtureService);
 
       await fixtureController.createFixture(req, res);
 
+      expect(errorStub.calledOnce).to.be.true;
       expect(adminStub.calledOnce).to.be.true;
       expect(stub.calledOnce).to.be.true;
       expect(checkTeamStub.calledOnce).to.be.true;
@@ -265,6 +154,8 @@ describe("FixtureController", () => {
 
     let status, json, res, fixtureController, adminService, userService, teamService, fixtureService;
 
+    let sandbox = null
+
     beforeEach(() => {
       status = sinon.stub();
       json = sinon.spy();
@@ -274,8 +165,12 @@ describe("FixtureController", () => {
       teamService = new TeamService();
       userService = new UserService();
       fixtureService = new FixtureService();
+      sandbox = sinon.createSandbox();
     });
 
+    afterEach(() => {
+      sandbox.restore()
+    })
 
     it("should return unauthorized if no token is provided", async () => {
       const req = {
@@ -298,17 +193,20 @@ describe("FixtureController", () => {
       expect(json.args[0][0].error).to.equal("unauthorized");
     });
 
-    it("should not update a fixture when an invalid id is provided", async () => {
+
+    //Validate the request param. We wont get to the request body validation. so no need to mock it
+    it("should return error if the fixture id is invalid", async () => {
+
       const req = {
         body: { 
           home: "5e67f24197392c3415b5cf92",
           away: "5e6435c01386fbcaba160b89",
-          matchday: "12-12-2050",
-          matchtime: "10:30",
+          matchday: "12-12-2050", 
+          matchtime: "10:30"
         },
         tokenMetadata: { _id: faker.random.uuid() },
 
-        params: { id: "sjknjskdjfkjsdfksdfl"} //invalid fixture id
+        params: { id: "dkshfsdhfoisdhfoisdf"} //invalid id
       };
 
       fixtureController = new FixtureController(userService, adminService, teamService, fixtureService);
@@ -319,179 +217,45 @@ describe("FixtureController", () => {
       expect(status.args[0][0]).to.equal(400);
       expect(json.calledOnce).to.be.true;
       expect(json.args[0][0].error).to.equal("fixture id is not valid");
+
     });
 
-
-    it("should not update a fixture with empty details", async () => {
+    //Since we have already unit tested all input validations in the validate.test.js file, we can just consider any scenerio here where validation fails so as to improve coverage
+    it("should return error(s) when validation fails", async () => {
 
       const req = {
         body: { 
-          home: "",
-          away: "",
-          matchday: "",
-          matchtime: ""
-        },
-        tokenMetadata: { _id: faker.random.uuid() },
-
-        params: { id: "5e6403c9e4ca0f9fce20b1b3"} //this id is valid
-      };
-
-      fixtureController = new FixtureController(userService, adminService, teamService, fixtureService);
-
-      await fixtureController.updateFixture(req, res);
-
-      expect(status.calledOnce).to.be.true;
-      expect(status.args[0][0]).to.equal(400);
-      expect(json.calledOnce).to.be.true;
-      expect(json.args[0][0].error).to.equal("ensure that correct details are sent");
-    });
-
-    it("should not update a fixture with invalid home team", async () => {
-
-      const req = {
-        body: { 
-          home: "5e67f24197392c3415b5cf92xxxx",
+          home: "5e67f24197392c3415b5cf92XX", //this is invalid
           away: "5e6435c01386fbcaba160b89",
-          matchday: "20-12-2050",
+          matchday: "12-12-1998", //this date is in the past
           matchtime: "10:30"
         },
         tokenMetadata: { _id: faker.random.uuid() },
 
         params: { id: "5e6403c9e4ca0f9fce20b1b3"} //this id is valid
+
       };
+
+      //this is a mock response, it can be anything you want
+      const errors = [
+        { "home": "a valid home team is required" },
+        { "matchday": "can't update a fixture in the past"}
+      ]
+
+      const stub = sandbox.stub(validate, "fixtureValidate").returns(errors);
 
       fixtureController = new FixtureController(userService, adminService, teamService, fixtureService);
 
       await fixtureController.updateFixture(req, res);
 
+      expect(stub.calledOnce).to.be.true;
       expect(status.calledOnce).to.be.true;
       expect(status.args[0][0]).to.equal(400);
       expect(json.calledOnce).to.be.true;
-      expect(json.args[0][0].error).to.equal("home id is not valid");
+      expect(json.args[0][0].errors).to.equal(errors);
+
     });
 
-    it("should not update a fixture with invalid away team", async () => {
-
-      const req = {
-        body: { 
-          home: "5e67f24197392c3415b5cf92",
-          away: "5e6435c01386fbcaba160b89xxxx",
-          matchday: "20-12-2050",
-          matchtime: "10:30"
-        },
-        tokenMetadata: { _id: faker.random.uuid() },
-
-        params: { id: "5e6403c9e4ca0f9fce20b1b3"} //this id is valid
-      };
-
-      fixtureController = new FixtureController(userService, adminService, teamService, fixtureService);
-
-      await fixtureController.updateFixture(req, res);
-
-      expect(status.calledOnce).to.be.true;
-      expect(status.args[0][0]).to.equal(400);
-      expect(json.calledOnce).to.be.true;
-      expect(json.args[0][0].error).to.equal("away id is not valid");
-    });
-
-
-    it("should not update a fixture with same team", async () => {
-
-      const req = {
-        body: { 
-          home: "5e67f24197392c3415b5cf92", //the home is the same as the away
-          away: "5e67f24197392c3415b5cf92",
-          matchday: "12-12-2050",
-          matchtime: "10:30"
-        },
-        tokenMetadata: { _id: faker.random.uuid() },
-        
-        params: { id: "5e6403c9e4ca0f9fce20b1b3"} //this id is valid
-
-      };
-
-      fixtureController = new FixtureController(userService, adminService, teamService, fixtureService);
-
-      await fixtureController.updateFixture(req, res);
-
-      expect(status.calledOnce).to.be.true;
-      expect(status.args[0][0]).to.equal(400);
-      expect(json.calledOnce).to.be.true;
-      expect(json.args[0][0].error).to.equal("You can't update a fixture with the same team");
-    });
-
-    it("should not update a fixture with invalid matchday", async () => {
-
-      const req = {
-        body: { 
-          home: "5e67f24197392c3415b5cf92",
-          away: "5e6435c01386fbcaba160b89",
-          matchday: "20-14-2050", //the month is invalid (format used: dd-mm-yyyy)
-          matchtime: "10:30"
-        },
-        tokenMetadata: { _id: faker.random.uuid() },
-        
-        params: { id: "5e6403c9e4ca0f9fce20b1b3"} //this id is valid
-      };
-      
-      fixtureController = new FixtureController(userService, adminService, teamService, fixtureService);
-
-      await fixtureController.updateFixture(req, res);
-
-      expect(status.calledOnce).to.be.true;
-      expect(status.args[0][0]).to.equal(400);
-      expect(json.calledOnce).to.be.true;
-      expect(json.args[0][0].error).to.equal("matchday must be of the format: 'dd-mm-yyyy'");
-    });
-
-
-    it("should not update a fixture with invalid matchtime", async () => {
-
-      const req = {
-        body: { 
-          home: "5e67f24197392c3415b5cf92",
-          away: "5e6435c01386fbcaba160b89",
-          matchday: "20-06-2050", 
-          matchtime: "7:pm" //the time is invalid (format used: 10:30 or 07:00)
-        },
-        tokenMetadata: { _id: faker.random.uuid() },
-        
-        params: { id: "5e6403c9e4ca0f9fce20b1b3"} //this id is valid
-      };
-
-      fixtureController = new FixtureController(userService, adminService, teamService, fixtureService);
-
-      await fixtureController.updateFixture(req, res);
-
-      expect(status.calledOnce).to.be.true;
-      expect(status.args[0][0]).to.equal(400);
-      expect(json.calledOnce).to.be.true;
-      expect(json.args[0][0].error).to.equal("matchtime must be of the format: '10:30 or 07:00'");
-    });
-
-    it("should not update a fixture with past date", async () => {
-
-      const req = {
-        body: { 
-          home: "5e67f24197392c3415b5cf92",
-          away: "5e6435c01386fbcaba160b89",
-          matchday: "20-06-1999", //the year is in the past
-          matchtime: "07:00" 
-        },
-        tokenMetadata: { _id: faker.random.uuid() },
-        
-        params: { id: "5e6403c9e4ca0f9fce20b1b3"} //this id is valid
-      };
-
-      fixtureController = new FixtureController(userService, adminService, teamService, fixtureService);
-
-      await fixtureController.updateFixture(req, res);
-
-      expect(status.calledOnce).to.be.true;
-      expect(status.args[0][0]).to.equal(400);
-      expect(json.calledOnce).to.be.true;
-      expect(json.args[0][0].error).to.equal("can't update a fixture with a past date");
-    });
 
     it("should not update a fixture with unauthorized admin", async () => {
 
@@ -517,12 +281,16 @@ describe("FixtureController", () => {
         }
       }
 
-      const adminStub = sinon.stub(fixtureService, "adminGetFixture").returns(formerFixture);
+      //the error is empty. We have tested validation in the validate.test.js file, so we will only mock the response to be empty
+      const errorStub = sandbox.stub(validate, "fixtureValidate").returns([]);
+
+      const adminStub = sandbox.stub(fixtureService, "adminGetFixture").returns(formerFixture);
 
       fixtureController = new FixtureController(userService, adminService, teamService, fixtureService);
 
       await fixtureController.updateFixture(req, res);
 
+      expect(errorStub.calledOnce).to.be.true;
       expect(adminStub.calledOnce).to.be.true;
       expect(status.calledOnce).to.be.true;
       expect(status.args[0][0]).to.equal(401);
@@ -568,18 +336,20 @@ describe("FixtureController", () => {
       const stubValue = {
         home: "5e642be7f0833bc1c47429d1",
         away: "5e642be7f0833bc1c47429d1",
-        matchday: "20-03-2020",
+        matchday: "20-03-2050",
         matchtime: "03:30"
       }
 
-      const formerStub = sinon.stub(fixtureService, "adminGetFixture").returns(formerFixture);
-      const checkTeamStub = sinon.stub(teamService, "checkTeams").returns(gottenTeams);
-      const stub = sinon.stub(fixtureService, "updateFixture").returns(stubValue);
+      const errorStub = sandbox.stub(validate, "fixtureValidate").returns([]);
+      const formerStub = sandbox.stub(fixtureService, "adminGetFixture").returns(formerFixture);
+      const checkTeamStub = sandbox.stub(teamService, "checkTeams").returns(gottenTeams);
+      const stub = sandbox.stub(fixtureService, "updateFixture").returns(stubValue);
 
       fixtureController = new FixtureController(userService, adminService, teamService, fixtureService);
 
       await fixtureController.updateFixture(req, res);
 
+      expect(errorStub.calledOnce).to.be.true;
       expect(formerStub.calledOnce).to.be.true;
       expect(stub.calledOnce).to.be.true;
       expect(checkTeamStub.calledOnce).to.be.true;
@@ -595,6 +365,8 @@ describe("FixtureController", () => {
 
     let status, json, res, fixtureController, adminService, userService, teamService, fixtureService;
 
+    let sandbox = null
+
     beforeEach(() => {
       status = sinon.stub();
       json = sinon.spy();
@@ -604,9 +376,15 @@ describe("FixtureController", () => {
       teamService = new TeamService();
       userService = new UserService();
       fixtureService = new FixtureService();
+      sandbox = sinon.createSandbox();
+
     });
 
+    afterEach(() => {
+      sandbox.restore()
+    })
 
+    //we wont hit validation here, so no need to mock it
     it("should return unauthorized if no token is provided", async () => {
 
       const req = {
@@ -624,10 +402,14 @@ describe("FixtureController", () => {
     });
 
 
-    it("should not delete a fixture whose id is invalid", async () => {
+    //Validate the request param. 
+    it("should return error if the fixture id is invalid", async () => {
+
       const req = {
-        tokenMetadata: { _id: "5e678b4527b990c36ff39dda" },
-        params: { id: "dsnfsdnfnsdfkjnsdjfn"} //this is an invalid id
+
+        tokenMetadata: { _id: faker.random.uuid() },
+
+        params: { id: "dkshfsdhfoisdhfoisdf"} //invalid id
       };
 
       fixtureController = new FixtureController(userService, adminService, teamService, fixtureService);
@@ -638,6 +420,7 @@ describe("FixtureController", () => {
       expect(status.args[0][0]).to.equal(400);
       expect(json.calledOnce).to.be.true;
       expect(json.args[0][0].error).to.equal("fixture id is not valid");
+
     });
 
 
@@ -660,7 +443,7 @@ describe("FixtureController", () => {
         }
       }
 
-      const formerStub = sinon.stub(fixtureService, "adminGetFixture").returns(formerFixture);
+      const formerStub = sandbox.stub(fixtureService, "adminGetFixture").returns(formerFixture);
 
       fixtureController = new FixtureController(userService, adminService, teamService, fixtureService);
 
@@ -677,7 +460,6 @@ describe("FixtureController", () => {
     it("should delete a fixture successfully", async () => {
 
       const req = {
-
         //make sure the id here, matches the admin id from the team we wishes to update
         tokenMetadata: { _id: "5e678b4527b990c36ff39dda" }, 
 
@@ -698,9 +480,8 @@ describe("FixtureController", () => {
         data: "fixture deleted"
       }
 
-      const formerStub = sinon.stub(fixtureService, "adminGetFixture").returns(formerFixture);
-      const stub = sinon.stub(fixtureService, "deleteFixture").returns(stubValue);
-
+      const formerStub = sandbox.stub(fixtureService, "adminGetFixture").returns(formerFixture);
+      const stub = sandbox.stub(fixtureService, "deleteFixture").returns(stubValue);
 
       fixtureController = new FixtureController(userService, adminService, teamService, fixtureService);
 
@@ -719,6 +500,8 @@ describe("FixtureController", () => {
 
     let status, json, res, fixtureController, adminService, userService, teamService, fixtureService;
 
+    let sandbox = null
+
     beforeEach(() => {
       status = sinon.stub();
       json = sinon.spy();
@@ -728,9 +511,14 @@ describe("FixtureController", () => {
       teamService = new TeamService();
       userService = new UserService();
       fixtureService = new FixtureService();
+      sandbox = sinon.createSandbox();
     });
 
+    afterEach(() => {
+      sandbox.restore()
+    })
 
+    //we wont hit input validation here, so no need to mock it
     it("should return unauthorized if no token is provided", async () => {
 
       const req = {
@@ -747,12 +535,14 @@ describe("FixtureController", () => {
       expect(json.args[0][0].error).to.equal("unauthorized");
     });
 
+    //Validate the request param. 
+    it("should return error if the fixture id is invalid", async () => {
 
-    it("should not get a fixture whose id is invalid", async () => {
       const req = {
-        tokenMetadata: { _id: faker.random.uuid() }, //since we will mock the authenticated user we are checking against
 
-        params: { id: "dsnfsdnfnsdfkjnsdjfn"} //this is an invalid id
+        tokenMetadata: { _id: faker.random.uuid() },
+
+        params: { id: "dkshfsdhfoisdhfoisdf"} //invalid id
       };
 
       fixtureController = new FixtureController(userService, adminService, teamService, fixtureService);
@@ -763,8 +553,8 @@ describe("FixtureController", () => {
       expect(status.args[0][0]).to.equal(400);
       expect(json.calledOnce).to.be.true;
       expect(json.args[0][0].error).to.equal("fixture id is not valid");
-    });
 
+    });
 
     it("should get a fixture successfully", async () => {
 
@@ -786,8 +576,8 @@ describe("FixtureController", () => {
         away: faker.random.uuid(),
       }
 
-      const userStub = sinon.stub(userService, "getUser").returns(user); //this user can either be an admin or normal user
-      const stub = sinon.stub(fixtureService, "getFixture").returns(fixture);
+      const userStub = sandbox.stub(userService, "getUser").returns(user); //this user can either be an admin or normal user
+      const stub = sandbox.stub(fixtureService, "getFixture").returns(fixture);
 
       fixtureController = new FixtureController(userService, adminService, teamService, fixtureService);
 

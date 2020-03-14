@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon --exec babel-node ./api/index.js",
-    "test": "export NODE_ENV=test && nyc --require @babel/register  mocha ./api/**/*.test.js --timeout 20000 --exit"
+    "test": "export NODE_ENV=test && nyc --require @babel/register  mocha ./api/**/*.test.js --timeout 20000 --exit",
+    "coveralls": "nyc npm test && nyc report --reporter=text-lcov | coveralls"
   },
   "repository": {
     "type": "git",
@@ -27,7 +28,6 @@
     "dotenv": "^8.2.0",
     "email-validator": "^2.0.4",
     "express": "^4.17.1",
-    "express-validator": "^6.4.0",
     "jsonwebtoken": "^8.5.1",
     "lodash": "^4.17.15",
     "mongodb": "^3.5.4",
@@ -46,6 +46,7 @@
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "chai-http": "^4.3.0",
+    "coveralls": "^3.0.9",
     "eslint": "^6.8.0",
     "eslint-config-airbnb-base": "^14.0.0",
     "eslint-plugin-import": "^2.20.1",

@@ -6,15 +6,21 @@ import AdminService from '../services/admin.service'
 import UserService from '../services/user.service'
 import faker from 'faker'
 import { ObjectID } from 'mongodb';
+import validate from '../utils/validate'
 
 
 const { expect } = chai;
+
+
+//WE WILL MOCK ALL REQUEST BODY VALIDATION  IN THIS TEST. WE HAVE ALREADY TESTED ALL REQUEST BODY VALIDATIONS IN THE validate.test.js FILE, SO WE WILL ONLY FOCUS ON UNIT TESTING THE CONTROLLER
 
 describe("TeamController", () => {
 
   describe("createTeam", () => {
 
     let status, json, res, teamController, adminService, userService, teamService
+
+    let sandbox = null
 
     beforeEach(() => {
       status = sinon.stub();
@@ -24,9 +30,15 @@ describe("TeamController", () => {
       adminService = new AdminService();
       teamService = new TeamService();
       userService = new UserService();
+      sandbox = sinon.createSandbox();
     });
 
+    afterEach(() => {
+      sandbox.restore()
+    })
 
+
+    //we wont get reach the validation, no need to mock it
     it("should return unauthorized if no token is provided", async () => {
 
       const req = {
@@ -44,20 +56,31 @@ describe("TeamController", () => {
     });
 
 
-    it("should not create a team with empty name", async () => {
+    //Since we have already unit tested all validations in the validate.test.js file, we can just consider any scenerio here where validation fails so as to improve coverage
+    it("should return error(s) when validation fails", async () => {
+
       const req = {
         body: { name: "" },
         tokenMetadata: { _id: faker.random.uuid() } 
       };
 
+      //this is a mock response, it can be anything you want
+      const errors = [
+        { "name": "a valid team name is required" },
+      ]
+
+      const errorStub = sandbox.stub(validate, "teamValidate").returns(errors);
+
       teamController = new TeamController(userService, adminService, teamService);
 
       await teamController.createTeam(req, res);
 
+      expect(errorStub.calledOnce).to.be.true;
       expect(status.calledOnce).to.be.true;
       expect(status.args[0][0]).to.equal(400);
       expect(json.calledOnce).to.be.true;
-      expect(json.args[0][0].error).to.equal("a valid team name is required");
+      expect(json.args[0][0].errors).to.equal(errors);
+
     });
 
     it("should create a team successfully", async () => {
@@ -74,14 +97,16 @@ describe("TeamController", () => {
         name: faker.name.findName()
         
       }
+      const errorStub = sandbox.stub(validate, "teamValidate").returns([]); //empty error
 
-      const adminStub = sinon.stub(adminService, "getAdmin").returns(stubAdmin);
-      const stub = sinon.stub(teamService, "createTeam").returns(stubValue);
+      const adminStub = sandbox.stub(adminService, "getAdmin").returns(stubAdmin);
+      const stub = sandbox.stub(teamService, "createTeam").returns(stubValue);
 
       teamController = new TeamController(userService, adminService, teamService);
 
       await teamController.createTeam(req, res);
 
+      expect(errorStub.calledOnce).to.be.true;
       expect(adminStub.calledOnce).to.be.true;
       expect(stub.calledOnce).to.be.true;
       expect(status.calledOnce).to.be.true;
@@ -95,6 +120,8 @@ describe("TeamController", () => {
 
     let status, json, res, teamController, adminService, userService, teamService
 
+    let sandbox = null
+
     beforeEach(() => {
       status = sinon.stub();
       json = sinon.spy();
@@ -103,9 +130,14 @@ describe("TeamController", () => {
       adminService = new AdminService();
       teamService = new TeamService();
       userService = new UserService();
+      sandbox = sinon.createSandbox()
     });
 
+    afterEach(() => {
+      sandbox.restore()
+    })
 
+    //we wont get reach the validation, no need to mock it
     it("should return unauthorized if no token is provided", async () => {
       const req = {
         body: { name: faker.name.findName() },
@@ -121,12 +153,15 @@ describe("TeamController", () => {
       expect(json.args[0][0].error).to.equal("unauthorized");
     });
 
-
-    it("should not update a team whose id is invalid", async () => {
+   
+    //we wont get reach the request body validation, no need to mock it. We are checking the request param
+    it("should return error when invalid team id param is used", async () => {
       const req = {
         body: { name: faker.name.findName() },
-        tokenMetadata: { _id: faker.random.uuid() }, //since we have mocked the admin, this can be anything
-        params: { id: "dsnfsdnfnsdfkjnsdjfn"} //this is an invalid id
+
+        tokenMetadata: { _id: faker.random.uuid() }, 
+
+        params: { id: "sjdfisdjflksdfshdiufs"} //invalid team id
       };
 
       teamController = new TeamController(userService, adminService, teamService);
@@ -137,26 +172,40 @@ describe("TeamController", () => {
       expect(status.args[0][0]).to.equal(400);
       expect(json.calledOnce).to.be.true;
       expect(json.args[0][0].error).to.equal("team id is not valid");
+
     });
 
 
-    it("should not update a team with empty name", async () => {
+    //Since we have already unit tested all validations in the validate.test.js file, we can just consider any scenerio here where validation fails so as to improve coverage
+    it("should return error(s) when validation fails", async () => {
+
       const req = {
         body: { name: "" },
         tokenMetadata: { _id: faker.random.uuid() },
-        params: { id: "5e6403c9e4ca0f9fce20b1b3"} //this id is valid
+
+        //the id here should be valid, we are interested in validating only the request body, not the request param
+        params: { id: "5e6403c9e4ca0f9fce20b1b3"} 
       };
+
+      //this is a mock response, it can be anything you want
+      const errors = [
+        { "id": "team id is not valid" },
+        { "name": "a valid team name is required" },
+      ]
+
+      const errorStub = sandbox.stub(validate, "teamValidate").returns(errors);
 
       teamController = new TeamController(userService, adminService, teamService);
 
       await teamController.updateTeam(req, res);
 
+      expect(errorStub.calledOnce).to.be.true;
       expect(status.calledOnce).to.be.true;
       expect(status.args[0][0]).to.equal(400);
       expect(json.calledOnce).to.be.true;
-      expect(json.args[0][0].error).to.equal("a valid team name is required");
-    });
+      expect(json.args[0][0].errors).to.equal(errors);
 
+    });
 
     it("should not update a team by unauthorized admin", async () => {
       const req = {
@@ -168,7 +217,6 @@ describe("TeamController", () => {
         params: { id: "5e6403c9e4ca0f9fce20b1b3"} //this id is valid
       };
 
-      //the id of the admin provided here is different from the one that wants to update the team, so it will be unauthorized
       const formerTeam = {
         _id: faker.random.uuid(),
         name: "former team",
@@ -177,12 +225,15 @@ describe("TeamController", () => {
         }
       }
 
-      const formerStub = sinon.stub(teamService, "adminGetTeam").returns(formerTeam);
+      const errorStub = sandbox.stub(validate, "teamValidate").returns([]); //no input errors
+
+      const formerStub = sandbox.stub(teamService, "adminGetTeam").returns(formerTeam);
 
       teamController = new TeamController(userService, adminService, teamService);
 
       await teamController.updateTeam(req, res);
 
+      expect(errorStub.calledOnce).to.be.true;
       expect(formerStub.calledOnce).to.be.true;
       expect(status.calledOnce).to.be.true;
       expect(status.args[0][0]).to.equal(401);
@@ -213,14 +264,15 @@ describe("TeamController", () => {
           _id: new ObjectID("5e678b4527b990c36ff39dda"), //this id is same as the one in the tokenMetada
         }
       }
-
-      const formerStub = sinon.stub(teamService, "adminGetTeam").returns(formerTeam);
-      const stub = sinon.stub(teamService, "updateTeam").returns(stubValue);
+      const errorStub = sandbox.stub(validate, "teamValidate").returns([]); //no input errors
+      const formerStub = sandbox.stub(teamService, "adminGetTeam").returns(formerTeam);
+      const stub = sandbox.stub(teamService, "updateTeam").returns(stubValue);
 
       teamController = new TeamController(userService, adminService, teamService);
 
       await teamController.updateTeam(req, res);
 
+      expect(errorStub.calledOnce).to.be.true;
       expect(formerStub.calledOnce).to.be.true;
       expect(stub.calledOnce).to.be.true;
       expect(status.calledOnce).to.be.true;
@@ -234,6 +286,8 @@ describe("TeamController", () => {
 
     let status, json, res, teamController, adminService, userService, teamService
 
+    let sandbox = null
+
     beforeEach(() => {
       status = sinon.stub();
       json = sinon.spy();
@@ -242,9 +296,14 @@ describe("TeamController", () => {
       adminService = new AdminService();
       teamService = new TeamService();
       userService = new UserService();
+      sandbox = sinon.createSandbox()
     });
 
+    afterEach(() => {
+      sandbox.restore()
+    })
 
+    //we wont get reach the validation, no need to mock it
     it("should return unauthorized if no token is provided", async () => {
 
       const req = {
@@ -261,11 +320,13 @@ describe("TeamController", () => {
       expect(json.args[0][0].error).to.equal("unauthorized");
     });
 
-
-    it("should not delete a team whose id is invalid", async () => {
+    //return error when the team id is not valid
+    it("should return error when invalid team id param is used", async () => {
       const req = {
-        tokenMetadata: { _id: "5e678b4527b990c36ff39dda" },
-        params: { id: "dsnfsdnfnsdfkjnsdjfn"} //this is an invalid id
+
+        tokenMetadata: { _id: faker.random.uuid() }, 
+
+        params: { id: "sjdfisdjflksdfshdiufs"} //invalid team id
       };
 
       teamController = new TeamController(userService, adminService, teamService);
@@ -276,8 +337,8 @@ describe("TeamController", () => {
       expect(status.args[0][0]).to.equal(400);
       expect(json.calledOnce).to.be.true;
       expect(json.args[0][0].error).to.equal("team id is not valid");
-    });
 
+    });
 
     it("should not delete a team by unauthorized admin", async () => {
       const req = {
@@ -297,7 +358,7 @@ describe("TeamController", () => {
         }
       }
 
-      const formerStub = sinon.stub(teamService, "adminGetTeam").returns(formerTeam);
+      const formerStub = sandbox.stub(teamService, "adminGetTeam").returns(formerTeam);
 
       teamController = new TeamController(userService, adminService, teamService);
 
@@ -314,7 +375,6 @@ describe("TeamController", () => {
     it("should delete a team successfully", async () => {
 
       const req = {
-
         //make sure the id here, matches the admin id from the team we wishes to update
         tokenMetadata: { _id: "5e678b4527b990c36ff39dda" }, 
 
@@ -334,8 +394,8 @@ describe("TeamController", () => {
         data: "team deleted"
       }
 
-      const formerStub = sinon.stub(teamService, "adminGetTeam").returns(formerTeam);
-      const stub = sinon.stub(teamService, "deleteTeam").returns(stubValue);
+      const formerStub = sandbox.stub(teamService, "adminGetTeam").returns(formerTeam);
+      const stub = sandbox.stub(teamService, "deleteTeam").returns(stubValue);
 
       teamController = new TeamController(userService, adminService, teamService);
 
@@ -354,6 +414,8 @@ describe("TeamController", () => {
 
     let status, json, res, teamController, adminService, userService, teamService
 
+    let sandbox = null
+
     beforeEach(() => {
       status = sinon.stub();
       json = sinon.spy();
@@ -362,9 +424,14 @@ describe("TeamController", () => {
       adminService = new AdminService();
       teamService = new TeamService();
       userService = new UserService();
+      sandbox = sinon.createSandbox()
     });
 
+    afterEach(() => {
+      sandbox.restore()
+    })
 
+    //we wont get reach the validation, no need to mock it
     it("should return unauthorized if no token is provided", async () => {
 
       const req = {
@@ -381,12 +448,13 @@ describe("TeamController", () => {
       expect(json.args[0][0].error).to.equal("unauthorized");
     });
 
-
-    it("should not get a team whose id is invalid", async () => {
+    //return error when the team id is not valid
+    it("should return error when invalid team id param is used", async () => {
       const req = {
-        tokenMetadata: { _id: "5e678b4527b990c36ff39dda" },
 
-        params: { id: "dsnfsdnfnsdfkjnsdjfn"} //this is an invalid id
+        tokenMetadata: { _id: faker.random.uuid() }, 
+
+        params: { id: "sjdfisdjflksdfshdiufs"} //invalid team id
       };
 
       teamController = new TeamController(userService, adminService, teamService);
@@ -397,6 +465,7 @@ describe("TeamController", () => {
       expect(status.args[0][0]).to.equal(400);
       expect(json.calledOnce).to.be.true;
       expect(json.args[0][0].error).to.equal("team id is not valid");
+
     });
 
 
@@ -411,8 +480,7 @@ describe("TeamController", () => {
 
       const user = {
         _id: faker.random.uuid(),
-        name: faker.name.findName()
-        ,
+        name: faker.name.findName(),
       }
 
       const team = {
@@ -420,8 +488,8 @@ describe("TeamController", () => {
         name: "the team",
       }
 
-      const userStub = sinon.stub(userService, "getUser").returns(user); //this user can either be an admin or normal user
-      const stub = sinon.stub(teamService, "getTeam").returns(team);
+      const userStub = sandbox.stub(userService, "getUser").returns(user); //this user can either be an admin or normal user
+      const stub = sandbox.stub(teamService, "getTeam").returns(team);
 
       teamController = new TeamController(userService, adminService, teamService);
 

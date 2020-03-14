@@ -1,11 +1,11 @@
 import User from '../models/user'
 import { ObjectID } from 'mongodb'
+import password from '../utils/password'
 
 
 class AdminService {
-  constructor(password) {
+  constructor() {
     this.user = User
-    this.pass = password
   }
 
   async createAdmin(admin) {
@@ -19,7 +19,7 @@ class AdminService {
       }
 
       //hash the admin password
-      admin.password = this.pass.hashPassword(admin.password)
+      admin.password = password.hashPassword(admin.password)
 
       //The admin have the role of admin
       admin.role = "admin"

@@ -1,5 +1,5 @@
-import validator from  "email-validator"
 import User from '../models/user'
+import validate from '../utils/validate'
 
 
 
@@ -11,23 +11,15 @@ class UserController {
 
   async createUser(req, res) {
 
-    const { name, email, password } =  req.body
-
-    if (
-      (!name || typeof name !== "string") ||
-      (!email || typeof email !== "string") ||
-      (!password || typeof password !== "string")
-    ) {
+    const errors = validate.registerValidate(req)
+    if (errors.length > 0) {
       return res.status(400).json({
         status: 400,
-        error: "ensure that correct details are sent"
+        errors: errors
       })
     }
-    if (!validator.validate(email)){
-      return res.status(400).json({
-        error: "invalid email"
-      });
-    }
+
+    const { name, email, password } =  req.body
     
     let user = new User({
       name: name.trim(),

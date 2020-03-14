@@ -1,17 +1,18 @@
 import User from '../models/user'
 import jwt from 'jsonwebtoken';
 import config from 'dotenv'
+import password from '../utils/password'
+
 
 config.config()
 
 
 class LoginService {
-  constructor(password) {
+  constructor() {
     this.user = User
-    this.pass = password
   }
 
-  async login(email, password) {
+  async login(email, pass) {
 
     try {
 
@@ -19,7 +20,7 @@ class LoginService {
       if(!user) {
         throw new Error('record not found');
       }
-      const correctPass = this.pass.validPassword(password, user.password);
+      const correctPass = password.validPassword(pass, user.password);
       if (correctPass) {
         let userCred = {
           _id: user._id.toHexString(),

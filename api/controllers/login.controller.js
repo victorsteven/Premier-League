@@ -1,4 +1,4 @@
-import validator from  "email-validator"
+import validate from '../utils/validate'
 
 
 class LoginController {
@@ -8,23 +8,15 @@ class LoginController {
 
   async login(req, res) {
 
-    const { email, password } =  req.body
+    const errors = validate.loginValidate(req)
+    if (errors.length > 0) {
+      return res.status(400).json({
+        status: 400,
+        errors: errors
+      })
+    }
 
-    if (
-      (!email || typeof email !== "string") ||
-      (!password || typeof password !== "string")
-    ) {
-      return res.status(400).json({
-        status: 400,
-        error: "ensure that correct details are sent"
-      })
-    }
-    if (!validator.validate(email)){
-      return res.status(400).json({
-        status: 400,
-        error: "invalid email"
-      })
-    }
+    const { email, password } =  req.body
     
     try {
       const token = await this.loginService.login(email, password)

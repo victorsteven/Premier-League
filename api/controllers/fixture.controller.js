@@ -1,7 +1,7 @@
 import _ from 'lodash'
 import { ObjectID } from 'mongodb';
 import Fixture from '../models/fixture';
-
+import validate from '../utils/validate'
 
 
 class FixtureController {
@@ -24,64 +24,16 @@ class FixtureController {
       });
     }
     
+    const errors = validate.fixtureValidate(req)
+    if (errors.length > 0) {
+      return res.status(400).json({
+        status: 400,
+        errors: errors
+      })
+    }
+
+    //No errors, proceed
     const { home, away, matchday, matchtime } = req.body
-
-    if (
-      (!home || typeof home !== "string") || (!away || typeof away !== "string") ||
-      (!matchday || typeof matchday !== "string") || (!matchtime || typeof matchtime !== "string")
-    ) {
-      return res.status(400).json({
-        error: "ensure that correct details are sent"
-      });
-    }
-    if(!ObjectID.isValid(home)){
-      return res.status(400).json({
-        status: 400,
-        error: "home id is not valid"
-      })
-    }
-    if(!ObjectID.isValid(away)){
-      return res.status(400).json({
-        status: 400,
-        error: "away id is not valid"
-      })
-    }
-
-    let day = /^(0[1-9]|[12][0-9]|3[01])[- /.](0[1-9]|1[012])[- /.](19|20)\d\d$/
-    if(!day.test(matchday)){
-      return res.status(400).json({
-        status: 400,
-        error: `matchday must be of the format: 'dd-mm-yyyy'`
-      })
-    }
-    let time = /^$|^(([01][0-9])|(2[0-3])):[0-5][0-9]$/
-    if(!time.test(matchtime)){
-      return res.status(400).json({
-        status: 400,
-        error: `matchtime must be of the format: '10:30 or 07:00'`
-      })
-    }
-
-    let date = new Date();
-
-    let matchdate = matchday.split("-")[2] + "-" + matchday.split("-")[1] + "-" + matchday.split("-")[0] + ":" + matchtime
-
-    let matchd = new Date(matchdate)
-
-    if (matchd !== date && matchd < date ){
-      return res.status(400).json({
-        status: 400,
-        error: "can't create a fixture with a past date"
-      })
-    }
-
-    //the teams must be different
-    if(home === away){
-      return res.status(400).json({
-        status: 400,
-        error: "You can't create a fixture with the same team"
-      })
-    }
 
     try {
       
@@ -127,78 +79,32 @@ class FixtureController {
       });
     }
 
-    //check if the id passed to edit is valid
-    var requestId = req.params.id;
-    if(!ObjectID.isValid(requestId)){
+    //check the request param
+    const { id } = req.params 
+    if(!ObjectID.isValid(id)){
       return res.status(400).json({
         status: 400,
         error: "fixture id is not valid"
       })
     }
 
+    const errors = validate.fixtureValidate(req)
+    if (errors.length > 0) {
+      return res.status(400).json({
+        status: 400,
+        errors: errors
+      })
+    }
+
+    //No errors, proceed
     const { home, away, matchday, matchtime } = req.body
-
-    if (
-      (!home || typeof home !== "string") || (!away || typeof away !== "string") ||
-      (!matchday || typeof matchday !== "string") || (!matchtime || typeof matchtime !== "string")
-    ) {
-      return res.status(400).json({
-        error: "ensure that correct details are sent"
-      });
-    }
-    if(!ObjectID.isValid(home)){
-      return res.status(400).json({
-        status: 400,
-        error: "home id is not valid"
-      })
-    }
-    if(!ObjectID.isValid(away)){
-      return res.status(400).json({
-        status: 400,
-        error: "away id is not valid"
-      })
-    }
-    let day = /^(0[1-9]|[12][0-9]|3[01])[- /.](0[1-9]|1[012])[- /.](19|20)\d\d$/
-    if(!day.test(matchday)){
-      return res.status(400).json({
-        status: 400,
-        error: `matchday must be of the format: 'dd-mm-yyyy'`
-      })
-    }
-    let time = /^$|^(([01][0-9])|(2[0-3])):[0-5][0-9]$/
-    if(!time.test(matchtime)){
-      return res.status(400).json({
-        status: 400,
-        error: `matchtime must be of the format: '10:30 or 07:00'`
-      })
-    }
-    let date = new Date();
-
-    let matchdate = matchday.split("-")[2] + "-" + matchday.split("-")[1] + "-" + matchday.split("-")[0] + ":" + matchtime
-
-    let matchd = new Date(matchdate)
-
-    if (matchd !== date && matchd < date ){
-      return res.status(400).json({
-        status: 400,
-        error: "can't update a fixture with a past date"
-      })
-    }
-
-    //the teams must be different
-    if(home === away){
-      return res.status(400).json({
-        status: 400,
-        error: "You can't update a fixture with the same team"
-      })
-    }
 
     try {
       
       let adminId = tokenMetadata._id
 
       //check if the team exist and if the owner is legit, before updating it:
-      const fixture = await this.fixtureService.adminGetFixture(requestId)
+      const fixture = await this.fixtureService.adminGetFixture(id)
       if (fixture.admin._id.toHexString() !== adminId) {
         return res.status(401).json({
           status: 401,
@@ -241,8 +147,9 @@ class FixtureController {
       });
     }
 
-    var requestId = req.params.id;
-    if(!ObjectID.isValid(requestId)){
+    //check the request param
+    const { id } = req.params 
+    if(!ObjectID.isValid(id)){
       return res.status(400).json({
         status: 400,
         error: "fixture id is not valid"
@@ -254,7 +161,7 @@ class FixtureController {
       let adminId = tokenMetadata._id
 
       //check if the fixture exist and if the owner is legit, before updating it:
-      const fixture = await this.fixtureService.adminGetFixture(requestId)
+      const fixture = await this.fixtureService.adminGetFixture(id)
       if (fixture.admin._id.toHexString() !== adminId) {
         return res.status(401).json({
           status: 401,
@@ -289,8 +196,9 @@ class FixtureController {
       });
     }
 
-    var requestId = req.params.id;
-    if(!ObjectID.isValid(requestId)){
+    //check the request param
+    const { id } = req.params 
+    if(!ObjectID.isValid(id)){
       return res.status(400).json({
         status: 400,
         error: "fixture id is not valid"
@@ -304,7 +212,7 @@ class FixtureController {
       //verify if the account that want to view this fixture exists(weather admin or normal user) 
       const user = await this.userService.getUser(authId)
       if(user) {
-        const fixture = await this.fixtureService.getFixture(requestId)
+        const fixture = await this.fixtureService.getFixture(id)
         if (fixture) {
           return res.status(200).json({
             status: 200,
