@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "nodemon --exec babel-node ./api/index.js",
     "test": "export NODE_ENV=test && nyc --require @babel/register  mocha ./api/**/*.test.js --timeout 20000 --exit",
-    "coveralls": "nyc npm test && nyc report --reporter=text-lcov | coveralls"
+    "coveralls": "nyc npm test && nyc report --reporter=text-lcov | coveralls",
+    "build": "rm -rf ./dist && babel -d ./dist ./api -s",
+    "start": "npm run build && node ./dist/index.js"
   },
   "repository": {
     "type": "git",

@@ -17,4 +17,4 @@ COPY . .
 
 EXPOSE 8080
 
-CMD [ "dev", "index.js" ]
+CMD [ "start", "index.js" ]
