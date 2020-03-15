@@ -16,7 +16,7 @@ const port = process.env.PORT || 8000;
 app.use('/api/v1', routes)
 
 app.get('/', (req, res) => res.status(200).send({
- error: 'Hello! Welcome to this API.'
+ Success: 'Hello! Welcome to this API.'
 }));
 
 app.listen(port, () => {
