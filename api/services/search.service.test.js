@@ -134,7 +134,6 @@ describe('SearchFixtureService', () => {
     sandbox.restore()
   })
 
-
   describe('searchHomeFixture', () => {
 
     it('should return empty if search result is not found', async () => {
