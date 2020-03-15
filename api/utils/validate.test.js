@@ -234,7 +234,21 @@ describe('Validation', () => {
 
      let errors = validate.fixtureSearchValidate(req)
 
-     console.log("the errors: ", errors)
+     expect(errors.length).to.be.greaterThan(0)
+     expect(JSON.stringify(errors)).to.equal(JSON.stringify(errorsResponse)) //since we are comparing the values of two arrays we use stringify
+    });
+
+    it('cannot search a fixture with invalid matchtime', () => {
+
+      const req = {
+       query: { matchtime: "3:00pm" } //invalid matchtime
+     };
+
+      const errorsResponse =  [ 
+        {"matchtime": "matchtime must be of the format: '10:30 or 07:00'"},
+      ]
+
+     let errors = validate.fixtureSearchValidate(req)
 
      expect(errors.length).to.be.greaterThan(0)
      expect(JSON.stringify(errors)).to.equal(JSON.stringify(errorsResponse)) //since we are comparing the values of two arrays we use stringify

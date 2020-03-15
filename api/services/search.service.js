@@ -14,16 +14,12 @@ class SearchService {
   async searchTeam(name){
 
     try {
-
-      if(name) {
-
-        const teams = await this.team.find({'name': { $regex: '.*' + name, $options:'i'  + '.*' }})
-                                      .select('-admin')
-                                      .select('-__v')
-                                      .exec()
-        return teams
-
-      }
+      //a wildcard might get more than one team
+      const teams = await this.team.find({'name': { $regex: '.*' + name, $options:'i'  + '.*' }})
+                                    .select('-admin')
+                                    .select('-__v')
+                                    .exec()
+      return teams
 
     } catch(error) {
       throw error;
@@ -280,7 +276,7 @@ class SearchService {
       const homes = await this.team.find({'name': { $regex: '.*' + homeTeam, $options:'i'  + '.*' }}).exec()
 
       if(homes) {
-        
+
         const homeIds = []
 
         homes.map(team => homeIds.push(team._id))

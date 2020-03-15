@@ -14,7 +14,124 @@ const { expect } = chai
 
 //Note any value that comes to this layer of the app is correctly checked and formatted, using our validators. so, only correct data come here.
 
-describe.only('SearchFixtureService', () => {
+
+describe('SearchTeamService', () => {
+
+  let sandbox = null
+
+  beforeEach(() => {
+    sandbox = sinon.createSandbox();
+  });
+
+  afterEach(() => {
+    sandbox.restore()
+  })
+
+
+  describe('searchTeam', () => {
+
+    it('should return empty if search result is not found', async () => {
+
+      let team = "Chelsea"
+
+      var mockFind = {
+
+        select() {
+          return this;
+        },
+        populate() {
+            return this;
+        },
+        exec() {
+          return Promise.resolve(false);
+        }
+      };
+
+      const teamStub = sandbox.stub(Team, 'find').returns(mockFind);
+
+      const searchService = new SearchService();
+
+      await expect(searchService.searchTeam(team)).to.be.empty
+
+      expect(teamStub.calledOnce).to.be.true;
+     
+    });
+
+    it('should search and get team', async () => {
+
+      let teamInput = "Chelsea"
+
+      const teamValue = {
+        "_id": "5e69748a6e72a1a0793956eb",
+        "name": "Chelsea"
+      }
+
+      var mockTeam = {
+        select() {
+          return this;
+        },
+        populate() {
+            return this;
+        },
+        exec() {
+          return Promise.resolve(teamValue);
+        }
+      };
+
+      const teamStub = sandbox.stub(Team, 'find').returns(mockTeam);
+
+      const searchService = new SearchService();
+
+      const team = await searchService.searchTeam(teamInput);
+
+      expect(teamStub.calledOnce).to.be.true;
+      expect(team._id).to.equal(teamValue._id);
+      expect(team._id).to.equal(teamValue._id);
+    });
+
+    it('should search and get team that matches a wildcard', async () => {
+
+      let teamInput = "Manchester"
+
+      //The input can match the teams below
+      const teamsValue = [
+        {
+          "_id": "5e69748a6e72a1a0793956eb",
+          "name": "Manchester United"
+        },
+        {
+          "_id": "5e6d168ce43d8272913a7d98",
+          "name": "Manchester City"
+        },
+      ]
+
+      var mockTeam = {
+        select() {
+          return this;
+        },
+        populate() {
+            return this;
+        },
+        exec() {
+          return Promise.resolve(teamsValue);
+        }
+      };
+
+      const teamStub = sandbox.stub(Team, 'find').returns(mockTeam);
+
+      const searchService = new SearchService();
+
+      const teams = await searchService.searchTeam(teamInput);
+
+      expect(teamStub.calledOnce).to.be.true;
+      expect(teams.length).to.be.equal(2);
+    });
+  });
+})
+
+
+
+describe('SearchFixtureService', () => {
 
   let sandbox = null
 
