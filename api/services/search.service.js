@@ -28,49 +28,54 @@ class SearchService {
 
   async searchFixture(query) {
 
+    const { home, away, matchday, matchtime } = query
+
     try {
 
-      if(query.home && !query.away && !query.matchday && !query.matchtime) {
-        return await this.searchHomeFixture(query.home)
+      if(home && !away && !matchday && !matchtime) {
+        return await this.searchHomeFixture(home)
       } 
-      else if (!query.home && query.away && !query.matchday && !query.matchtime) {
-        return await this.searchAwayFixture(query.away)
+      else if (!home && away && !matchday && !matchtime) {
+        return await this.searchAwayFixture(away)
       }
-      else if (!query.home && !query.away && query.matchday && !query.matchtime) {
-        return await this.searchMatchDayFixture(query.matchday)
+      else if (!home && !away && matchday && !matchtime) {
+        return await this.searchMatchDayFixture(matchday)
       }
-      else if (!query.home && !query.away && !query.matchday && query.matchtime) {
-        return await this.searchMatchTimeFixture(query.matchtime)
+      else if (!home && !away && !matchday && matchtime) {
+        return await this.searchMatchTimeFixture(matchtime)
       }
-      else if (query.home && query.away && !query.matchday && !query.matchtime) {
-        return await this.searchHomeAndAwayFixture(query.home, query.away)
+      else if (home && away && !matchday && !matchtime) {
+        return await this.searchHomeAndAwayFixture(home, away)
       }
-      else if (query.home && !query.away && query.matchday && !query.matchtime) {
-        return await this.searchHomeAndMatchDayFixture(query.home, query.matchday)
+      else if (home && !away && matchday && !matchtime) {
+        return await this.searchHomeAndMatchDayFixture(home, matchday)
       }
-      else if (query.home && !query.away && !query.matchday && query.matchtime) {
-        return await this.searchHomeAndMatchTimeFixture(query.home, query.matchtime)
+      else if (home && !away && !matchday && matchtime) {
+        return await this.searchHomeAndMatchTimeFixture(home, matchtime)
       }
-      else if (query.home && query.away && query.matchday && !query.matchtime) {
-        return await this.searchHomeAwayAndMatchDayFixture(query.home, query.away, query.matchday)
+      else if (home && away && matchday && !matchtime) {
+        return await this.searchHomeAwayAndMatchDayFixture(home, away, matchday)
       }
-      else if (query.home && query.away && !query.matchday && query.matchtime) {
-        return await this.searchHomeAwayAndMatchTimeFixture(query.home, query.away, query.matchtime)
+      else if (home && away && !matchday && matchtime) {
+        return await this.searchHomeAwayAndMatchTimeFixture(home, away, matchtime)
       }
-      else if (query.home && !query.away && query.matchday && query.matchtime) {
-        return await this.searchHomeMatchDayAndMatchTimeFixture(query.home, query.matchday, query.matchtime)
+      else if (home && !away && matchday && matchtime) {
+        return await this.searchHomeMatchDayAndMatchTimeFixture(home, matchday, matchtime)
       }
-      else if (!query.home && query.away && query.matchday && !query.matchtime) {
-        return await this.searchAwayAndMatchDayFixture(query.away, query.matchday)
+      else if (!home && away && matchday && !matchtime) {
+        return await this.searchAwayAndMatchDayFixture(away, matchday)
       }
-      else if (!query.home && query.away && !query.matchday && query.matchtime) {
-        return await this.searchAwayAndMatchTimeFixture(query.away, query.matchtime)
+      else if (!home && away && !matchday && matchtime) {
+        return await this.searchAwayAndMatchTimeFixture(away, matchtime)
       }
-      else if (!query.home && query.away && query.matchday && query.matchtime) {
-        return await this.searchAwayMatchDayAndMatchTimeFixture(query.away, query.matchday, query.matchtime)
+      else if (!home && away && matchday && matchtime) {
+        return await this.searchAwayMatchDayAndMatchTimeFixture(away, matchday, matchtime)
       }
-      else if (!query.home && !query.away && query.matchday && query.matchtime) {
-        return await this.searchMatchDayAndMatchTimeFixture(query.matchday, query.matchtime)
+      else if (!home && !away && matchday && matchtime) {
+        return await this.searchMatchDayAndMatchTimeFixture(matchday, matchtime)
+      }
+      else if (home && away && matchday && matchtime) {
+        return await this.searchHomeAwayMatchDayAndMatchTimeFixture(home, away, matchday, matchtime)
       }
 
     } catch(error) {
@@ -438,6 +443,37 @@ class SearchService {
 
       return fixtures
 
+    }  catch(error) {
+      throw error;
+    }
+  }
+
+    async searchHomeAwayMatchDayAndMatchTimeFixture(homeTeam, awayTeam, matchDay, matchTime) {
+
+      try {
+  
+      const homes = await this.team.find({'name': { $regex: '.*' + homeTeam, $options:'i' + '.*' }})
+      const aways = await this.team.find({'name': { $regex: '.*' + awayTeam, $options:'i' + '.*' }})
+
+      if(homes && aways) {
+
+        const homeIds = []
+        const awayIds = []
+  
+        homes.map(team => homeIds.push(team._id))
+        aways.map(team => awayIds.push(team._id))
+  
+        const fixtures = await this.fixture.find({ home: { $in: homeIds }, away: { $in: awayIds }, matchday: matchDay, matchtime: matchTime })
+                                            .select('-admin')
+                                            .select('-__v')
+                                            .populate('home', '_id name')
+                                            .populate('away', '_id name')
+                                            .exec()
+  
+        return fixtures
+
+      }
+  
     }  catch(error) {
       throw error;
     }
