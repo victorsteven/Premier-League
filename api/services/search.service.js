@@ -24,7 +24,7 @@ class SearchService {
         return teams
 
       }
-      
+
     } catch(error) {
       throw error;
     }
@@ -105,13 +105,14 @@ class SearchService {
 
     try {
 
-      const aways = await this.team.find({'name': { $regex: '.*' + awayTeam, $options:'i'  + '.*' }})
+      const aways = await this.team.find({'name': { $regex: '.*' + awayTeam, $options:'i'  + '.*' }}).exec()
 
-      const awayIds = []
+      if(aways) {
+        const awayIds = []
 
-      aways.map(team => awayIds.push(team._id))
+        aways.map(team => awayIds.push(team._id))
 
-      const awayMatchDayMatchTimeFixtures = await this.fixture.find({ away: { $in: awayIds }, matchday: matchDay, matchtime: matchTime })
+        const awayMatchDayMatchTimeFixtures = await this.fixture.find({ away: { $in: awayIds }, matchday: matchDay, matchtime: matchTime })
                                                               .select('-admin')
                                                               .select('-__v')
                                                               .populate('home', '_id name')
@@ -119,6 +120,8 @@ class SearchService {
                                                               .exec()
 
       return awayMatchDayMatchTimeFixtures
+
+      } 
 
     } catch(error) {
       throw error;
@@ -129,20 +132,23 @@ class SearchService {
 
     try {
 
-      const aways = await this.team.find({'name': { $regex: '.*' + awayTeam, $options:'i'  + '.*' }})
+      const aways = await this.team.find({'name': { $regex: '.*' + awayTeam, $options:'i'  + '.*' }}).exec()
 
-      const awayIds = []
+      if(aways) {
+        const awayIds = []
 
-      aways.map(team => awayIds.push(team._id))
+        aways.map(team => awayIds.push(team._id))
 
-      const awayMatchTimeFixtures = await this.fixture.find({ away: { $in: awayIds }, matchtime: matchTime })
+        const awayMatchTimeFixtures = await this.fixture.find({ away: { $in: awayIds }, matchtime: matchTime })
                                                       .select('-admin')
                                                       .select('-__v')
                                                       .populate('home', '_id name')
                                                       .populate('away', '_id name')
                                                       .exec()
 
-      return awayMatchTimeFixtures
+        return awayMatchTimeFixtures
+
+      }
 
     } catch(error) {
       throw error;
@@ -153,20 +159,23 @@ class SearchService {
 
     try {
 
-      const aways = await this.team.find({'name': { $regex: '.*' + awayTeam, $options:'i'  + '.*' }})
+      const aways = await this.team.find({'name': { $regex: '.*' + awayTeam, $options:'i'  + '.*' }}).exec()
 
-      const awayIds = []
+      if(aways) {
 
-      aways.map(team => awayIds.push(team._id))
+        const awayIds = []
 
-      const awayMatchDayFixtures = await this.fixture.find({ away: { $in: awayIds }, matchday: matchDay })
+        aways.map(team => awayIds.push(team._id))
+
+        const awayMatchDayFixtures = await this.fixture.find({ away: { $in: awayIds }, matchday: matchDay })
                                                       .select('-admin')
                                                       .select('-__v')
                                                       .populate('home', '_id name')
                                                       .populate('away', '_id name')
                                                       .exec()
 
-      return awayMatchDayFixtures
+        return awayMatchDayFixtures
+      }
 
     } catch(error) {
       throw error;
@@ -178,20 +187,22 @@ class SearchService {
 
     try {
 
-      const homes = await this.team.find({'name': { $regex: '.*' + homeTeam, $options:'i'  + '.*' }})
+      const homes = await this.team.find({'name': { $regex: '.*' + homeTeam, $options:'i'  + '.*' }}).exec()
 
-      const homeIds = []
+      if (homes) {
+        const homeIds = []
 
-      homes.map(team => homeIds.push(team._id))
-
-      const homeMatchDayMatchTimeFixtures = await this.fixture.find({ home: { $in: homeIds }, matchday: matchDay, matchtime: matchTime })
-                                                              .select('-admin')
-                                                              .select('-__v')
-                                                              .populate('home', '_id name')
-                                                              .populate('away', '_id name')
-                                                              .exec()
-
-      return homeMatchDayMatchTimeFixtures
+        homes.map(team => homeIds.push(team._id))
+  
+        const homeMatchDayMatchTimeFixtures = await this.fixture.find({ home: { $in: homeIds }, matchday: matchDay, matchtime: matchTime })
+                                                                .select('-admin')
+                                                                .select('-__v')
+                                                                .populate('home', '_id name')
+                                                                .populate('away', '_id name')
+                                                                .exec()
+  
+        return homeMatchDayMatchTimeFixtures
+      }
 
     } catch(error) {
       throw error;
@@ -203,16 +214,18 @@ class SearchService {
 
     try {
 
-      const homes = await this.team.find({'name': { $regex: '.*' + homeTeam, $options:'i'  + '.*' }})
-      const aways = await this.team.find({'name': { $regex: '.*' + awayTeam, $options:'i'  + '.*' }})
+      const homes = await this.team.find({'name': { $regex: '.*' + homeTeam, $options:'i'  + '.*' }}).exec()
+      const aways = await this.team.find({'name': { $regex: '.*' + awayTeam, $options:'i'  + '.*' }}).exec()
 
-      const homeIds = []
-      const awayIds = []
+      if(homes && aways) {
 
-      homes.map(team => homeIds.push(team._id))
-      aways.map(team => awayIds.push(team._id))
+        const homeIds = []
+        const awayIds = []
 
-      const homeAwayMatchTimeFixtures = await this.fixture.find({ home: { $in: homeIds }, away: { $in: awayIds }, matchtime: matchTime })
+        homes.map(team => homeIds.push(team._id))
+        aways.map(team => awayIds.push(team._id))
+
+        const homeAwayMatchTimeFixtures = await this.fixture.find({ home: { $in: homeIds }, away: { $in: awayIds }, matchtime: matchTime })
                                                           .select('-admin')
                                                           .select('-__v')
                                                           .populate('home', '_id name')
@@ -220,6 +233,8 @@ class SearchService {
                                                           .exec()
 
       return homeAwayMatchTimeFixtures
+
+    }
 
     } catch(error) {
       throw error;
@@ -231,23 +246,27 @@ class SearchService {
 
     try {
 
-      const homes = await this.team.find({'name': { $regex: '.*' + homeTeam, $options:'i'  + '.*' }})
-      const aways = await this.team.find({'name': { $regex: '.*' + awayTeam, $options:'i'  + '.*' }})
+      const homes = await this.team.find({'name': { $regex: '.*' + homeTeam, $options:'i'  + '.*' }}).exec()
+      const aways = await this.team.find({'name': { $regex: '.*' + awayTeam, $options:'i'  + '.*' }}).exec()
 
-      const homeIds = []
-      const awayIds = []
+      if(homes && aways) {
 
-      homes.map(team => homeIds.push(team._id))
-      aways.map(team => awayIds.push(team._id))
+        const homeIds = []
+        const awayIds = []
 
-      const homeAwayMatchDayFixtures = await this.fixture.find({ home: { $in: homeIds }, away: { $in: awayIds }, matchday: matchDay })
+        homes.map(team => homeIds.push(team._id))
+        aways.map(team => awayIds.push(team._id))
+
+        const homeAwayMatchDayFixtures = await this.fixture.find({ home: { $in: homeIds }, away: { $in: awayIds }, matchday: matchDay })
                                                           .select('-admin')
                                                           .select('-__v')
                                                           .populate('home', '_id name')
                                                           .populate('away', '_id name')
                                                           .exec()
 
-      return homeAwayMatchDayFixtures
+        return homeAwayMatchDayFixtures
+
+      }
 
     } catch(error) {
       throw error;
@@ -258,20 +277,23 @@ class SearchService {
 
     try {
 
-      const homes = await this.team.find({'name': { $regex: '.*' + homeTeam, $options:'i'  + '.*' }})
+      const homes = await this.team.find({'name': { $regex: '.*' + homeTeam, $options:'i'  + '.*' }}).exec()
 
-      const homeIds = []
+      if(homes) {
+        
+        const homeIds = []
 
-      homes.map(team => homeIds.push(team._id))
+        homes.map(team => homeIds.push(team._id))
 
-      const homeMatchDayFixtures = await this.fixture.find({ home: { $in: homeIds },  matchtime: matchTime })
+        const homeMatchDayFixtures = await this.fixture.find({ home: { $in: homeIds },  matchtime: matchTime })
                                                       .select('-admin')
                                                       .select('-__v')
                                                       .populate('home', '_id name')
                                                       .populate('away', '_id name')
                                                       .exec()
+        return homeMatchDayFixtures
 
-      return homeMatchDayFixtures
+      }
 
     } catch(error) {
       throw error;
@@ -282,20 +304,23 @@ class SearchService {
 
     try {
 
-      const homes = await this.team.find({'name': { $regex: '.*' + homeTeam, $options:'i'  + '.*' }})
+      const homes = await this.team.find({'name': { $regex: '.*' + homeTeam, $options:'i'  + '.*' }}).exec()
 
-      const homeIds = []
+      if(homes){
 
-      homes.map(team => homeIds.push(team._id))
+        const homeIds = []
 
-      const homeMatchDayFixtures = await this.fixture.find({ home: { $in: homeIds }, matchday: matchDay })
+        homes.map(team => homeIds.push(team._id))
+
+        const homeMatchDayFixtures = await this.fixture.find({ home: { $in: homeIds }, matchday: matchDay })
                                                       .select('-admin')
                                                       .select('-__v')
                                                       .populate('home', '_id name')
                                                       .populate('away', '_id name')
                                                       .exec()
 
-      return homeMatchDayFixtures
+        return homeMatchDayFixtures
+      }
 
     } catch(error) {
       throw error;
@@ -341,22 +366,30 @@ class SearchService {
 
   async searchHomeFixture(homeTeam){
 
+    console.log("th home team: ", homeTeam)
+
+
     try {
 
-      const homes = await this.team.find({'name': { $regex: '.*' + homeTeam, $options:'i'  + '.*' }})
+      const homes = await this.team.find({'name': { $regex: '.*' + homeTeam, $options:'i'  + '.*' }}).exec()
 
-      const homeIds = []
+      console.log("the homes: ", homes)
 
-      homes.map(team => homeIds.push(team._id))
+      if (homes) {
 
-      const homeFixtures = await this.fixture.find({ home: { $in: homeIds } })
-                                              .select('-admin')
-                                              .select('-__v')
-                                              .populate('home', '_id name')
-                                              .populate('away', '_id name')
-                                              .exec()
+        const homeIds = []
 
-      return homeFixtures
+        homes.map(team => homeIds.push(team._id))
+
+        const homeFixtures = await this.fixture.find({ home: { $in: homeIds } })
+                                                .select('-admin')
+                                                .select('-__v')
+                                                .populate('home', '_id name')
+                                                .populate('away', '_id name')
+                                                .exec()
+
+        return homeFixtures
+      }
 
     } catch(error) {
       throw error;
@@ -366,22 +399,29 @@ class SearchService {
 
   async searchAwayFixture(awayTeam){
 
+    console.log("th away team: ", awayTeam)
+
     try {
 
-      const aways = await this.team.find({'name': { $regex: '.*' + awayTeam, $options:'i' + '.*' }})
+      const aways = await this.team.find({'name': { $regex: '.*' + awayTeam, $options:'i' + '.*' }}).exec()
 
-      const awayIds = []
+      console.log("th away teams here: ", aways)
 
-      aways.map(team => awayIds.push(team._id))
 
-      const awayFixtures = await this.fixture.find({ away: { $in: awayIds } })
+      if(aways) {
+        const awayIds = []
+
+        aways.map(team => awayIds.push(team._id))
+
+        const awayFixtures = await this.fixture.find({ away: { $in: awayIds } })
                                               .select('-admin')
                                               .select('-__v')
                                               .populate('home', '_id name')
                                               .populate('away', '_id name')
                                               .exec()
 
-      return awayFixtures
+        return awayFixtures
+      }
 
     } catch(error) {
       throw error;
