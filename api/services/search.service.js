@@ -362,14 +362,9 @@ class SearchService {
 
   async searchHomeFixture(homeTeam){
 
-    console.log("th home team: ", homeTeam)
-
-
     try {
 
       const homes = await this.team.find({'name': { $regex: '.*' + homeTeam, $options:'i'  + '.*' }}).exec()
-
-      console.log("the homes: ", homes)
 
       if (homes) {
 
@@ -395,14 +390,9 @@ class SearchService {
 
   async searchAwayFixture(awayTeam){
 
-    console.log("th away team: ", awayTeam)
-
     try {
 
       const aways = await this.team.find({'name': { $regex: '.*' + awayTeam, $options:'i' + '.*' }}).exec()
-
-      console.log("th away teams here: ", aways)
-
 
       if(aways) {
         const awayIds = []

@@ -1,8 +1,5 @@
 import chai from 'chai'
 import sinon from 'sinon'
-import faker from 'faker'
-import { ObjectID } from 'mongodb'
-import FixtureService from './fixture.service'
 import Fixture from '../models/fixture'
 import Team from '../models/team'
 import SearchService from './search.service'
@@ -826,12 +823,12 @@ describe('SearchFixtureService', () => {
       const fixtureValue = {
             "_id": "5e6976e61ec9d7a2d58662a8",
             "home": {
-                "_id": "5e69737e96bdb99f784df32d",
+                "_id": "5e69739d96bdb99f784df32e",
                 "name": "Chelsea"
             },
             "away": {
-                "_id": "5e69739d96bdb99f784df32e",
-                "name": "Newcastle United"
+                "_id": "5e69737e96bdb99f784df32d",
+                "name": "Everton"
             },
             "matchday": "20-10-2050",
             "matchtime": "10:30"
@@ -924,12 +921,12 @@ describe('SearchFixtureService', () => {
       const fixtureValue = {
             "_id": "5e6976e61ec9d7a2d58662a8",
             "home": {
-                "_id": "5e69737e96bdb99f784df32d",
+                "_id": "5e69739d96bdb99f784df32e",
                 "name": "Chelsea"
             },
             "away": {
-                "_id": "5e69739d96bdb99f784df32e",
-                "name": "Newcastle United"
+                "_id": "5e69737e96bdb99f784df32d",
+                "name": "Everton"
             },
             "matchday": "20-10-2050",
             "matchtime": "10:30"
@@ -970,8 +967,10 @@ describe('SearchFixtureService', () => {
       expect(teamStub.calledOnce).to.be.true;
       expect(fixtureStub.calledOnce).to.be.true;
       expect(fixture._id).to.equal(fixtureValue._id);
-      expect(fixture.home).to.equal(fixtureValue.home);
-      expect(fixture.away).to.equal(fixtureValue.away);
+      expect(fixture.home._id).to.equal(fixtureValue.home._id);
+      expect(fixture.away._id).to.equal(fixtureValue.away._id);
+      expect(fixture.home.name).to.equal(fixtureValue.home.name);
+      expect(fixture.away.name).to.equal(fixtureValue.away.name);
       expect(fixture.matchday).to.equal(fixtureValue.matchday);
       expect(fixture.matchtime).to.equal(fixtureValue.matchtime);
     });
@@ -1023,12 +1022,12 @@ describe('SearchFixtureService', () => {
       const fixtureValue = {
             "_id": "5e6976e61ec9d7a2d58662a8",
             "home": {
-                "_id": "5e69737e96bdb99f784df32d",
+                "_id": "5e69739d96bdb99f784df32e",
                 "name": "Chelsea"
             },
             "away": {
-                "_id": "5e69739d96bdb99f784df32e",
-                "name": "Newcastle United"
+                "_id": "5e69737e96bdb99f784df32d",
+                "name": "Everton"
             },
             "matchday": "20-10-2050",
             "matchtime": "10:30"
@@ -1069,8 +1068,10 @@ describe('SearchFixtureService', () => {
       expect(teamStub.calledOnce).to.be.true;
       expect(fixtureStub.calledOnce).to.be.true;
       expect(fixture._id).to.equal(fixtureValue._id);
-      expect(fixture.home).to.equal(fixtureValue.home);
-      expect(fixture.away).to.equal(fixtureValue.away);
+      expect(fixture.home._id).to.equal(fixtureValue.home._id);
+      expect(fixture.away._id).to.equal(fixtureValue.away._id);
+      expect(fixture.home.name).to.equal(fixtureValue.home.name);
+      expect(fixture.away.name).to.equal(fixtureValue.away.name);
       expect(fixture.matchday).to.equal(fixtureValue.matchday);
       expect(fixture.matchtime).to.equal(fixtureValue.matchtime);
     });
@@ -1148,6 +1149,92 @@ describe('SearchFixtureService', () => {
       expect(fixture.away).to.equal(fixtureValue.away);
       expect(fixture.matchday).to.equal(fixtureValue.matchday);
       expect(fixture.matchtime).to.equal(fixtureValue.matchtime);
+    });
+  });
+
+
+  describe('Wildcard Fixtures', () => {
+
+    it('should search and a get a fixture based on home team and matchtime using a wildcard', async () => {
+
+      let home = "Manchester"
+      let matchtime = "10:30"
+
+      const homeTeams =  [
+        {
+          "_id": "5e69748a6e72a1a0793956eb",
+          "name": "Manchester United"
+        },
+        {
+          "_id": "5e6d1673e43d8272913a7d97",
+          "name": "Manchester City"
+        }
+      ]
+
+      const fixtureValues = [
+        {
+          "_id": "5e6976e61ec9d7a2d58662a8",
+          "home": {
+              "_id": "5e69748a6e72a1a0793956eb",
+              "name": "Manchester United"
+          },
+          "away": {
+              "_id": "5e69739d96bdb99f784df32e",
+              "name": "Newcastle United"
+          },
+          "matchday": "12-11-2050",
+          "matchtime": "10:30"
+        },
+        {
+          "_id": "5e6d168ce43d8272913a7d98",
+          "home": {
+              "_id": "5e6d1673e43d8272913a7d97",
+              "name": "Manchester City"
+          },
+          "away": {
+              "_id": "5e69739d96bdb99f784df32e",
+              "name": "Newcastle United"
+          },
+          "matchday": "15-04-2050",
+          "matchtime": "02:15"
+        }
+      ]
+
+      var mockTeams = {
+        select() {
+          return this;
+        },
+        populate() {
+            return this;
+        },
+        exec() {
+          return Promise.resolve(homeTeams);
+        }
+      }; 
+
+      var mockFixture = {
+        select() {
+          return this;
+        },
+        populate() {
+            return this;
+        },
+        exec() {
+          return Promise.resolve(fixtureValues);
+        }
+      };
+
+      const teamStub = sandbox.stub(Team, 'find').returns(mockTeams);
+
+      const fixtureStub = sandbox.stub(Fixture, 'find').returns(mockFixture);
+
+      const searchService = new SearchService();
+
+      const fixtures = await searchService.searchHomeAndMatchTimeFixture(home, matchtime);
+
+      expect(teamStub.calledOnce).to.be.true;
+      expect(fixtureStub.calledOnce).to.be.true;
+      expect(fixtures.length).to.be.equal(2);
     });
   });
 });

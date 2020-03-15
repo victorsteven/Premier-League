@@ -176,7 +176,7 @@ describe('Validation', () => {
       };
 
       const errorsResponse =  [ 
-        { name: 'a valid team name is required, atleastt 3 characters' }
+        { name: 'a valid team name is required, atleast 3 characters' }
       ]
 
       let errors = validate.teamSearchValidate(req)
@@ -209,8 +209,8 @@ describe('Validation', () => {
      };
 
       const errorsResponse =  [ 
-        {"home": "a valid home team is required, atleastt 3 characters"},
-        {"away": "a valid away team is required, atleastt 3 characters"},
+        {"home": "a valid home team is required, atleast 3 characters"},
+        {"away": "a valid away team is required, atleast 3 characters"},
         {"matchday": "matchday must be of the format: 'dd-mm-yyyy'"}, //the month is more than 12
         {"matchtime": "matchtime must be of the format: '10:30 or 07:00'"},
       ]

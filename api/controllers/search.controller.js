@@ -23,8 +23,6 @@ class SearchController {
 
     const { name } = req.query
 
-    console.log("the name: ", name)
-
     try {
       const searchResult = await this.searchService.searchTeam(name)
       if(searchResult) {
