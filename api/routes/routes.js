@@ -54,7 +54,8 @@ router.delete('/fixtures/:id', adminAuth, (req, res) => fixtureController.delete
 router.get('/fixtures/:id', auth, (req, res) => fixtureController.getFixture(req, res))
 router.get('/fixtures', auth, (req, res) => fixtureController.getFixtures(req, res))
 
-// router.get('/search/teams', (req, res) => searchController.searchTeam(req, res))
+//Search
+router.get('/search/team', (req, res) => searchController.searchTeam(req, res))
 router.get('/search/fixture', (req, res) => searchController.searchFixture(req, res))
 
 

@@ -10,6 +10,26 @@ class SearchService {
 
   }
 
+
+  async searchTeam(name){
+
+    try {
+
+      if(name) {
+
+        const teams = await this.team.find({'name': { $regex: '.*' + name, $options:'i'  + '.*' }})
+                                      .select('-admin')
+                                      .select('-__v')
+                                      .exec()
+        return teams
+
+      }
+      
+    } catch(error) {
+      throw error;
+    }
+  }
+
   async searchFixture(query) {
 
     try {
@@ -65,15 +85,14 @@ class SearchService {
 
   async searchMatchDayAndMatchTimeFixture(matchDay, matchTime){
 
-    console.log("only matchDay, matchTime")
-
     try {
 
       const awayMatchTimeFixtures = await this.fixture.find({ matchday: matchDay, matchtime: matchTime })
-                                          .select('-__v')
-                                          .populate('home', '_id name')
-                                          .populate('away', '_id name')
-                                          .exec()
+                                                      .select('-admin')
+                                                      .select('-__v')
+                                                      .populate('home', '_id name')
+                                                      .populate('away', '_id name')
+                                                      .exec()
 
       return awayMatchTimeFixtures
 
@@ -84,8 +103,6 @@ class SearchService {
 
   async searchAwayMatchDayAndMatchTimeFixture(awayTeam, matchDay, matchTime){
 
-    console.log("only away, matchDay, matchTime")
-
     try {
 
       const aways = await this.team.find({'name': { $regex: '.*' + awayTeam, $options:'i'  + '.*' }})
@@ -95,10 +112,11 @@ class SearchService {
       aways.map(team => awayIds.push(team._id))
 
       const awayMatchDayMatchTimeFixtures = await this.fixture.find({ away: { $in: awayIds }, matchday: matchDay, matchtime: matchTime })
-                                          .select('-__v')
-                                          .populate('home', '_id name')
-                                          .populate('away', '_id name')
-                                          .exec()
+                                                              .select('-admin')
+                                                              .select('-__v')
+                                                              .populate('home', '_id name')
+                                                              .populate('away', '_id name')
+                                                              .exec()
 
       return awayMatchDayMatchTimeFixtures
 
@@ -109,8 +127,6 @@ class SearchService {
 
   async searchAwayAndMatchTimeFixture(awayTeam, matchTime){
 
-    console.log("only away, matchTime")
-
     try {
 
       const aways = await this.team.find({'name': { $regex: '.*' + awayTeam, $options:'i'  + '.*' }})
@@ -120,10 +136,11 @@ class SearchService {
       aways.map(team => awayIds.push(team._id))
 
       const awayMatchTimeFixtures = await this.fixture.find({ away: { $in: awayIds }, matchtime: matchTime })
-                                          .select('-__v')
-                                          .populate('home', '_id name')
-                                          .populate('away', '_id name')
-                                          .exec()
+                                                      .select('-admin')
+                                                      .select('-__v')
+                                                      .populate('home', '_id name')
+                                                      .populate('away', '_id name')
+                                                      .exec()
 
       return awayMatchTimeFixtures
 
@@ -134,8 +151,6 @@ class SearchService {
 
   async searchAwayAndMatchDayFixture(awayTeam, matchDay){
 
-    console.log("only away, matchDay")
-
     try {
 
       const aways = await this.team.find({'name': { $regex: '.*' + awayTeam, $options:'i'  + '.*' }})
@@ -145,10 +160,11 @@ class SearchService {
       aways.map(team => awayIds.push(team._id))
 
       const awayMatchDayFixtures = await this.fixture.find({ away: { $in: awayIds }, matchday: matchDay })
-                                          .select('-__v')
-                                          .populate('home', '_id name')
-                                          .populate('away', '_id name')
-                                          .exec()
+                                                      .select('-admin')
+                                                      .select('-__v')
+                                                      .populate('home', '_id name')
+                                                      .populate('away', '_id name')
+                                                      .exec()
 
       return awayMatchDayFixtures
 
@@ -160,8 +176,6 @@ class SearchService {
 
   async searchHomeMatchDayAndMatchTimeFixture(homeTeam, matchDay, matchTime){
 
-    console.log("only home, matchDay and matchTime")
-
     try {
 
       const homes = await this.team.find({'name': { $regex: '.*' + homeTeam, $options:'i'  + '.*' }})
@@ -171,10 +185,11 @@ class SearchService {
       homes.map(team => homeIds.push(team._id))
 
       const homeMatchDayMatchTimeFixtures = await this.fixture.find({ home: { $in: homeIds }, matchday: matchDay, matchtime: matchTime })
-                                          .select('-__v')
-                                          .populate('home', '_id name')
-                                          .populate('away', '_id name')
-                                          .exec()
+                                                              .select('-admin')
+                                                              .select('-__v')
+                                                              .populate('home', '_id name')
+                                                              .populate('away', '_id name')
+                                                              .exec()
 
       return homeMatchDayMatchTimeFixtures
 
@@ -185,8 +200,6 @@ class SearchService {
 
 
   async searchHomeAwayAndMatchTimeFixture(homeTeam, awayTeam, matchTime){
-
-    console.log("only home, away and matchTime")
 
     try {
 
@@ -200,10 +213,11 @@ class SearchService {
       aways.map(team => awayIds.push(team._id))
 
       const homeAwayMatchTimeFixtures = await this.fixture.find({ home: { $in: homeIds }, away: { $in: awayIds }, matchtime: matchTime })
-                                          .select('-__v')
-                                          .populate('home', '_id name')
-                                          .populate('away', '_id name')
-                                          .exec()
+                                                          .select('-admin')
+                                                          .select('-__v')
+                                                          .populate('home', '_id name')
+                                                          .populate('away', '_id name')
+                                                          .exec()
 
       return homeAwayMatchTimeFixtures
 
@@ -214,8 +228,6 @@ class SearchService {
 
 
   async searchHomeAwayAndMatchDayFixture(homeTeam, awayTeam, matchDay){
-
-    console.log("only home, away and matchday")
 
     try {
 
@@ -229,10 +241,11 @@ class SearchService {
       aways.map(team => awayIds.push(team._id))
 
       const homeAwayMatchDayFixtures = await this.fixture.find({ home: { $in: homeIds }, away: { $in: awayIds }, matchday: matchDay })
-                                          .select('-__v')
-                                          .populate('home', '_id name')
-                                          .populate('away', '_id name')
-                                          .exec()
+                                                          .select('-admin')
+                                                          .select('-__v')
+                                                          .populate('home', '_id name')
+                                                          .populate('away', '_id name')
+                                                          .exec()
 
       return homeAwayMatchDayFixtures
 
@@ -243,8 +256,6 @@ class SearchService {
 
   async searchHomeAndMatchTimeFixture(homeTeam, matchTime){
 
-    console.log("only home and match time")
-
     try {
 
       const homes = await this.team.find({'name': { $regex: '.*' + homeTeam, $options:'i'  + '.*' }})
@@ -254,10 +265,11 @@ class SearchService {
       homes.map(team => homeIds.push(team._id))
 
       const homeMatchDayFixtures = await this.fixture.find({ home: { $in: homeIds },  matchtime: matchTime })
-                                          .select('-__v')
-                                          .populate('home', '_id name')
-                                          .populate('away', '_id name')
-                                          .exec()
+                                                      .select('-admin')
+                                                      .select('-__v')
+                                                      .populate('home', '_id name')
+                                                      .populate('away', '_id name')
+                                                      .exec()
 
       return homeMatchDayFixtures
 
@@ -268,8 +280,6 @@ class SearchService {
 
   async searchHomeAndMatchDayFixture(homeTeam, matchDay){
 
-    console.log("only home and match day")
-
     try {
 
       const homes = await this.team.find({'name': { $regex: '.*' + homeTeam, $options:'i'  + '.*' }})
@@ -279,10 +289,11 @@ class SearchService {
       homes.map(team => homeIds.push(team._id))
 
       const homeMatchDayFixtures = await this.fixture.find({ home: { $in: homeIds }, matchday: matchDay })
-                                          .select('-__v')
-                                          .populate('home', '_id name')
-                                          .populate('away', '_id name')
-                                          .exec()
+                                                      .select('-admin')
+                                                      .select('-__v')
+                                                      .populate('home', '_id name')
+                                                      .populate('away', '_id name')
+                                                      .exec()
 
       return homeMatchDayFixtures
 
@@ -294,11 +305,10 @@ class SearchService {
 
   async searchMatchDayFixture(matchday){
 
-    console.log("only match day")
-
     try {
 
       const matchDays = await this.fixture.find({ matchday: matchday })
+                                          .select('-admin')
                                           .select('-__v')
                                           .populate('home', '_id name')
                                           .populate('away', '_id name')
@@ -313,15 +323,14 @@ class SearchService {
 
   async searchMatchTimeFixture(matchtime){
 
-    console.log("only match time")
-
     try {
 
       const matchTimes = await this.fixture.find({ matchtime: matchtime })
-                                          .select('-__v')
-                                          .populate('home', '_id name')
-                                          .populate('away', '_id name')
-                                          .exec()
+                                            .select('-admin')
+                                            .select('-__v')
+                                            .populate('home', '_id name')
+                                            .populate('away', '_id name')
+                                            .exec()
 
       return matchTimes
 
@@ -332,8 +341,6 @@ class SearchService {
 
   async searchHomeFixture(homeTeam){
 
-    console.log("only home")
-
     try {
 
       const homes = await this.team.find({'name': { $regex: '.*' + homeTeam, $options:'i'  + '.*' }})
@@ -343,10 +350,11 @@ class SearchService {
       homes.map(team => homeIds.push(team._id))
 
       const homeFixtures = await this.fixture.find({ home: { $in: homeIds } })
-                                          .select('-__v')
-                                          .populate('home', '_id name')
-                                          .populate('away', '_id name')
-                                          .exec()
+                                              .select('-admin')
+                                              .select('-__v')
+                                              .populate('home', '_id name')
+                                              .populate('away', '_id name')
+                                              .exec()
 
       return homeFixtures
 
@@ -358,8 +366,6 @@ class SearchService {
 
   async searchAwayFixture(awayTeam){
 
-    console.log("only away")
-
     try {
 
       const aways = await this.team.find({'name': { $regex: '.*' + awayTeam, $options:'i' + '.*' }})
@@ -369,10 +375,11 @@ class SearchService {
       aways.map(team => awayIds.push(team._id))
 
       const awayFixtures = await this.fixture.find({ away: { $in: awayIds } })
-                                            .select('-__v')
-                                            .populate('home', '_id name')
-                                            .populate('away', '_id name')
-                                            .exec()
+                                              .select('-admin')
+                                              .select('-__v')
+                                              .populate('home', '_id name')
+                                              .populate('away', '_id name')
+                                              .exec()
 
       return awayFixtures
 
@@ -383,8 +390,6 @@ class SearchService {
 
 
   async searchHomeAndAwayFixture(homeTeam, awayTeam) {
-
-    console.log("both", new RegExp(homeTeam, "i"))
 
     try {
 
@@ -399,10 +404,11 @@ class SearchService {
       aways.map(team => awayIds.push(team._id))
 
       const fixtures = await this.fixture.find({ home: { $in: homeIds }, away: { $in: awayIds }  })
-                                            .select('-__v')
-                                            .populate('home', '_id name')
-                                            .populate('away', '_id name')
-                                            .exec()
+                                          .select('-admin')
+                                          .select('-__v')
+                                          .populate('home', '_id name')
+                                          .populate('away', '_id name')
+                                          .exec()
 
       return fixtures
 
