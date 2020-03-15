@@ -106,7 +106,7 @@ class SearchService {
 
     try {
 
-      const aways = await this.team.find({'name': { $regex: '.*' + awayTeam, $options:'i'  + '.*' }}).exec()
+      const aways = await this.team.find({'name': { $regex: '.*' + awayTeam, $options:'i'  + '.*' }})
 
       if(aways) {
         const awayIds = []
@@ -133,7 +133,7 @@ class SearchService {
 
     try {
 
-      const aways = await this.team.find({'name': { $regex: '.*' + awayTeam, $options:'i'  + '.*' }}).exec()
+      const aways = await this.team.find({'name': { $regex: '.*' + awayTeam, $options:'i'  + '.*' }})
 
       if(aways) {
         const awayIds = []
@@ -160,7 +160,7 @@ class SearchService {
 
     try {
 
-      const aways = await this.team.find({'name': { $regex: '.*' + awayTeam, $options:'i'  + '.*' }}).exec()
+      const aways = await this.team.find({'name': { $regex: '.*' + awayTeam, $options:'i'  + '.*' }})
 
       if(aways) {
 
@@ -188,7 +188,7 @@ class SearchService {
 
     try {
 
-      const homes = await this.team.find({'name': { $regex: '.*' + homeTeam, $options:'i'  + '.*' }}).exec()
+      const homes = await this.team.find({'name': { $regex: '.*' + homeTeam, $options:'i'  + '.*' }})
 
       if (homes) {
         const homeIds = []
@@ -215,16 +215,10 @@ class SearchService {
 
     try {
 
-      const homes = await this.team.find({'name': { $regex: '.*' + homeTeam, $options:'i'  + '.*' }}).exec()
-      const aways = await this.team.find({'name': { $regex: '.*' + awayTeam, $options:'i'  + '.*' }}).exec()
+      const homeIds = await this.getHomeIds(homeTeam)
+      const awayIds = await this.getAwayIds(awayTeam)
 
-      if(homes && aways) {
-
-        const homeIds = []
-        const awayIds = []
-
-        homes.map(team => homeIds.push(team._id))
-        aways.map(team => awayIds.push(team._id))
+      if(homeIds && awayIds) {
 
         const homeAwayMatchTimeFixtures = await this.fixture.find({ home: { $in: homeIds }, away: { $in: awayIds }, matchtime: matchTime })
                                                           .select('-admin')
@@ -247,16 +241,10 @@ class SearchService {
 
     try {
 
-      const homes = await this.team.find({'name': { $regex: '.*' + homeTeam, $options:'i'  + '.*' }}).exec()
-      const aways = await this.team.find({'name': { $regex: '.*' + awayTeam, $options:'i'  + '.*' }}).exec()
+      const homeIds = await this.getHomeIds(homeTeam)
+      const awayIds = await this.getAwayIds(awayTeam)
 
-      if(homes && aways) {
-
-        const homeIds = []
-        const awayIds = []
-
-        homes.map(team => homeIds.push(team._id))
-        aways.map(team => awayIds.push(team._id))
+      if(homeIds && awayIds) {
 
         const homeAwayMatchDayFixtures = await this.fixture.find({ home: { $in: homeIds }, away: { $in: awayIds }, matchday: matchDay })
                                                           .select('-admin')
@@ -278,7 +266,7 @@ class SearchService {
 
     try {
 
-      const homes = await this.team.find({'name': { $regex: '.*' + homeTeam, $options:'i'  + '.*' }}).exec()
+      const homes = await this.team.find({'name': { $regex: '.*' + homeTeam, $options:'i'  + '.*' }})
 
       if(homes) {
 
@@ -305,7 +293,7 @@ class SearchService {
 
     try {
 
-      const homes = await this.team.find({'name': { $regex: '.*' + homeTeam, $options:'i'  + '.*' }}).exec()
+      const homes = await this.team.find({'name': { $regex: '.*' + homeTeam, $options:'i'  + '.*' }})
 
       if(homes){
 
@@ -369,7 +357,7 @@ class SearchService {
 
     try {
 
-      const homes = await this.team.find({'name': { $regex: '.*' + homeTeam, $options:'i'  + '.*' }}).exec()
+      const homes = await this.team.find({'name': { $regex: '.*' + homeTeam, $options:'i'  + '.*' }})
 
       if (homes) {
 
@@ -397,7 +385,7 @@ class SearchService {
 
     try {
 
-      const aways = await this.team.find({'name': { $regex: '.*' + awayTeam, $options:'i' + '.*' }}).exec()
+      const aways = await this.team.find({'name': { $regex: '.*' + awayTeam, $options:'i' + '.*' }})
 
       if(aways) {
         const awayIds = []
@@ -424,45 +412,35 @@ class SearchService {
 
     try {
 
-    const homes = await this.team.find({'name': { $regex: '.*' + homeTeam, $options:'i' + '.*' }})
-    const aways = await this.team.find({'name': { $regex: '.*' + awayTeam, $options:'i' + '.*' }})
+      const homeIds = await this.getHomeIds(homeTeam)
+      const awayIds = await this.getAwayIds(awayTeam)
 
+      if(homeIds && awayIds) {
 
-      const homeIds = []
-      const awayIds = []
+        const fixtures = await this.fixture.find({ home: { $in: homeIds }, away: { $in: awayIds }  })
+                                            .select('-admin')
+                                            .select('-__v')
+                                            .populate('home', '_id name')
+                                            .populate('away', '_id name')
+                                            .exec()
 
-      homes.map(team => homeIds.push(team._id))
-      aways.map(team => awayIds.push(team._id))
+        return fixtures
 
-      const fixtures = await this.fixture.find({ home: { $in: homeIds }, away: { $in: awayIds }  })
-                                          .select('-admin')
-                                          .select('-__v')
-                                          .populate('home', '_id name')
-                                          .populate('away', '_id name')
-                                          .exec()
-
-      return fixtures
-
+      }
     }  catch(error) {
       throw error;
     }
   }
 
-    async searchHomeAwayMatchDayAndMatchTimeFixture(homeTeam, awayTeam, matchDay, matchTime) {
+  async searchHomeAwayMatchDayAndMatchTimeFixture(homeTeam, awayTeam, matchDay, matchTime) {
 
-      try {
+    try {
   
-      const homes = await this.team.find({'name': { $regex: '.*' + homeTeam, $options:'i' + '.*' }})
-      const aways = await this.team.find({'name': { $regex: '.*' + awayTeam, $options:'i' + '.*' }})
+      const homeIds = await this.getHomeIds(homeTeam)
+      const awayIds = await this.getAwayIds(awayTeam)
 
-      if(homes && aways) {
+      if(homeIds && awayIds) {
 
-        const homeIds = []
-        const awayIds = []
-  
-        homes.map(team => homeIds.push(team._id))
-        aways.map(team => awayIds.push(team._id))
-  
         const fixtures = await this.fixture.find({ home: { $in: homeIds }, away: { $in: awayIds }, matchday: matchDay, matchtime: matchTime })
                                             .select('-admin')
                                             .select('-__v')
@@ -474,6 +452,48 @@ class SearchService {
 
       }
   
+    }  catch(error) {
+      throw error;
+    }
+  }
+
+  async getHomeIds(homeTeam) {
+
+    try {
+
+      const homes = await this.team.find({'name': { $regex: '.*' + homeTeam, $options:'i' + '.*' }})
+
+      console.log("the homes: ", homes)
+
+      if(homes) {
+
+        const homeIds = []
+
+        homes.map(team => homeIds.push(team._id))
+
+        return homeIds
+      }
+
+    }  catch(error) {
+      throw error;
+    }
+  }
+
+  async getAwayIds(awayTeam) {
+
+    try {
+
+      const aways = await this.team.find({'name': { $regex: '.*' + awayTeam, $options:'i' + '.*' }})
+
+      if(aways) {
+
+        const awayIds = []
+
+        aways.map(team => awayIds.push(team._id))
+
+        return awayIds
+      }
+
     }  catch(error) {
       throw error;
     }
