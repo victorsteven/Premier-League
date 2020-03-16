@@ -76,6 +76,9 @@ class SearchService {
       }
       else if (home && away && matchday && matchtime) {
         return await this.searchHomeAwayMatchDayAndMatchTimeFixture(home, away, matchday, matchtime)
+      } 
+      else {
+        throw new Error("you have not provided valid search data")
       }
 
     } catch(error) {
