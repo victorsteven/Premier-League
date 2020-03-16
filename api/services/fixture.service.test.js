@@ -216,6 +216,9 @@ describe('FixtureService', () => {
         populate() {
             return this;
         },
+        sort() {
+          return this;
+        },
         exec() {
           return Promise.resolve(false);
         }
@@ -269,6 +272,9 @@ describe('FixtureService', () => {
         },
         populate() {
             return this;
+        },
+        sort() {
+          return this;
         },
         exec() {
           return Promise.resolve(stubValues);

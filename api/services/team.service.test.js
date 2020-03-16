@@ -139,6 +139,9 @@ describe('TeamService', () => {
         select() {
           return this;
         },
+        sort() {
+          return this;
+        },
         exec() {
           return Promise.resolve(stubValue);
         }
@@ -162,6 +165,9 @@ describe('TeamService', () => {
 
       var mockFind = {
         select() {
+          return this;
+        },
+        sort() {
           return this;
         },
         exec() {
@@ -194,6 +200,9 @@ describe('TeamService', () => {
 
       var mockFind = {
         select() {
+          return this;
+        },
+        sort() {
           return this;
         },
         exec() {

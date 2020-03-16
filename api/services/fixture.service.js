@@ -108,6 +108,7 @@ class FixtureService {
                                                 .select('-__v')
                                                 .populate('home', '_id name')
                                                 .populate('away', '_id name')
+                                                .sort('matchday')
                                                 .exec()
 
       if (!gottenFixtures) {

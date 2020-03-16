@@ -67,7 +67,7 @@ class TeamService {
 
     try {
 
-      const gottenTeams = await this.team.find().select('-admin').select('-__v').exec()
+      const gottenTeams = await this.team.find().select('-admin').select('-__v').sort('name').exec()
       if (!gottenTeams) {
         throw new Error('no record found');
       }
