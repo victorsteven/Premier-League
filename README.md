@@ -5,8 +5,17 @@ Postman Documentation: https://documenter.getpostman.com/view/4595252/SzS2xo8W?v
 
 Heroku API: https://premier-league-fx.herokuapp.com
 
-### Install the application 
+### Clone the application 
 
+Using SSH:
+```
+git clone https://github.com/victorsteven/Premier-League.git
+```
+
+#### Change to the application directory:
+```
+cd Premier-League
+```
 
 ### Run the Application
 
