@@ -1,5 +1,3 @@
-import chai from 'chai'
-import sinon from 'sinon'
 import faker from 'faker'
 import jwt from 'jsonwebtoken';
 import { ObjectID } from 'mongodb'
@@ -7,59 +5,48 @@ import User from '../models/user'
 import  password from '../utils/password';
 import LoginService from './login.service'
 
-chai.use(require('chai-as-promised'))
-const { expect } = chai
 
 
 describe('LoginService', () => {
-
-  let sandbox = null
-
-  beforeEach(() => {
-    sandbox = sinon.createSandbox();
-  });
-
-  afterEach(() => {
-    sandbox.restore()
-  })
 
   describe('login', () => {
 
     it('should not login a user if the user does not exist', async () => {
 
-      const email = "email@example.com"
-      const pass = "password"
+      const email = 'email@example.com'
+      const pass = 'password'
 
-      const checkStub = sandbox.stub(User, 'findOne').returns(false);
+      const checkStub = jest.spyOn(User, 'findOne').mockReturnValue(false)
 
       const loginService = new LoginService();
 
-      await expect(loginService.login(email, pass)).to.be.rejectedWith(Error, "record not found")
-      
-      expect(checkStub.calledOnce).to.be.true;
+      await expect(loginService.login(email, pass)).rejects.toThrow('record not found');
+
+      expect(checkStub).toHaveBeenCalled();
 
     });
 
     it('should not login a user if password does not match with hash', async () => {
 
-      const email = "email@example.com"
-      const pass = "password"
+      const email = 'email@example.com'
+      const pass = 'password'
 
       const record = {
-        _id: faker.random.uuid(),
+        _id:  new ObjectID("5e69748a6e72a1a0793956eb"), //this id is valid
         name: faker.name.findName(),
       };
 
-      const checkStub = sandbox.stub(User, 'findOne').returns(record);
-      const passStub = sandbox.stub(password, 'validPassword').returns(false); //return that the passwords do not match
+      const checkStub = jest.spyOn(User, 'findOne').mockReturnValue(record)
+
+      const passStub = jest.spyOn(password, 'validPassword').mockReturnValue(false)  //return that the passwords do not match
 
       const loginService = new LoginService();
 
-      await expect(loginService.login(email, pass)).to.be.rejectedWith(Error, "Invalid user credentials")
-      
-      expect(passStub.calledOnce).to.be.true;
-      expect(checkStub.calledOnce).to.be.true;
-      
+      await expect(loginService.login(email, pass)).rejects.toThrow('Invalid user credentials');
+
+      expect(checkStub).toHaveBeenCalled();
+      expect(passStub).toHaveBeenCalled();
+
     });
 
     it('should login a user successfully', async () => {
@@ -74,20 +61,21 @@ describe('LoginService', () => {
       };
       let stubToken = "jkndndfnskdjnfskjdnfjksdnf"
 
-      const checkStub = sandbox.stub(User, 'findOne').returns(stubValue); //the have the user
-      const passStub = sandbox.stub(password, 'validPassword').returns(true); //the passwords match
-      const jwtStub = sandbox.stub(jwt, 'sign').returns(stubToken); //our fake token
+      const checkStub = jest.spyOn(User, 'findOne').mockReturnValue(stubValue)
+
+      const passStub = jest.spyOn(password, 'validPassword').mockReturnValue(true) //the passwords match
+
+      const jwtStub = jest.spyOn(jwt, 'sign').mockReturnValue(stubToken); //our fake token
 
       const loginService = new LoginService();
       const token = await loginService.login(email, pass);
 
-      expect(passStub.calledOnce).to.be.true;
-      expect(checkStub.calledOnce).to.be.true;
-      expect(jwtStub.calledOnce).to.be.true;
-
-      expect(token).to.not.be.null;
-      expect(token).to.have.length.greaterThan(0);
-      expect(token).to.equal(stubToken);
+      expect(checkStub).toHaveBeenCalled();
+      expect(passStub).toHaveBeenCalled();
+      expect(jwtStub).toHaveBeenCalled();
+      expect(token).not.toBeNull();
+      expect(token.length).toBeGreaterThan(0)
+      expect(token).toBe(stubToken);
     });
   });
 });

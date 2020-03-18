@@ -1,217 +1,326 @@
-import chai from 'chai'
-import sinon from 'sinon'
-import Fixture from '../models/fixture'
-import Team from '../models/team'
 import SearchService from './search.service'
+import { seedTeamsAndFixtures } from '../testsetup/index'
+import  { connect, clearDatabase, closeDatabase  }  from '../testsetup/test-db'
 
 
-chai.use(require('chai-as-promised'))
-const { expect } = chai
+//Define the variable to hold our seeded data
+let seededTeamsFixtures
 
+/**
+ * Connect to a new in-memory database before running any tests.
+ */
+beforeAll(async () => {
+  await connect();
+});
 
-//Note any value that comes to this layer of the app is correctly checked and formatted, using our validators. so, only correct data come here.
+beforeEach(async () => {
+  seededTeamsFixtures = await seedTeamsAndFixtures()
+});
+
+/**
+* Clear all test data after every test.
+*/
+afterEach(async () => {
+  await clearDatabase();
+});
+
+/**
+* Remove and close the db and server.
+*/
+afterAll(async () => {
+  await closeDatabase();
+});
+
 
 
 describe('SearchTeamService', () => {
-
-  let sandbox = null
-
-  beforeEach(() => {
-    sandbox = sinon.createSandbox();
-  });
-
-  afterEach(() => {
-    sandbox.restore()
-  })
-
 
   describe('searchTeam', () => {
 
     it('should return empty if search result is not found', async () => {
 
-      let team = "Chelsea"
-
-      var mockFind = {
-
-        select() {
-          return this;
-        },
-        populate() {
-            return this;
-        },
-        exec() {
-          return Promise.resolve(false);
-        }
-      };
-
-      const teamStub = sandbox.stub(Team, 'find').returns(mockFind);
+      let teamInput = 'Chelsea'
 
       const searchService = new SearchService();
 
-      await expect(searchService.searchTeam(team)).to.be.empty
+      const teams = await searchService.searchTeam(teamInput)
 
-      expect(teamStub.calledOnce).to.be.true;
+      expect(teams.length).toBe(0)
      
     });
 
-    it('should search and get team', async () => {
+    it('should search and get team(s)', async () => {
 
-      let teamInput = "Chelsea"
-
-      const teamValue = {
-        "_id": "5e69748a6e72a1a0793956eb",
-        "name": "Chelsea"
-      }
-
-      var mockFind = {
-        select() {
-          return this;
-        },
-        exec() {
-          return Promise.resolve(teamValue);
-        }
-      };
-
-      const teamStub = sandbox.stub(Team, 'find').returns(mockFind);
-
-      const searchService = new SearchService();
-
-      const team = await searchService.searchTeam(teamInput);
-
-      expect(teamStub.calledOnce).to.be.true;
-      expect(team._id).to.equal(teamValue._id);
-      expect(team._id).to.equal(teamValue._id);
-    });
-
-    it('should search and get team that matches a wildcard', async () => {
-
-      let teamInput = "Manchester"
-
-      //The input can match the teams below
-      const teamsValue = [
-        {
-          "_id": "5e69748a6e72a1a0793956eb",
-          "name": "Manchester United"
-        },
-        {
-          "_id": "5e6d168ce43d8272913a7d98",
-          "name": "Manchester City"
-        },
-      ]
-
-      var mockFind = {
-        select() {
-          return this;
-        },
-        exec() {
-          return Promise.resolve(teamsValue);
-        }
-      };
-
-      const teamStub = sandbox.stub(Team, 'find').returns(mockFind);
+      let teamInput = 'Arsenal'
 
       const searchService = new SearchService();
 
       const teams = await searchService.searchTeam(teamInput);
 
-      expect(teamStub.calledOnce).to.be.true;
-      expect(teams.length).to.be.equal(2);
+      //this record can be greater than zero
+      expect(teams.length).toBeGreaterThan(0)
+
     });
   });
-})
+});
 
 
 
 describe('SearchFixtureService', () => {
 
-  let sandbox = null
 
-  beforeEach(() => {
-    sandbox = sinon.createSandbox();
+  describe('searchFixture', () => {
+
+    it('should get fixture based on searchHomeFixture', async () => {
+
+      let query = {
+        home: 'Liverpool',
+      }
+
+      const searchService = new SearchService();
+
+      const result =  await searchService.searchFixture(query)
+
+      expect(result.length).toBe(1)
+    })
+
+    it('should get fixture(s) based on searchAwayFixture', async () => {
+
+      let query = {
+        away: 'Arsenal',
+      }
+      
+      const searchService = new SearchService();
+
+      const result =  await searchService.searchFixture(query)
+
+      expect(result.length).toBe(1)
+    })
+
+    it('should get fixture(s) based on searchMatchDayFixture', async () => {
+
+      let query = {
+        matchday: '20-10-2050',
+      }
+      
+      const searchService = new SearchService();
+
+      const result =  await searchService.searchFixture(query)
+
+      expect(result.length).toBe(1)
+    })
+
+    it('should get fixture(s) based on searchMatchTimeFixture', async () => {
+
+      let query = {
+        matchtime: '07:30',
+      }
+      
+      const searchService = new SearchService();
+
+      const result =  await searchService.searchFixture(query)
+
+      expect(result.length).toBe(1)
+    })
+
+    it('should get fixture(s) based on searchHomeAndAwayFixture', async () => {
+
+      let query = {
+        home: 'Liverpool',
+        away: 'Arsenal'
+      }
+      
+      const searchService = new SearchService();
+
+      const result =  await searchService.searchFixture(query)
+
+      expect(result.length).toBe(1)
+    })
+
+    it('should get fixture(s) based on searchHomeAndMatchDayFixture', async () => {
+
+      let query = {
+        home: 'Liverpool',
+        matchday: '20-10-2050',
+      }
+      
+      const searchService = new SearchService();
+
+      const result =  await searchService.searchFixture(query)
+
+      expect(result.length).toBe(1)
+    })
+
+    it('should get fixture(s) based on searchHomeAndMatchTimeFixture', async () => {
+
+      let query = {
+        home: 'Liverpool',
+        matchtime: '10:30'
+      }
+    
+      const searchService = new SearchService();
+
+      const result =  await searchService.searchFixture(query)
+
+      expect(result.length).toBe(1)
+    })
+
+    it('should get fixture(s) based on searchHomeAwayAndMatchDayFixture', async () => {
+
+      let query = {
+        home: 'West Ham',
+        away: 'Manchester City',
+        matchday: '25-06-2050',
+      }
+
+      const searchService = new SearchService();
+
+      const result =  await searchService.searchFixture(query)
+
+      expect(result.length).toBe(1)
+
+    })
+
+    it('should get fixture(s) based on searchHomeAwayAndMatchTimeFixture', async () => {
+
+      let query = {
+        home: 'West Ham',
+        away: 'Manchester City',
+        matchtime: '07:30'
+      }
+      
+      const searchService = new SearchService();
+
+      const result =  await searchService.searchFixture(query)
+
+      expect(result.length).toBe(1)
+    })
+
+    it('should get fixture(s) based on searchHomeMatchDayAndMatchTimeFixture', async () => {
+
+      let query = {
+        home: 'Liverpool',
+        matchday: '20-10-2050',
+        matchtime: '10:30'
+      }
+      
+      const searchService = new SearchService();
+
+      const result =  await searchService.searchFixture(query)
+
+      expect(result.length).toBe(1)
+    })
+
+    it('should get fixture(s) based on searchAwayAndMatchDayFixture', async () => {
+
+      let query = {
+        away: 'Arsenal',
+        matchday: '20-10-2050',
+      }
+
+      const searchService = new SearchService();
+
+      const result =  await searchService.searchFixture(query)
+
+      expect(result.length).toBe(1)
+    })
+
+    it('should get fixture(s) based on searchAwayAndMatchTimeFixture', async () => {
+
+      let query = {
+        away: 'Arsenal',
+        matchtime: '10:30'
+      }
+
+      const searchService = new SearchService();
+
+      const result =  await searchService.searchFixture(query)
+
+      expect(result.length).toBe(1)
+    })
+
+    it('should get fixture(s) based on searchAwayMatchDayAndMatchTimeFixture', async () => {
+
+      let query = {
+        away: 'Arsenal',
+        matchday: '20-10-2050',
+        matchtime: '10:30'
+      }
+      
+
+      const searchService = new SearchService();
+
+      const result =  await searchService.searchFixture(query)
+
+      expect(result.length).toBe(1)
+    })
+
+    it('should get fixture(s) based on searchMatchDayAndMatchTimeFixture', async () => {
+
+      let query = {
+        matchday: '20-10-2050',
+        matchtime: '10:30'
+      }
+
+      const searchService = new SearchService();
+
+      const result =  await searchService.searchFixture(query)
+
+      expect(result.length).toBe(1)
+    })
+
+    it('should get fixture(s) based on searchHomeAwayMatchDayAndMatchTimeFixture', async () => {
+
+      let query = {
+        home: 'Liverpool',
+        away: 'Arsenal',
+        matchday: '20-10-2050',
+        matchtime: '10:30'
+      }
+
+      const searchService = new SearchService();
+
+      const result =  await searchService.searchFixture(query)
+
+      expect(result.length).toBe(1)
+    })
+
+    it('should get return nothing if no criteria is provided', async () => {
+
+      let query = {}
+
+      const searchService = new SearchService();
+
+      const result = await searchService.searchFixture(query)
+
+      expect(result.length).toBe(0)
+    })
   });
 
-  afterEach(() => {
-    sandbox.restore()
-  })
 
   describe('searchHomeFixture', () => {
 
     it('should return empty if search result is not found', async () => {
 
-      let homeTeam = "Chelsea"
-
-      var mockFind = {
-
-        select() {
-          return this;
-        },
-        populate() {
-            return this;
-        },
-        exec() {
-          return Promise.resolve(false);
-        }
-      };
-
-      //We wont get to the fixture since the team is not found, so we mock only the team
-      const teamStub = sandbox.stub(Team, 'find').returns(mockFind);
+      let homeTeam = 'Chelsea' //this is not in our in-memory db
 
       const searchService = new SearchService();
 
-      await expect(searchService.searchHomeFixture(homeTeam)).to.be.empty
+      //the team table must be searched first, if record not found, it start failing
+      await expect(searchService.searchHomeFixture(homeTeam)).resolves.toBeUndefined()
 
-      expect(teamStub.calledOnce).to.be.true;
-     
     });
 
     it('should search and get fixture based on a home team', async () => {
 
-      let home = "Chelsea"
-
-      const teamsValue = [{
-        "_id": "5e69748a6e72a1a0793956eb",
-        "name": "Chelsea"
-      }]
-
-      const fixtureValue = {
-            "_id": "5e6976e61ec9d7a2d58662a8",
-            "home": {
-                "_id": "5e69748a6e72a1a0793956eb",
-                "name": "Chelsea"
-            },
-            "away": {
-                "_id": "5e69739d96bdb99f784df32e",
-                "name": "Newcastle United"
-            },
-            "matchday": "12-11-2050",
-            "matchtime": "10:30"
-        }
-
-      var mockFixture = {
-        select() {
-          return this;
-        },
-        populate() {
-            return this;
-        },
-        exec() {
-          return Promise.resolve(fixtureValue);
-        }
-      };
-
-      const teamStub = sandbox.stub(Team, 'find').returns(teamsValue);
-      const fixtureStub = sandbox.stub(Fixture, 'find').returns(mockFixture);
+      let homeTeam = 'Liverpool' //this record exist in our in-memory db
 
       const searchService = new SearchService();
-      const fixture = await searchService.searchHomeFixture(home);
 
-      expect(teamStub.calledOnce).to.be.true;
-      expect(fixtureStub.calledOnce).to.be.true;
-      expect(fixture._id).to.equal(fixtureValue._id);
-      expect(fixture.home).to.equal(fixtureValue.home);
-      expect(fixture.away).to.equal(fixtureValue.away);
-      expect(fixture.matchday).to.equal(fixtureValue.matchday);
-      expect(fixture.matchtime).to.equal(fixtureValue.matchtime);
+      const fixture =  await searchService.searchHomeFixture(homeTeam)
+
+      expect(fixture.length).toBe(1)
+
     });
   });
 
@@ -219,81 +328,26 @@ describe('SearchFixtureService', () => {
 
     it('should return empty if search result is not found', async () => {
 
-      let awayTeam = "Everton"
-
-      var mockFind = {
-
-        select() {
-          return this;
-        },
-        populate() {
-            return this;
-        },
-        exec() {
-          return Promise.resolve(false);
-        }
-      };
-
-      //We wont get to the fixture since the team is not found, so we mock only the team
-      const teamStub = sandbox.stub(Team, 'find').returns(mockFind);
+      let awayTeam = 'Real Madrid' 
 
       const searchService = new SearchService();
 
-      await expect(searchService.searchAwayFixture(awayTeam)).to.be.empty
+      //the team table must be searched first, if record not found, it start failing
+      await expect(searchService.searchAwayFixture(awayTeam)).resolves.toBeUndefined()
 
-      expect(teamStub.calledOnce).to.be.true;
-     
     });
 
 
     it('should search and get fixture based on an away team', async () => {
 
-      const away = "Everton"
-
-      const teamsValue = [{
-        "_id": "5e69739d96bdb99f784df32e",
-        "name": "Newcastle United"
-      }]
-
-      const fixtureValue = {
-            "_id": "5e6976e61ec9d7a2d58662a8",
-            "home": {
-                "_id": "5e69748a6e72a1a0793956eb",
-                "name": "Chelsea"
-            },
-            "away": {
-                "_id": "5e69739d96bdb99f784df32e",
-                "name": "Newcastle United"
-            },
-            "matchday": "12-11-2050",
-            "matchtime": "10:30"
-        }
-
-      var mockFixture = {
-        select() {
-          return this;
-        },
-        populate() {
-            return this;
-        },
-        exec() {
-          return Promise.resolve(fixtureValue);
-        }
-      };
-
-      const teamStub = sandbox.stub(Team, 'find').returns(teamsValue);
-      const fixtureStub = sandbox.stub(Fixture, 'find').returns(mockFixture);
+      const awayTeam = 'Arsenal'
 
       const searchService = new SearchService();
-      const fixture = await searchService.searchAwayFixture(away);
 
-      expect(teamStub.calledOnce).to.be.true;
-      expect(fixtureStub.calledOnce).to.be.true;
-      expect(fixture._id).to.equal(fixtureValue._id);
-      expect(fixture.home).to.equal(fixtureValue.home);
-      expect(fixture.away).to.equal(fixtureValue.away);
-      expect(fixture.matchday).to.equal(fixtureValue.matchday);
-      expect(fixture.matchtime).to.equal(fixtureValue.matchtime);
+      const fixture =  await searchService.searchAwayFixture(awayTeam)
+
+      expect(fixture.length).toBe(1)
+
     });
   });
 
@@ -302,75 +356,26 @@ describe('SearchFixtureService', () => {
 
     it('should return empty if search result is not found', async () => {
 
-      let matchtime = "10:30"
-
-      var mockFind = {
-
-        select() {
-          return this;
-        },
-        populate() {
-            return this;
-        },
-        exec() {
-          return Promise.resolve(false);
-        }
-      };
-
-      const fixtureStub = sandbox.stub(Fixture, 'find').returns(mockFind);
+      let matchtime = '15:30' //this matchtime does not exist
 
       const searchService = new SearchService();
 
-      await expect(searchService.searchMatchTimeFixture(matchtime)).to.be.empty
+      const fixture = await searchService.searchMatchTimeFixture(matchtime)
 
-      expect(fixtureStub.calledOnce).to.be.true;
-     
+      expect(fixture.length).toBe(0)
+
     });
-
 
     it('should search and a get a fixture based on matchtime', async () => {
 
-      let matchtime = "10:30"
-
-      const fixtureValue = {
-            "_id": "5e6976e61ec9d7a2d58662a8",
-            "home": {
-                "_id": "5e69748a6e72a1a0793956eb",
-                "name": "Chelsea"
-            },
-            "away": {
-                "_id": "5e69739d96bdb99f784df32e",
-                "name": "Newcastle United"
-            },
-            "matchday": "20-10-2050",
-            "matchtime": "10:30"
-        }
-
-      var mockFixture = {
-
-        select() {
-          return this;
-        },
-        populate() {
-            return this;
-        },
-        exec() {
-          return Promise.resolve(fixtureValue);
-        }
-      };
-
-      const fixtureStub = sandbox.stub(Fixture, 'find').returns(mockFixture);
+      let matchtime = '10:30' //this matchtime exists
 
       const searchService = new SearchService();
 
-      const fixture = await searchService.searchMatchTimeFixture(matchtime);
+      const fixture =  await searchService.searchMatchTimeFixture(matchtime)
 
-      expect(fixtureStub.calledOnce).to.be.true;
-      expect(fixture._id).to.equal(fixtureValue._id);
-      expect(fixture.home).to.equal(fixtureValue.home);
-      expect(fixture.away).to.equal(fixtureValue.away);
-      expect(fixture.matchday).to.equal(fixtureValue.matchday);
-      expect(fixture.matchtime).to.equal(fixtureValue.matchtime);
+      expect(fixture.length).toBe(1)
+
     });
   });
 
@@ -379,75 +384,24 @@ describe('SearchFixtureService', () => {
 
     it('should return empty if search result is not found', async () => {
 
-      let matchday = "20-10-2050"
-
-      var mockFind = {
-
-        select() {
-          return this;
-        },
-        populate() {
-            return this;
-        },
-        exec() {
-          return Promise.resolve(false);
-        }
-      };
-
-      const fixtureStub = sandbox.stub(Fixture, 'find').returns(mockFind);
+      let matchday = '30-10-2050' //this day does not exist
 
       const searchService = new SearchService();
 
-      await expect(searchService.searchMatchTimeFixture(matchday)).to.be.empty
+      const fixture = await searchService.searchMatchDayFixture(matchday)
 
-      expect(fixtureStub.calledOnce).to.be.true;
-     
+      expect(fixture.length).toBe(0)
     });
-
 
     it('should search and a get a fixture based on matchday', async () => {
 
-      let matchday = "20-10-2050"
-
-      const fixtureValue = {
-            "_id": "5e6976e61ec9d7a2d58662a8",
-            "home": {
-                "_id": "5e69748a6e72a1a0793956eb",
-                "name": "Chelsea"
-            },
-            "away": {
-                "_id": "5e69739d96bdb99f784df32e",
-                "name": "Newcastle United"
-            },
-            "matchday": "20-10-2050",
-            "matchtime": "10:30"
-        }
-
-      var mockFixture = {
-
-        select() {
-          return this;
-        },
-        populate() {
-            return this;
-        },
-        exec() {
-          return Promise.resolve(fixtureValue);
-        }
-      };
-
-      const fixtureStub = sandbox.stub(Fixture, 'find').returns(mockFixture);
+      let matchday = '20-10-2050'
 
       const searchService = new SearchService();
 
-      const fixture = await searchService.searchMatchDayFixture(matchday);
+      const fixture =  await searchService.searchMatchDayFixture(matchday)
 
-      expect(fixtureStub.calledOnce).to.be.true;
-      expect(fixture._id).to.equal(fixtureValue._id);
-      expect(fixture.home).to.equal(fixtureValue.home);
-      expect(fixture.away).to.equal(fixtureValue.away);
-      expect(fixture.matchday).to.equal(fixtureValue.matchday);
-      expect(fixture.matchtime).to.equal(fixtureValue.matchtime);
+      expect(fixture.length).toBe(1)
     });
   });
 
@@ -455,73 +409,29 @@ describe('SearchFixtureService', () => {
 
     it('should return empty if search result is not found', async () => {
 
-      let home = "Chelsea"
-      let matchday = "20-10-2050"
-
-      //We wont get to the fixture since the team is not found, so we mock only the team
-      const teamStub = sandbox.stub(Team, 'find').returns(false);
+      //Both parameters must be found to output the result
+      let home = 'Chelsea'  //not found
+      let matchday = '20-10-2050' //found
 
       const searchService = new SearchService();
 
-      await expect(searchService.searchHomeAndMatchDayFixture(home, matchday)).to.be.empty
+      //the team table must be searched first, if record not found, it start failing
+      await expect(searchService.searchHomeAndMatchDayFixture(home, matchday)).resolves.toBeUndefined()
 
-      expect(teamStub.calledOnce).to.be.true;
-     
     });
 
 
     it('should search and a get a fixture based on home and matchday', async () => {
 
-      let home = "Chelsea"
-      let matchday = "20-10-2050"
-
-      const homeTeam =  [{
-            "_id": "5e69748a6e72a1a0793956eb",
-            "name": "Chelsea"
-          }]
-
-      const fixtureValue = {
-            "_id": "5e6976e61ec9d7a2d58662a8",
-            "home": {
-                "_id": "5e69748a6e72a1a0793956eb",
-                "name": "Chelsea"
-            },
-            "away": {
-                "_id": "5e69739d96bdb99f784df32e",
-                "name": "Newcastle United"
-            },
-            "matchday": "20-10-2050",
-            "matchtime": "10:30"
-        }
-
-      var mockFixture = {
-
-        select() {
-          return this;
-        },
-        populate() {
-            return this;
-        },
-        exec() {
-          return Promise.resolve(fixtureValue);
-        }
-      };
-
-      const teamStub = sandbox.stub(Team, 'find').returns(homeTeam);
-
-      const fixtureStub = sandbox.stub(Fixture, 'find').returns(mockFixture);
+      let home = 'Liverpool' //found
+      let matchday = '20-10-2050' //found
 
       const searchService = new SearchService();
 
-      const fixture = await searchService.searchHomeAndMatchDayFixture(home, matchday);
+      const fixture =  await searchService.searchHomeAndMatchDayFixture(home, matchday)
 
-      expect(teamStub.calledOnce).to.be.true;
-      expect(fixtureStub.calledOnce).to.be.true;
-      expect(fixture._id).to.equal(fixtureValue._id);
-      expect(fixture.home).to.equal(fixtureValue.home);
-      expect(fixture.away).to.equal(fixtureValue.away);
-      expect(fixture.matchday).to.equal(fixtureValue.matchday);
-      expect(fixture.matchtime).to.equal(fixtureValue.matchtime);
+      expect(fixture.length).toBe(1)
+
     });
   });
 
@@ -529,73 +439,29 @@ describe('SearchFixtureService', () => {
   describe('searchHomeAndMatchTimeFixture', () => {
 
     it('should return empty if search result is not found', async () => {
-
-      let home = "Chelsea"
-      let matchtime = "10:30"
-
-      //We wont get to the fixture since the team is not found, so we mock only the team
-      const teamStub = sandbox.stub(Team, 'find').returns(false);
+ 
+      let home = 'Chelsea' //not found
+      let matchtime = '10:30' //found
 
       const searchService = new SearchService();
 
-      await expect(searchService.searchHomeAndMatchTimeFixture(home, matchtime)).to.be.empty
+      //the team table must be searched first, if record not found, it start failing
+      await expect(searchService.searchHomeAndMatchTimeFixture(home, matchtime)).resolves.toBeUndefined()
 
-      expect(teamStub.calledOnce).to.be.true;
-     
     });
 
 
     it('should search and a get a fixture based on home and matchtime', async () => {
 
-      let home = "Chelsea"
-      let matchtime = "10:30"
-
-      const homeTeam =  [{
-            "_id": "5e69748a6e72a1a0793956eb",
-            "name": "Chelsea"
-          }]
-
-      const fixtureValue = {
-            "_id": "5e6976e61ec9d7a2d58662a8",
-            "home": {
-                "_id": "5e69748a6e72a1a0793956eb",
-                "name": "Chelsea"
-            },
-            "away": {
-                "_id": "5e69739d96bdb99f784df32e",
-                "name": "Newcastle United"
-            },
-            "matchday": "20-10-2050",
-            "matchtime": "10:30"
-        }
-
-      var mockFixture = {
-        select() {
-          return this;
-        },
-        populate() {
-            return this;
-        },
-        exec() {
-          return Promise.resolve(fixtureValue);
-        }
-      };
-
-      const teamStub = sandbox.stub(Team, 'find').returns(homeTeam);
-
-      const fixtureStub = sandbox.stub(Fixture, 'find').returns(mockFixture);
+      let home = 'Liverpool' //found
+      let matchtime = '10:30' //found
 
       const searchService = new SearchService();
 
-      const fixture = await searchService.searchHomeAndMatchTimeFixture(home, matchtime);
+      const fixture =  await searchService.searchHomeAndMatchTimeFixture(home, matchtime)
 
-      expect(teamStub.calledOnce).to.be.true;
-      expect(fixtureStub.calledOnce).to.be.true;
-      expect(fixture._id).to.equal(fixtureValue._id);
-      expect(fixture.home).to.equal(fixtureValue.home);
-      expect(fixture.away).to.equal(fixtureValue.away);
-      expect(fixture.matchday).to.equal(fixtureValue.matchday);
-      expect(fixture.matchtime).to.equal(fixtureValue.matchtime);
+      expect(fixture.length).toBe(1)
+
     });
   });
 
@@ -604,73 +470,29 @@ describe('SearchFixtureService', () => {
 
     it('should return empty if search result is not found', async () => {
 
-      let home = "Chelsea"
-      let matchday = "20-10-2050"
-      let matchtime = "10:30"
-
-      //We wont get to the fixture since the team is not found, so we mock only the team
-      const teamStub = sandbox.stub(Team, 'find').returns(false);
+      let home = 'Chelsea' //not found
+      let matchday = '20-10-2050' //found
+      let matchtime = '10:30' //found
 
       const searchService = new SearchService();
 
-      await expect(searchService.searchHomeAndMatchTimeFixture(home, matchday, matchtime)).to.be.empty
+      //the team table must be searched first, if record not found, it start failing
+      await expect(searchService.searchHomeMatchDayAndMatchTimeFixture(home, matchday, matchtime)).resolves.toBeUndefined()
 
-      expect(teamStub.calledOnce).to.be.true;
-     
     });
 
     it('should search and a get a fixture based on home, matchday and matchtime', async () => {
 
-      let home = "Chelsea"
-      let matchday = "20-10-2050"
-      let matchtime = "10:30"
-
-      const homeTeam =  [{
-            "_id": "5e69748a6e72a1a0793956eb",
-            "name": "Chelsea"
-          }]
-
-      const fixtureValue = {
-            "_id": "5e6976e61ec9d7a2d58662a8",
-            "home": {
-                "_id": "5e69748a6e72a1a0793956eb",
-                "name": "Chelsea"
-            },
-            "away": {
-                "_id": "5e69739d96bdb99f784df32e",
-                "name": "Newcastle United"
-            },
-            "matchday": "20-10-2050",
-            "matchtime": "10:30"
-        }
-
-      var mockFixture = {
-        select() {
-          return this;
-        },
-        populate() {
-            return this;
-        },
-        exec() {
-          return Promise.resolve(fixtureValue);
-        }
-      };
-
-      const teamStub = sandbox.stub(Team, 'find').returns(homeTeam);
-
-      const fixtureStub = sandbox.stub(Fixture, 'find').returns(mockFixture);
+      let home = 'Liverpool' //found
+      let matchday = '20-10-2050' //found
+      let matchtime = '10:30' //found
 
       const searchService = new SearchService();
 
-      const fixture = await searchService.searchHomeMatchDayAndMatchTimeFixture(home, matchday, matchtime);
+      const fixture =  await searchService.searchHomeMatchDayAndMatchTimeFixture(home, matchday, matchtime)
 
-      expect(teamStub.calledOnce).to.be.true;
-      expect(fixtureStub.calledOnce).to.be.true;
-      expect(fixture._id).to.equal(fixtureValue._id);
-      expect(fixture.home).to.equal(fixtureValue.home);
-      expect(fixture.away).to.equal(fixtureValue.away);
-      expect(fixture.matchday).to.equal(fixtureValue.matchday);
-      expect(fixture.matchtime).to.equal(fixtureValue.matchtime);
+      expect(fixture.length).toBe(1)
+
     });
   });
 
@@ -678,71 +500,27 @@ describe('SearchFixtureService', () => {
 
     it('should return empty if search result is not found', async () => {
 
-      let away = "Everton"
-      let matchday = "20-10-2050"
-
-      //We wont get to the fixture since the team is not found, so we mock only the team
-      const teamStub = sandbox.stub(Team, 'find').returns(false);
+      let away = 'Everton' //not found
+      let matchday = '20-10-2050' //found
 
       const searchService = new SearchService();
 
-      await expect(searchService.searchAwayAndMatchDayFixture(away, matchday)).to.be.empty
+      //the team table must be searched first, if record not found, it start failing
+       await expect(searchService.searchAwayAndMatchDayFixture(away, matchday)).resolves.toBeUndefined()
 
-      expect(teamStub.calledOnce).to.be.true;
-     
     });
 
     it('should search and a get a fixture based on away and matchday', async () => {
 
-      let away = "Everton"
-      let matchday = "20-10-2050"
+        let away = 'Manchester City' //found
+        let matchday = '25-06-2050' //found
 
-      const awayTeams =  [{
-            "_id": "5e69737e96bdb99f784df32d",
-            "name": "Everton"
-          }]
+        const searchService = new SearchService();
 
-      const fixtureValue = {
-            "_id": "5e6976e61ec9d7a2d58662a8",
-            "home": {
-                "_id": "5e69739d96bdb99f784df32e",
-                "name": "Chelsea"
-            },
-            "away": {
-                "_id": "5e69737e96bdb99f784df32d",
-                "name": "Everton"
-            },
-            "matchday": "20-10-2050",
-            "matchtime": "10:30"
-        }
+        const fixture = await searchService.searchAwayAndMatchDayFixture(away, matchday);
 
-      var mockFixture = {
-        select() {
-          return this;
-        },
-        populate() {
-            return this;
-        },
-        exec() {
-          return Promise.resolve(fixtureValue);
-        }
-      };
+        expect(fixture.length).toBe(1)
 
-      const teamStub = sandbox.stub(Team, 'find').returns(awayTeams);
-
-      const fixtureStub = sandbox.stub(Fixture, 'find').returns(mockFixture);
-
-      const searchService = new SearchService();
-
-      const fixture = await searchService.searchAwayAndMatchDayFixture(away, matchday);
-
-      expect(teamStub.calledOnce).to.be.true;
-      expect(fixtureStub.calledOnce).to.be.true;
-      expect(fixture._id).to.equal(fixtureValue._id);
-      expect(fixture.home).to.equal(fixtureValue.home);
-      expect(fixture.away).to.equal(fixtureValue.away);
-      expect(fixture.matchday).to.equal(fixtureValue.matchday);
-      expect(fixture.matchtime).to.equal(fixtureValue.matchtime);
     });
   });
 
@@ -751,73 +529,27 @@ describe('SearchFixtureService', () => {
 
     it('should return empty if search result is not found', async () => {
 
-      let away = "Everton"
-      let matchtime = "10:30"
-
-      //We wont get to the fixture since the team is not found, so we mock only the team
-      const teamStub = sandbox.stub(Team, 'find').returns(false);
+      let away = 'Everton'  //not found
+      let matchtime = '10:30' //found
 
       const searchService = new SearchService();
 
-      await expect(searchService.searchAwayAndMatchTimeFixture(away, matchtime)).to.be.empty
+      //the team table must be searched first, if record not found, it start failing
+      await expect(searchService.searchAwayAndMatchTimeFixture(away, matchtime)).resolves.toBeUndefined()
 
-      expect(teamStub.calledOnce).to.be.true;
-     
     });
 
     it('should search and a get a fixture based on away and matchtime', async () => {
 
-      let away = "Everton"
-      let matchtime = "10:30"
-
-      const awayTeams =  [{
-            "_id": "5e69737e96bdb99f784df32d",
-            "name": "Everton"
-          }]
-
-      const fixtureValue = {
-            "_id": "5e6976e61ec9d7a2d58662a8",
-            "home": {
-                "_id": "5e69739d96bdb99f784df32e",
-                "name": "Chelsea"
-            },
-            "away": {
-                "_id": "5e69737e96bdb99f784df32d",
-                "name": "Everton"
-            },
-            "matchday": "20-10-2050",
-            "matchtime": "10:30"
-        }
-
-      var mockFixture = {
-        select() {
-          return this;
-        },
-        populate() {
-            return this;
-        },
-        exec() {
-          return Promise.resolve(fixtureValue);
-        }
-      };
-
-      const teamStub = sandbox.stub(Team, 'find').returns(awayTeams);
-
-      const fixtureStub = sandbox.stub(Fixture, 'find').returns(mockFixture);
+      let away = 'Arsenal'
+      let matchtime = '10:30'
 
       const searchService = new SearchService();
 
       const fixture = await searchService.searchAwayAndMatchTimeFixture(away, matchtime);
 
-      expect(teamStub.calledOnce).to.be.true;
-      expect(fixtureStub.calledOnce).to.be.true;
-      expect(fixture._id).to.equal(fixtureValue._id);
-      expect(fixture.home._id).to.equal(fixtureValue.home._id);
-      expect(fixture.away._id).to.equal(fixtureValue.away._id);
-      expect(fixture.home.name).to.equal(fixtureValue.home.name);
-      expect(fixture.away.name).to.equal(fixtureValue.away.name);
-      expect(fixture.matchday).to.equal(fixtureValue.matchday);
-      expect(fixture.matchtime).to.equal(fixtureValue.matchtime);
+      expect(fixture.length).toBe(1)
+
     });
   });
 
@@ -825,75 +557,29 @@ describe('SearchFixtureService', () => {
 
     it('should return empty if search result is not found', async () => {
 
-      let away = "Everton"
-      let matchday = "20-10-2050"
-      let matchtime = "10:30"
-
-      //We wont get to the fixture since the team is not found, so we mock only the team
-      const teamStub = sandbox.stub(Team, 'find').returns(false);
+      let away = 'Everton' //not found
+      let matchday = '20-10-2050' //found
+      let matchtime = '10:30' //found
 
       const searchService = new SearchService();
 
-      await expect(searchService.searchAwayMatchDayAndMatchTimeFixture(away, matchday, matchtime)).to.be.empty
+      //the team table must be searched first, if record not found, it start failing
+      await expect(searchService.searchAwayMatchDayAndMatchTimeFixture(away, matchday, matchtime)).resolves.toBeUndefined()
 
-      expect(teamStub.calledOnce).to.be.true;
-     
     });
 
     it('should search and a get a fixture based on away, matchday and matchtime', async () => {
 
-      let away = "Everton"
-      let matchday = "20-10-2050"
-      let matchtime = "10:30"
-
-      const awayTeams =  [{
-            "_id": "5e69737e96bdb99f784df32d",
-            "name": "Everton"
-          }]
-
-      const fixtureValue = {
-            "_id": "5e6976e61ec9d7a2d58662a8",
-            "home": {
-                "_id": "5e69739d96bdb99f784df32e",
-                "name": "Chelsea"
-            },
-            "away": {
-                "_id": "5e69737e96bdb99f784df32d",
-                "name": "Everton"
-            },
-            "matchday": "20-10-2050",
-            "matchtime": "10:30"
-        }
-
-      var mockFixture = {
-        select() {
-          return this;
-        },
-        populate() {
-            return this;
-        },
-        exec() {
-          return Promise.resolve(fixtureValue);
-        }
-      };
-
-      const teamStub = sandbox.stub(Team, 'find').returns(awayTeams);
-
-      const fixtureStub = sandbox.stub(Fixture, 'find').returns(mockFixture);
+      let away = 'Arsenal' //found
+      let matchday = '20-10-2050' //found
+      let matchtime = '10:30' //found
 
       const searchService = new SearchService();
 
       const fixture = await searchService.searchAwayMatchDayAndMatchTimeFixture(away, matchday, matchtime);
 
-      expect(teamStub.calledOnce).to.be.true;
-      expect(fixtureStub.calledOnce).to.be.true;
-      expect(fixture._id).to.equal(fixtureValue._id);
-      expect(fixture.home._id).to.equal(fixtureValue.home._id);
-      expect(fixture.away._id).to.equal(fixtureValue.away._id);
-      expect(fixture.home.name).to.equal(fixtureValue.home.name);
-      expect(fixture.away.name).to.equal(fixtureValue.away.name);
-      expect(fixture.matchday).to.equal(fixtureValue.matchday);
-      expect(fixture.matchtime).to.equal(fixtureValue.matchtime);
+      expect(fixture.length).toBe(1)
+
     });
   });
 
@@ -902,24 +588,14 @@ describe('SearchFixtureService', () => {
 
     it('should retrieve home id(s), based on a given home input', async () => {
 
-      let home = "Chelsea"
-
-      //it can be more than one, depending on the wildcard used
-      const homes = [{
-        "_id": "5e69739d96bdb99f784df32e",
-        "name": "Chelsea"
-      }]
-
-      const homeIdsValue =  ["5e69739d96bdb99f784df32e"] 
-
-      const teamStub = sandbox.stub(Team, 'find').returns(homes);
+      let home = 'Liverpool'
 
       const searchService = new SearchService();
 
       const homeIds = await searchService.getHomeIds(home);
 
-      expect(teamStub.calledOnce).to.be.true;
-      expect(homeIds).to.deep.equal(homeIdsValue);
+      expect(homeIds.length).toBeGreaterThan(0)
+
     });
   });
 
@@ -928,24 +604,14 @@ describe('SearchFixtureService', () => {
 
     it('should retrieve away id(s), based on a given away input', async () => {
 
-      let away = "Everton"
-
-      //it can be more than one, depending on the wildcard used
-      const aways = [{
-        "_id": "5e69737e96bdb99f784df32d",
-        "name": "Everton"
-      }]
-
-      const awayIdsValue =  ["5e69737e96bdb99f784df32d"] 
-
-      const teamStub = sandbox.stub(Team, 'find').returns(aways);
+      let away = 'Manchester City'
 
       const searchService = new SearchService();
 
       const awayIds = await searchService.getAwayIds(away);
 
-      expect(teamStub.calledOnce).to.be.true;
-      expect(awayIds).to.deep.equal(awayIdsValue);
+      expect(awayIds.length).toBeGreaterThan(0)
+
     });
   });
 
@@ -953,73 +619,27 @@ describe('SearchFixtureService', () => {
 
     it('should return empty if search result is not found', async () => {
 
-      let home = "Chelsea"
-      let away = "Everton"
-
-      //We wont get to the fixture since the team is not found, so we mock only the team
-      const teamStub = sandbox.stub(Team, 'find').returns(false);
+      let home = 'Boton'
+      let away = 'Arsenal'
 
       const searchService = new SearchService();
 
-      await expect(searchService.searchHomeAndAwayFixture(home, away)).to.be.empty
+      //the team table must be searched first, if record not found, it start failing
+      await expect(searchService.searchHomeAndAwayFixture(home, away)).resolves.toBeUndefined()
 
-      expect(teamStub.calledOnce).to.be.true;
-     
     });
 
     it('should search and a get a fixture based on home, away', async () => {
 
-      let home = "Chelsea"
-      let away = "Everton"
-
-      const homeIds =  ["5e69739d96bdb99f784df32e"]
-      const awayIds =  ["5e69737e96bdb99f784df32d"]
-
-      const fixtureValue = {
-            "_id": "5e6976e61ec9d7a2d58662a8",
-            "home": {
-                "_id": "5e69739d96bdb99f784df32e",
-                "name": "Chelsea"
-            },
-            "away": {
-                "_id": "5e69737e96bdb99f784df32d",
-                "name": "Everton"
-            },
-            "matchday": "20-10-2050",
-            "matchtime": "10:30"
-        }
-
-      var mockFixture = {
-        select() {
-          return this;
-        },
-        populate() {
-            return this;
-        },
-        exec() {
-          return Promise.resolve(fixtureValue);
-        }
-      };
-
-      const fixtureStub = sandbox.stub(Fixture, 'find').returns(mockFixture);
+      let home = 'Liverpool'
+      let away = 'Arsenal'
 
       const searchService = new SearchService();
 
-      const homeIdsStub = sandbox.stub(searchService, 'getHomeIds').returns(homeIds);
-      const awayIdsStub = sandbox.stub(searchService, 'getAwayIds').returns(awayIds);
+       const fixture = await searchService.searchHomeAndAwayFixture(home, away)
 
-      const fixture = await searchService.searchHomeAndAwayFixture(home, away);
+      expect(fixture.length).toBe(1)
 
-      expect(homeIdsStub.calledOnce).to.be.true;
-      expect(awayIdsStub.calledOnce).to.be.true;
-      expect(fixtureStub.calledOnce).to.be.true;
-      expect(fixture._id).to.equal(fixtureValue._id);
-      expect(fixture.home._id).to.equal(fixtureValue.home._id);
-      expect(fixture.away._id).to.equal(fixtureValue.away._id);
-      expect(fixture.home.name).to.equal(fixtureValue.home.name);
-      expect(fixture.away.name).to.equal(fixtureValue.away.name);
-      expect(fixture.matchday).to.equal(fixtureValue.matchday);
-      expect(fixture.matchtime).to.equal(fixtureValue.matchtime);
     });
   });
 
@@ -1027,75 +647,29 @@ describe('SearchFixtureService', () => {
 
     it('should return empty if search result is not found', async () => {
 
-      let home = "Chelsea"
-      let away = "Everton"
-      let matchday = "20-10-2050"
-
-      //We wont get to the fixture since the team is not found, so we mock only the team
-      const teamStub = sandbox.stub(Team, 'find').returns(false);
+      let home = 'Chelsea'
+      let away = 'Everton'
+      let matchday = '20-10-2050'
 
       const searchService = new SearchService();
 
-      await expect(searchService.searchHomeAwayAndMatchDayFixture(home, away, matchday)).to.be.empty
+      //the team table must be searched first, if record not found, it start failing
+      await expect(searchService.searchHomeAwayAndMatchDayFixture(home, away, matchday)).resolves.toBeUndefined()
 
-      expect(teamStub.calledOnce).to.be.true;
-     
     });
 
     it('should search and a get a fixture based on home, away and matchday', async () => {
 
-      let home = "Chelsea"
-      let away = "Everton"
-      let matchday = "20-10-2050"
-
-      const homeIds =  ["5e69739d96bdb99f784df32e"]
-      const awayIds =  ["5e69737e96bdb99f784df32d"]
-
-      const fixtureValue = {
-            "_id": "5e6976e61ec9d7a2d58662a8",
-            "home": {
-                "_id": "5e69739d96bdb99f784df32e",
-                "name": "Chelsea"
-            },
-            "away": {
-                "_id": "5e69737e96bdb99f784df32d",
-                "name": "Everton"
-            },
-            "matchday": "20-10-2050",
-            "matchtime": "10:30"
-        }
-
-      var mockFixture = {
-        select() {
-          return this;
-        },
-        populate() {
-            return this;
-        },
-        exec() {
-          return Promise.resolve(fixtureValue);
-        }
-      };
-
-      const fixtureStub = sandbox.stub(Fixture, 'find').returns(mockFixture);
+      let home = 'Liverpool'
+      let away = 'Arsenal'
+      let matchday = '20-10-2050'
 
       const searchService = new SearchService();
 
-      const homeIdsStub = sandbox.stub(searchService, 'getHomeIds').returns(homeIds);
-      const awayIdsStub = sandbox.stub(searchService, 'getAwayIds').returns(awayIds);
-
       const fixture = await searchService.searchHomeAwayAndMatchDayFixture(home, away, matchday);
 
-      expect(homeIdsStub.calledOnce).to.be.true;
-      expect(awayIdsStub.calledOnce).to.be.true;
-      expect(fixtureStub.calledOnce).to.be.true;
-      expect(fixture._id).to.equal(fixtureValue._id);
-      expect(fixture.home._id).to.equal(fixtureValue.home._id);
-      expect(fixture.away._id).to.equal(fixtureValue.away._id);
-      expect(fixture.home.name).to.equal(fixtureValue.home.name);
-      expect(fixture.away.name).to.equal(fixtureValue.away.name);
-      expect(fixture.matchday).to.equal(fixtureValue.matchday);
-      expect(fixture.matchtime).to.equal(fixtureValue.matchtime);
+      expect(fixture.length).toBe(1)
+
     });
   });
 
@@ -1104,75 +678,29 @@ describe('SearchFixtureService', () => {
 
     it('should return empty if search result is not found', async () => {
 
-      let home = "Chelsea"
-      let away = "Everton"
-      let matchtime = "03:20"
-
-      //We wont get to the fixture since the team is not found, so we mock only the team
-      const teamStub = sandbox.stub(Team, 'find').returns(false);
+      let home = 'Chelsea'
+      let away = 'Everton'
+      let matchtime = '03:20'
 
       const searchService = new SearchService();
 
-      await expect(searchService.searchHomeAwayAndMatchTimeFixture(home, away, matchtime)).to.be.empty
+      //the team table must be searched first, if record not found, it start failing
+      await expect(searchService.searchHomeAwayAndMatchTimeFixture(home, away, matchtime)).resolves.toBeUndefined()
 
-      expect(teamStub.calledOnce).to.be.true;
-     
     });
 
     it('should search and a get a fixture based on home, away and matchtime', async () => {
 
-      let home = "Chelsea"
-      let away = "Everton"
-      let matchtime = "03:20"
-
-      const homeIds =  ["5e69739d96bdb99f784df32e"]
-      const awayIds =  ["5e69737e96bdb99f784df32d"]
-
-      const fixtureValue = {
-            "_id": "5e6976e61ec9d7a2d58662a8",
-            "home": {
-                "_id": "5e69739d96bdb99f784df32e",
-                "name": "Chelsea"
-            },
-            "away": {
-                "_id": "5e69737e96bdb99f784df32d",
-                "name": "Everton"
-            },
-            "matchday": "20-10-2050",
-            "matchtime": "10:30"
-        }
-
-      var mockFixture = {
-        select() {
-          return this;
-        },
-        populate() {
-            return this;
-        },
-        exec() {
-          return Promise.resolve(fixtureValue);
-        }
-      };
-
-      const fixtureStub = sandbox.stub(Fixture, 'find').returns(mockFixture);
-
+      let home = 'Liverpool'
+      let away = 'Arsenal'
+      let matchtime = '10:30'
+      
       const searchService = new SearchService();
-
-      const homeIdsStub = sandbox.stub(searchService, 'getHomeIds').returns(homeIds);
-      const awayIdsStub = sandbox.stub(searchService, 'getAwayIds').returns(awayIds);
 
       const fixture = await searchService.searchHomeAwayAndMatchTimeFixture(home, away, matchtime);
 
-      expect(homeIdsStub.calledOnce).to.be.true;
-      expect(awayIdsStub.calledOnce).to.be.true;
-      expect(fixtureStub.calledOnce).to.be.true;
-      expect(fixture._id).to.equal(fixtureValue._id);
-      expect(fixture.home._id).to.equal(fixtureValue.home._id);
-      expect(fixture.away._id).to.equal(fixtureValue.away._id);
-      expect(fixture.home.name).to.equal(fixtureValue.home.name);
-      expect(fixture.away.name).to.equal(fixtureValue.away.name);
-      expect(fixture.matchday).to.equal(fixtureValue.matchday);
-      expect(fixture.matchtime).to.equal(fixtureValue.matchtime);
+      expect(fixture.length).toBe(1)
+
     });
   });
 
@@ -1182,77 +710,31 @@ describe('SearchFixtureService', () => {
 
     it('should return empty if search result is not found', async () => {
 
-      let home = "Chelsea"
-      let away = "Everton"
-      let matchday = "20-10-2050"
-      let matchtime = "10:30"
-
-      //We wont get to the fixture since the team is not found, so we mock only the team
-      const teamStub = sandbox.stub(Team, 'find').returns(false);
+      let home = 'FullHam'
+      let away = 'Manchester City'
+      let matchday = '25-06-2050'
+      let matchtime = '07:30'
 
       const searchService = new SearchService();
 
-      await expect(searchService.searchHomeAwayMatchDayAndMatchTimeFixture(home, away, matchday, matchtime)).to.be.empty
+      //the team table must be searched first, if record not found, it start failing
+      await expect(searchService.searchHomeAwayMatchDayAndMatchTimeFixture(home, away, matchday, matchtime)).resolves.toBeUndefined()
 
-      expect(teamStub.calledOnce).to.be.true;
-     
     });
 
     it('should search and a get a fixture based on home, away, matchday and matchtime', async () => {
 
-      let home = "Chelsea"
-      let away = "Everton"
-      let matchday = "20-10-2050"
-      let matchtime = "10:30"
-
-      const homeIds =  ["5e69739d96bdb99f784df32e"]
-      const awayIds =  ["5e69737e96bdb99f784df32d"]
-
-      const fixtureValue = {
-            "_id": "5e6976e61ec9d7a2d58662a8",
-            "home": {
-                "_id": "5e69739d96bdb99f784df32e",
-                "name": "Chelsea"
-            },
-            "away": {
-                "_id": "5e69737e96bdb99f784df32d",
-                "name": "Everton"
-            },
-            "matchday": "20-10-2050",
-            "matchtime": "10:30"
-        }
-
-      var mockFixture = {
-        select() {
-          return this;
-        },
-        populate() {
-            return this;
-        },
-        exec() {
-          return Promise.resolve(fixtureValue);
-        }
-      };
-
-      const fixtureStub = sandbox.stub(Fixture, 'find').returns(mockFixture);
+      let home = 'West Ham'
+      let away = 'Manchester City'
+      let matchday = '25-06-2050'
+      let matchtime = '07:30'
 
       const searchService = new SearchService();
 
-      const homeIdsStub = sandbox.stub(searchService, 'getHomeIds').returns(homeIds);
-      const awayIdsStub = sandbox.stub(searchService, 'getAwayIds').returns(awayIds);
-
       const fixture = await searchService.searchHomeAwayMatchDayAndMatchTimeFixture(home, away, matchday, matchtime);
 
-      expect(homeIdsStub.calledOnce).to.be.true;
-      expect(awayIdsStub.calledOnce).to.be.true;
-      expect(fixtureStub.calledOnce).to.be.true;
-      expect(fixture._id).to.equal(fixtureValue._id);
-      expect(fixture.home._id).to.equal(fixtureValue.home._id);
-      expect(fixture.away._id).to.equal(fixtureValue.away._id);
-      expect(fixture.home.name).to.equal(fixtureValue.home.name);
-      expect(fixture.away.name).to.equal(fixtureValue.away.name);
-      expect(fixture.matchday).to.equal(fixtureValue.matchday);
-      expect(fixture.matchtime).to.equal(fixtureValue.matchtime);
+      expect(fixture.length).toBe(1)
+
     });
   });
 
@@ -1261,148 +743,43 @@ describe('SearchFixtureService', () => {
 
     it('should return empty if search result is not found', async () => {
 
-      let matchday = "20-10-2050"
-      let matchtime = "10:30"
-
-      var mockFixture = {
-        select() {
-          return this;
-        },
-        populate() {
-            return this;
-        },
-        exec() {
-          return Promise.resolve(false);
-        }
-      };
-
-      const fixtureStub = sandbox.stub(Fixture, 'find').returns(mockFixture);
+      let matchday = '04-10-2050'
+      let matchtime = '10:30'
 
       const searchService = new SearchService();
 
-      await expect(searchService.searchMatchDayAndMatchTimeFixture(matchday, matchtime)).to.be.empty
+      const fixture = await searchService.searchMatchDayAndMatchTimeFixture(matchday, matchtime)
 
-      expect(fixtureStub.calledOnce).to.be.true;
-     
+      expect(fixture.length).toBe(0)
+
     });
 
     it('should search and a get a fixture based on matchday and matchtime', async () => {
 
-      let matchday = "20-10-2050"
-      let matchtime = "10:30"
-
-      const fixtureValue = {
-            "_id": "5e6976e61ec9d7a2d58662a8",
-            "home": {
-                "_id": "5e69737e96bdb99f784df32d",
-                "name": "Chelsea"
-            },
-            "away": {
-                "_id": "5e69739d96bdb99f784df32e",
-                "name": "Newcastle United"
-            },
-            "matchday": "20-10-2050",
-            "matchtime": "10:30"
-        }
-      
-      var mockFixture = {
-        select() {
-          return this;
-        },
-        populate() {
-            return this;
-        },
-        exec() {
-          return Promise.resolve(fixtureValue);
-        }
-      };
-
-      const fixtureStub = sandbox.stub(Fixture, 'find').returns(mockFixture);
+      let matchday = '20-10-2050'
+      let matchtime = '10:30'
 
       const searchService = new SearchService();
 
       const fixture = await searchService.searchMatchDayAndMatchTimeFixture(matchday, matchtime);
 
-      expect(fixtureStub.calledOnce).to.be.true;
-      expect(fixture._id).to.equal(fixtureValue._id);
-      expect(fixture.home).to.equal(fixtureValue.home);
-      expect(fixture.away).to.equal(fixtureValue.away);
-      expect(fixture.matchday).to.equal(fixtureValue.matchday);
-      expect(fixture.matchtime).to.equal(fixtureValue.matchtime);
+      expect(fixture.length).toBe(1)
+
     });
   });
 
 
-  describe('Wildcard Fixtures', () => {
+  // describe('Wildcard Fixtures', () => {
 
-    it('should search and a get a fixture based on home team and matchtime using a wildcard', async () => {
+  //   it('should search and a get a fixture based on home team and matchtime using a wildcard', async () => {
 
-      let home = "Manchester"
-      let matchtime = "10:30"
+  //     let home = 'Manchester'
+  //     let matchtime = '10:30'
 
-      const homeTeams =  [
-        {
-          "_id": "5e69748a6e72a1a0793956eb",
-          "name": "Manchester United"
-        },
-        {
-          "_id": "5e6d1673e43d8272913a7d97",
-          "name": "Manchester City"
-        }
-      ]
+  //     const searchService = new SearchService();
 
-      const fixtureValues = [
-        {
-          "_id": "5e6976e61ec9d7a2d58662a8",
-          "home": {
-              "_id": "5e69748a6e72a1a0793956eb",
-              "name": "Manchester United"
-          },
-          "away": {
-              "_id": "5e69739d96bdb99f784df32e",
-              "name": "Newcastle United"
-          },
-          "matchday": "12-11-2050",
-          "matchtime": "10:30"
-        },
-        {
-          "_id": "5e6d168ce43d8272913a7d98",
-          "home": {
-              "_id": "5e6d1673e43d8272913a7d97",
-              "name": "Manchester City"
-          },
-          "away": {
-              "_id": "5e69739d96bdb99f784df32e",
-              "name": "Newcastle United"
-          },
-          "matchday": "15-04-2050",
-          "matchtime": "02:15"
-        }
-      ]
+  //     const fixtures = await searchService.searchHomeAndMatchTimeFixture(home, matchtime);
 
-      var mockFixture = {
-        select() {
-          return this;
-        },
-        populate() {
-            return this;
-        },
-        exec() {
-          return Promise.resolve(fixtureValues);
-        }
-      };
-
-      const teamStub = sandbox.stub(Team, 'find').returns(homeTeams);
-
-      const fixtureStub = sandbox.stub(Fixture, 'find').returns(mockFixture);
-
-      const searchService = new SearchService();
-
-      const fixtures = await searchService.searchHomeAndMatchTimeFixture(home, matchtime);
-
-      expect(teamStub.calledOnce).to.be.true;
-      expect(fixtureStub.calledOnce).to.be.true;
-      expect(fixtures.length).to.be.equal(2);
-    });
-  });
+  //   });
+  // });
 });

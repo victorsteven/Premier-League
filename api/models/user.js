@@ -19,6 +19,6 @@ var UserSchema = new Schema({
   role: {
     type: String, required: true, max: 100
   },
-});
+}, {collection: 'User'});
 
-export default mongoose.model('User', UserSchema)
+export default mongoose.model('User', UserSchema, 'User')

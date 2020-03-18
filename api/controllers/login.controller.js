@@ -20,12 +20,7 @@ class LoginController {
     
     try {
       const token = await this.loginService.login(email, password)
-      if(!token) {
-        return res.status(500).json({
-          status: 500,
-          error: "invalid user credentials"
-        })
-      }
+      
       return res.status(200).json({
         status: 200,
         token

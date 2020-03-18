@@ -28,12 +28,11 @@ class AdminController {
 
     try {
       const createAdmin = await this.adminService.createAdmin(admin)
-      if(createAdmin) {
-        return res.status(201).json({
-          status: 201,
-          data: createAdmin
-        })
-      }
+      
+      return res.status(201).json({
+        status: 201,
+        data: createAdmin
+      })
     } catch(error) {
       return res.status(500).json({
         status: 500,

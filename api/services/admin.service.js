@@ -1,5 +1,4 @@
 import User from '../models/user'
-import { ObjectID } from 'mongodb'
 import password from '../utils/password'
 
 
@@ -15,7 +14,7 @@ class AdminService {
       //check if the admin already exist
       const record = await this.user.findOne({ email: admin.email })
       if (record) {
-        throw new Error('record already exist');
+        throw new Error('record already exists')
       }
 
       //hash the admin password
@@ -46,11 +45,12 @@ class AdminService {
 
     try {
 
-      let adminObjID = new ObjectID(adminId)
+      // let adminObjID = new ObjectID(adminId)
       
-      const gottenAdmin = await this.user.findOne({ _id: adminObjID })
+      const gottenAdmin = await this.user.findOne({ _id: adminId })
+
       if (!gottenAdmin || gottenAdmin.role !== 'admin') {
-        throw new Error('admin does not exist');
+        throw new Error('no record found');
       }
       
       return gottenAdmin

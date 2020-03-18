@@ -1,67 +1,117 @@
-import chai from 'chai'
-import sinon from 'sinon'
-import faker from 'faker'
 import { ObjectID } from 'mongodb'
 import FixtureService from './fixture.service'
 import Fixture from '../models/fixture'
+import { seedFixtures } from '../testsetup/index'
+import  { connect, clearDatabase, closeDatabase  }  from '../testsetup/test-db'
 
-chai.use(require('chai-as-promised'))
-const { expect } = chai
+
+
+//Define the variable to hold our seeded data
+let seededFixtures
+/**
+ * Connect to a new in-memory database before running any tests.
+ */
+beforeAll(async () => {
+  await connect();
+});
+
+beforeEach(async () => {
+  seededFixtures = await seedFixtures()
+});
+
+/**
+* Clear all test data after every test.
+*/
+afterEach(async () => {
+  await clearDatabase();
+});
+
+/**
+* Remove and close the db and server.
+*/
+afterAll(async () => {
+  await closeDatabase();
+});
 
 
 describe('FixtureService', () => {
-
-  let sandbox = null
-
-  beforeEach(() => {
-    sandbox = sinon.createSandbox();
-  });
-
-  afterEach(() => {
-    sandbox.restore()
-  })
 
   describe('createFixture', () => {
 
     it('should not create a new fixture if record already exists', async () => {
 
-      const record = {
-        _id: faker.random.uuid(),
-        home: faker.random.uuid(),
-        away: faker.random.uuid(),
-      };
+      try {
 
-      const checkStub = sandbox.stub(Fixture, 'findOne').returns(record);
-  
-      const fixtureService = new FixtureService();
+        const firstFixture = seededFixtures[0]
 
-      await expect(fixtureService.createFixture(record)).to.be.rejectedWith(Error, "record already exist")
+        const record = {
+          home: firstFixture.home,
+          away: firstFixture.away,
+          admin: firstFixture.admin,
+          matchday: '20-12-2020',
+          matchtime: '15:00',
+        };
 
-      expect(checkStub.calledOnce).to.be.true;
+        const fixtureService = new FixtureService();
 
+        await fixtureService.createFixture(record)
+
+    } catch (e) {
+      expect(e.message).toMatch('record already exist');
+      }
     });
 
     it('should create a new fixture successfully', async () => {
 
       const stubValue = {
-        _id: faker.random.uuid(),
-        home: faker.random.uuid(),
-        away: faker.random.uuid(),
+        home: new ObjectID('5e6d169de43d8272913a7d99'),
+        away: new ObjectID('5e6d1639e43d8272913a7d93'),
+        matchday: '20-12-2020',
+        matchtime: '15:00',
+        admin: new ObjectID('5e6d1745e43d8272913a7d9d'),
       };
 
-      const checkStub = sandbox.stub(Fixture, 'findOne').returns(false); //the record does not exist
-
-      const createStub = sandbox.stub(Fixture, 'create').returns(stubValue);
-
       const fixtureService = new FixtureService();
+
       const fixture = await fixtureService.createFixture(stubValue);
 
-      expect(checkStub.calledOnce).to.be.true;
-      expect(createStub.calledOnce).to.be.true;
-      expect(fixture._id).to.equal(stubValue._id);
-      expect(fixture.home).to.equal(stubValue.home);
-      expect(fixture.away).to.equal(stubValue.away);
+      expect(fixture.home).toEqual(stubValue.home);
+      expect(fixture.away).toEqual(stubValue.away);
+      expect(fixture.admin).toEqual(stubValue.admin);
 
+    });
+  });
+
+
+  describe('adminGetFixture', () => {
+
+    it('should not get a fixture by an admin if record does not exists', async () => {
+
+      try {
+
+        let fixtureObjID = new ObjectID('5e682d0d580b5a6fb795b842')
+
+        const fixtureService = new FixtureService();
+
+        await fixtureService.adminGetFixture(fixtureObjID)
+
+      } catch (e) {
+        expect(e.message).toMatch('no record found');
+      }
+    });
+
+    it('should get a fixture by an admin', async () => {
+
+      const firstFixture = seededFixtures[0]
+
+      const fixtureService = new FixtureService();
+
+      const fixture = await fixtureService.adminGetFixture(firstFixture._id);
+
+      expect(fixture._id).toEqual(firstFixture._id);
+      expect(fixture.matchday).toBe(firstFixture.matchday);
+      expect(fixture.matchtime).toBe(firstFixture.matchtime);
+      expect(fixture.admin).toEqual(firstFixture.admin);
     });
   });
 
@@ -70,74 +120,31 @@ describe('FixtureService', () => {
 
     it('should not get a fixture if record does not exists', async () => {
 
-      //any id, fields that the service accepts is assumed to have been  checked in the controller. That is, only valid data can find there way here. So the "fixtureId" must be valid
-      let fixtureObjID = new ObjectID("5e682d0d580b5a6fb795b842")
+      try {
 
-      var mockFindOne = {
+        //This fixture does not exist
+        let fixtureObjID = new ObjectID('5e682d0d580b5a6fb795b842')
 
-        select() {
-          return this;
-        },
-        populate() {
-            return this;
-        },
-        exec() {
-          return Promise.resolve(false);
-        }
-      };
+        const fixtureService = new FixtureService();
 
-      const getStub = sandbox.stub(Fixture, 'findOne').returns(mockFindOne);
+        await fixtureService.getFixture(fixtureObjID)
 
-      const fixtureService = new FixtureService();
-
-      await expect(fixtureService.getFixture(fixtureObjID)).to.be.rejectedWith(Error, "no record found")
-
-      expect(getStub.calledOnce).to.be.true;
-     
+      } catch (e) {
+        expect(e.message).toMatch('no record found');
+      }
     });
 
     it('should get a fixture', async () => {
 
-      const stubValue = {
-            "_id": "5e6976e61ec9d7a2d58662a8",
-            "home": {
-                "_id": "5e69748a6e72a1a0793956eb",
-                "name": "Chelsea"
-            },
-            "away": {
-                "_id": "5e69739d96bdb99f784df32e",
-                "name": "Newcastle United"
-            },
-            "matchday": "12-11-2016",
-            "matchtime": "10:30"
-        }
-
-      let fixtureObjID = new ObjectID("5e682d0d580b5a6fb795b842")
-
-      var mockFindOne = {
-
-        select() {
-          return this;
-        },
-        populate() {
-            return this;
-        },
-        exec() {
-          return Promise.resolve(stubValue);
-        }
-      };
-
-      const fixtureStub = sandbox.stub(Fixture, 'findOne').returns(mockFindOne);
+      const firstFixture = seededFixtures[0]
 
       const fixtureService = new FixtureService();
-      const fixture = await fixtureService.getFixture(fixtureObjID);
 
-      expect(fixtureStub.calledOnce).to.be.true;
-      expect(fixture._id).to.equal(stubValue._id);
-      expect(fixture.home).to.equal(stubValue.home);
-      expect(fixture.away).to.equal(stubValue.away);
-      expect(fixture.matchday).to.equal(stubValue.matchday);
-      expect(fixture.matchtime).to.equal(stubValue.matchtime);
+      const fixture = await fixtureService.getFixture(firstFixture._id);
+
+      expect(fixture._id).toEqual(firstFixture._id);
+      expect(fixture.matchday).toBe(firstFixture.matchday);
+      expect(fixture.matchtime).toBe(firstFixture.matchtime);
     });
   });
 
@@ -146,149 +153,131 @@ describe('FixtureService', () => {
 
     it('should not update a fixture if record already exists', async () => {
 
-      //Note: extra check is required that's why we used valid objectids
+      try {
 
-      //This fixture home and away belongs to another fixture
-      const stubValue = {
-        _id:  new ObjectID("5e69737e96bdb99f784df32d"),
-        home: new ObjectID("5e6b16bcaf5e1565923d0ac2"),
-        away: new ObjectID("5e69758b274e95a16159c2bc"),
-      };
+        const firstFixture = seededFixtures[0]
+        const secondFixture = seededFixtures[1]
 
-      const record = {
-        _id: new ObjectID("5e682d0d580b5a6fb795b842"),
-        home: new ObjectID("5e6b16bcaf5e1565923d0ac2"),
-        away: new ObjectID("5e69758b274e95a16159c2bc"),
-      };
-
-      const checkStub = sandbox.stub(Fixture, 'findOne').returns(record);
+        const stubValue = {
+          _id:  firstFixture._id,
+          home: secondFixture.home, 
+          away: secondFixture.away, 
+          admin: firstFixture.admin,
+          matchday: firstFixture.matchday,
+          matchtime: firstFixture.matchtime,
+        };
+    
+        const fixtureService = new FixtureService();
   
-      const fixtureService = new FixtureService();
+        await fixtureService.updateFixture(stubValue)
 
-      await expect(fixtureService.updateFixture(stubValue)).to.be.rejectedWith(Error, "record already exist")
-
-      expect(checkStub.calledOnce).to.be.true;
-
+      } catch (e) {
+        expect(e.message).toMatch('record already exist');
+      }
     });
 
-    it('should update a new fixture successfully', async () => {
+    it('should update a fixture successfully', async () => {
 
-      //Note: extra check is required that's why we used valid objectids
-      const stubValue = {
-        _id:  new ObjectID("5e682d0d580b5a6fb795b842"),
-        home: new ObjectID("5e6b16bcaf5e1565923d0ac2"),
-        away: new ObjectID("5e69758b274e95a16159c2bc"),
-      };
+      try {
 
-      const record = {
-        _id: new ObjectID("5e682d0d580b5a6fb795b842"),
-        home: new ObjectID("5e6b13809f86ce60e92ff11c"),
-        away: new ObjectID("5e69737e96bdb99f784df32d"),
-      };
+        const firstFixture = seededFixtures[0]
 
-      //the record exist, but the incoming id is same at the one found in the db. ie, it does not belong to another fixture, so, we can update it
-      const checkStub = sandbox.stub(Fixture, 'findOne').returns(record); 
+        const stubValue = {
+          _id:  firstFixture._id,
+          home: new ObjectID('5e6b16bcaf5e1565923d0ac2'),
+          away: new ObjectID('5e69737e96bdb99f784df32d'),
+          matchday: '30-02-2031',
+          matchtime: '09:30'
+        };
 
-      const createStub = sandbox.stub(Fixture, 'findOneAndUpdate').returns(stubValue);
+        const fixtureService = new FixtureService();
+
+        const fixture = await fixtureService.updateFixture(stubValue);
+
+        expect(fixture.home).toEqual(stubValue.home)
+        expect(fixture.away).toEqual(stubValue.away)
+        expect(fixture.matchday).toEqual(stubValue.matchday)
+        expect(fixture.matchtime).toEqual(stubValue.matchtime)
+
+      } catch (e) {
+        expect(e).toMatch(null);
+      }
+    });
+  });
+
+  describe('deleteFixture', () => {
+
+    it('should return no record found if the fixture does not exist', async () => {
+
+      try {
+
+        let fixtureObjID = new ObjectID('5e682d0d580b5a6fb795b842')
+
+        const fixtureService = new FixtureService();
+
+        await fixtureService.deleteFixture(fixtureObjID)
+
+      } catch (e) {
+        expect(e.message).toMatch('something went wrong');
+      }
+    });
+
+    it('should delete a fixture successfully', async () => {
+
+      const firstFixture = seededFixtures[0]
+
+      const deleted = { n: 1, ok: 1, deletedCount: 1 }
 
       const fixtureService = new FixtureService();
-      const fixture = await fixtureService.updateFixture(stubValue);
+      const deletedData = await fixtureService.deleteFixture(firstFixture._id);
 
-      expect(checkStub.calledOnce).to.be.true;
-      expect(createStub.calledOnce).to.be.true;
-      expect(fixture._id).to.equal(stubValue._id);
-      expect(fixture.home).to.equal(stubValue.home);
-      expect(fixture.away).to.equal(stubValue.away);
-
-    });
+      expect(deletedData).toEqual(deleted);
+      
+     });
   });
 
 
   describe('getFixtures', () => {
 
-    it('should not get fixtures if record does not exists', async () => {
-
-      var mockFind = {
-
-        select() {
-          return this;
-        },
-        populate() {
-            return this;
-        },
-        sort() {
-          return this;
-        },
-        exec() {
-          return Promise.resolve(false);
-        }
-      };
-
-      const getStubs = sandbox.stub(Fixture, 'find').returns(mockFind);
-
-      const fixtureService = new FixtureService();
-
-      await expect(fixtureService.getFixtures()).to.be.rejectedWith(Error, "no record found")
-
-      expect(getStubs.calledOnce).to.be.true;
-     
-    });
-
     it('should get fixtures', async () => {
 
-      const stubValues = [
-        {
-            "_id": "5e6973b196bdb99f784df32f",
-            "home": {
-                "_id": "5e69737e96bdb99f784df32d",
-                "name": "Manchester United"
-            },
-            "away": {
-                "_id": "5e69739d96bdb99f784df32e",
-                "name": "Newcastle United"
-            },
-            "matchday": "12-11-2016",
-            "matchtime": "10:30"
-        },
-        {
-            "_id": "5e6976e61ec9d7a2d58662a8",
-            "home": {
-                "_id": "5e69748a6e72a1a0793956eb",
-                "name": "Chelsea"
-            },
-            "away": {
-                "_id": "5e69739d96bdb99f784df32e",
-                "name": "Newcastle United"
-            },
-            "matchday": "12-11-2016",
-            "matchtime": "10:30"
-        }
-      ]
-
-      var mockFind = {
-
-        select() {
-          return this;
-        },
-        populate() {
-            return this;
-        },
-        sort() {
-          return this;
-        },
-        exec() {
-          return Promise.resolve(stubValues);
-        }
-      };
-
-      const fixturesStub = sandbox.stub(Fixture, 'find').returns(mockFind);
-
       const fixtureService = new FixtureService();
-      const fixtures = await fixtureService.getFixtures();
+      const fixtures = await fixtureService.getFixtures(); //fixtures coming from our in-memory db
 
-      expect(fixturesStub.calledOnce).to.be.true;
-      expect(fixtures).to.equal(stubValues);
-      expect(fixtures.length).to.equal(2);
+      expect(fixtures.length).toEqual(2);
+
     });
+
+    //We will need to fake a db error, so as to cover the catch block
+    it('should not get fixtures if db error occurs', async () => {
+      try {
+
+        var mockFind = {
+          select() {
+            return this;
+          },
+          populate(){
+            return this;
+          },
+          sort(){
+            return this
+          },
+          exec() {
+            return Promise.reject('database error');
+          }
+        };
+
+        const fixturesStub = jest.spyOn(Fixture, 'find').mockReturnValue(mockFind);
+
+        const fixtureService = new FixtureService();
+
+        await fixtureService.getFixtures()
+
+        expect(fixturesStub).toHaveBeenCalled();
+
+      } catch (e) {
+        expect(e).toMatch('database error');
+      }
+    })
   });
 });

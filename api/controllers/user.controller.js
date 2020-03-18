@@ -29,12 +29,10 @@ class UserController {
 
     try {
       const createUser = await this.userService.createUser(user)
-      if(createUser) {
-        return res.status(201).json({
-          status: 201,
-          data: createUser
-        })
-      }
+      return res.status(201).json({
+        status: 201,
+        data: createUser
+      })
     } catch(error) {
       return res.status(500).json({
         status: 500,

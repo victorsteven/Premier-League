@@ -24,13 +24,13 @@ class SearchController {
     const { name } = req.query
 
     try {
+
       const searchResult = await this.searchService.searchTeam(name)
-      if(searchResult) {
-        return res.status(200).json({
-          status: 200,
-          data: searchResult
-        })
-      }
+      return res.status(200).json({
+        status: 200,
+        data: searchResult
+      })
+
     } catch(error) {
       return res.status(500).json({
         status: 500,
@@ -57,12 +57,10 @@ class SearchController {
 
     try {
       const searchResult = await this.searchService.searchFixture(searchTerm)
-      if(searchResult) {
-        return res.status(200).json({
-          status: 200,
-          data: searchResult
-        })
-      }
+      return res.status(200).json({
+        status: 200,
+        data: searchResult
+      })
     } catch(error) {
       return res.status(500).json({
         status: 500,

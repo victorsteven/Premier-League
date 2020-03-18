@@ -54,12 +54,10 @@ class FixtureController {
       })
 
       const createFixture = await this.fixtureService.createFixture(fixture)
-      if(createFixture) {
-        return res.status(201).json({
-          status: 201,
-          data: createFixture
-        })
-      }
+      return res.status(201).json({
+        status: 201,
+        data: createFixture
+      })
     } catch(error) {
       return res.status(500).json({
         status: 500,
@@ -121,12 +119,10 @@ class FixtureController {
       fixture.matchtime = matchtime
 
       const updateFixture = await this.fixtureService.updateFixture(fixture)
-      if(updateFixture) {
-        return res.status(200).json({
-          status: 200,
-          data: updateFixture
-        })
-      }
+      return res.status(200).json({
+        status: 200,
+        data: updateFixture
+      })
     } catch(error) {
       return res.status(500).json({
         status: 500,
@@ -170,13 +166,12 @@ class FixtureController {
       }
 
       //Delete the fixture
-      const status = await this.fixtureService.deleteFixture(fixture._id)
-      if (status) {
-        return res.status(200).json({
-          status: 200,
-          data: "fixture deleted"
-        })
-      }
+      await this.fixtureService.deleteFixture(fixture._id)
+
+      return res.status(200).json({
+        status: 200,
+        data: "fixture deleted"
+      })
     } catch(error) {
       return res.status(500).json({
         status: 500,
@@ -210,16 +205,14 @@ class FixtureController {
       let authId = tokenMetadata._id
 
       //verify if the account that want to view this fixture exists(weather admin or normal user) 
-      const user = await this.userService.getUser(authId)
-      if(user) {
-        const fixture = await this.fixtureService.getFixture(id)
-        if (fixture) {
-          return res.status(200).json({
-            status: 200,
-            data: fixture
-          })
-        }
-      }
+      await this.userService.getUser(authId)
+
+      const fixture = await this.fixtureService.getFixture(id)
+      
+      return res.status(200).json({
+        status: 200,
+        data: fixture
+      })
     } catch(error) {
       return res.status(500).json({
         status: 500,
@@ -244,16 +237,14 @@ class FixtureController {
       let authId = tokenMetadata._id
 
       //verify if the account that want to view this fixture exists(weather admin or normal user) 
-      const user = await this.userService.getUser(authId)
-      if (user) {
-        const fixtures = await this.fixtureService.getFixtures()
-        if (fixtures) {
-          return res.status(200).json({
-            status: 200,
-            data: fixtures
-          })
-        }
-      }
+      await this.userService.getUser(authId)
+
+      const fixtures = await this.fixtureService.getFixtures()
+
+      return res.status(200).json({
+        status: 200,
+        data: fixtures
+      })
     } catch(error) {
       return res.status(500).json({
         status: 500,

@@ -14,18 +14,17 @@ class TeamService {
       //check if the team already exist
       const record = await this.team.findOne({ name: team.name })
       if (record) {
-        throw new Error('record already exist');
+        throw new Error('record already exists');
       } 
 
       const createdTeam = await this.team.create(team);
 
       return createdTeam
-
+      
     } catch(error) {
       throw error;
     }
   }
-
 
   //we will need to confirm if the admin to update or delete a team or fixture exist
    async adminGetTeam(teamId) {
@@ -67,11 +66,7 @@ class TeamService {
 
     try {
 
-      const gottenTeams = await this.team.find().select('-admin').select('-__v').sort('name').exec()
-      if (!gottenTeams) {
-        throw new Error('no record found');
-      }
-      return gottenTeams
+      return await this.team.find().select('-admin').select('-__v').sort('name').exec()
 
     } catch(error) {
       throw error;
@@ -81,12 +76,6 @@ class TeamService {
    async updateTeam(team) {
 
     try {
-
-      //Lets make sure that we dont have duplicate team name
-      const record = await this.team.findOne({ team: team.name })
-      if (record) {
-        throw new Error('record already exist');
-      }
 
       const updatedTeam = await this.team.findOneAndUpdate(
         { _id: team._id}, 
@@ -98,7 +87,7 @@ class TeamService {
 
     } catch(error) {
       if(error.message.includes("duplicate")){
-        throw new Error("team name already exist")
+        throw new Error("record already exists")
       }
       throw error;
     }
@@ -111,8 +100,8 @@ class TeamService {
       let teamIdObj = new ObjectID(teamId)
 
       const deleted = await this.team.deleteOne({ _id: teamIdObj })
-      if (!deleted) {
-        throw new Error('no record found');
+      if (deleted.deletedCount === 0) {
+        throw new Error('something went wrong');
       }
       return deleted
 

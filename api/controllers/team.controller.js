@@ -44,12 +44,10 @@ class TeamController {
       })
 
       const createTeam = await this.teamService.createTeam(team)
-      if(createTeam) {
-        return res.status(201).json({
-          status: 201,
-          data: createTeam
-        })
-      }
+      return res.status(201).json({
+        status: 201,
+        data: createTeam
+      })
     } catch(error) {
       return res.status(500).json({
         status: 500,
@@ -105,12 +103,10 @@ class TeamController {
       team.name = name
       
       const updateTeam = await this.teamService.updateTeam(team)
-      if(updateTeam) {
-        return res.status(200).json({
-          status: 200,
-          data: updateTeam
-        })
-      }
+      return res.status(200).json({
+        status: 200,
+        data: updateTeam
+      })
     } catch(error) {
       return res.status(500).json({
         status: 500,
@@ -154,12 +150,10 @@ class TeamController {
 
       //Delete the team
       const status = await this.teamService.deleteTeam(id)
-      if (status) {
-        return res.status(200).json({
-          status: 200,
-          data: "team deleted"
-        })
-      }
+      return res.status(200).json({
+        status: 200,
+        data: "team deleted"
+      })
     } catch(error) {
       return res.status(500).json({
         status: 500,
@@ -198,12 +192,10 @@ class TeamController {
       
       try {
         const gottenTeam = await this.teamService.getTeam(id)
-        if (gottenTeam) {
-          return res.status(200).json({
-            status: 200,
-            data: gottenTeam
-          })
-        }
+        return res.status(200).json({
+          status: 200,
+          data: gottenTeam
+        })
       } catch(error) {
         throw error;
       }
@@ -232,16 +224,14 @@ class TeamController {
       let authId = tokenMetadata._id
 
       //verify if the account that want to view this team exists(weather admin or normal user) 
-      const user = await this.userService.getUser(authId)
-      if (user) {
-        const teams = await this.teamService.getTeams()
-        if (teams) {
-          return res.status(200).json({
-            status: 200,
-            data: teams
-          })
-        }
-      }
+      await this.userService.getUser(authId)
+
+      const teams = await this.teamService.getTeams()
+
+      return res.status(200).json({
+        status: 200,
+        data: teams
+      })
     } catch(error) {
       return res.status(500).json({
         status: 500,

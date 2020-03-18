@@ -1,64 +1,77 @@
-import chai from 'chai'
-import sinon from 'sinon'
-import faker from 'faker'
 import { ObjectID } from 'mongodb'
 import TeamService from './team.service'
-import Team from '../models/team'
+import { seedTeams } from '../testsetup/index'
+import  { connect, clearDatabase, closeDatabase  }  from '../testsetup/test-db'
 
 
-chai.use(require('chai-as-promised'))
-const { expect } = chai
+
+//Define the variable to hold our seeded data
+let seededTeams
+/**
+ * Connect to a new in-memory database before running any tests.
+ */
+beforeAll(async () => {
+  await connect();
+});
+
+beforeEach(async () => {
+  seededTeams = await seedTeams()
+});
+
+/**
+* Clear all test data after every test.
+*/
+afterEach(async () => {
+  await clearDatabase();
+  jest.clearAllMocks();
+});
+
+/**
+* Remove and close the db and server.
+*/
+afterAll(async () => {
+  await closeDatabase();
+});
 
 
 describe('TeamService', () => {
-
-  let sandbox = null
-
-  beforeEach(() => {
-    sandbox = sinon.createSandbox();
-  });
-
-  afterEach(() => {
-    sandbox.restore()
-  })
 
   describe('createTeam', () => {
 
     it('should not create a new team if record already exists', async () => {
 
-      const record = {
-        _id: faker.random.uuid(),
-        name: faker.name.findName(),
-      };
+      try {
 
-      const checkStub = sandbox.stub(Team, 'findOne').returns(record);
+        const firstTeam = seededTeams[0]
   
-      const teamService = new TeamService();
+        const record = {
+          name: firstTeam.name, 
+          admin: new ObjectID('5e6b13809f86ce60e92ff11c')
+        };
+    
+        const teamService = new TeamService();
 
-      await expect(teamService.createTeam(record)).to.be.rejectedWith(Error, "record already exist")
+        await teamService.createTeam(record)
 
-      expect(checkStub.calledOnce).to.be.true;
-
+      } catch (e) {
+        expect(e.message).toMatch('record already exists');
+      }
     });
 
     it('should create a new team successfully', async () => {
 
-      const stubValue = {
-        _id: faker.random.uuid(),
-        name: faker.name.findName(),
+      const newTeam = {
+        name: 'Chelsea',
+        admin: new ObjectID('5e6b13809f86ce60e92ff11c'), //our seeded admin
       };
 
-      const checkStub = sandbox.stub(Team, 'findOne').returns(false);
-
-      const createStub = sandbox.stub(Team, 'create').returns(stubValue);
-
       const teamService = new TeamService();
-      const team = await teamService.createTeam(stubValue);
 
-      expect(checkStub.calledOnce).to.be.true;
-      expect(createStub.calledOnce).to.be.true;
-      expect(team._id).to.equal(stubValue._id);
-      expect(team.name).to.equal(stubValue.name);
+      const team = await teamService.createTeam(newTeam);
+
+      expect(team._id).toBeDefined();
+      expect(team.name).toBe(newTeam.name);
+      expect(team.admin).toEqual(newTeam.admin);
 
     });
   });
@@ -67,36 +80,29 @@ describe('TeamService', () => {
 
     it('should not get a admin team if record does not exists', async () => {
 
-      //any id, fields that the service accepts is assumed to have been  checkedin the controller. That is, only valid data can find there way here. So the "teamId" must be valid
-      let teamObjID = new ObjectID("5e682d0d580b5a6fb795b842")
+      try {
 
-      const getStub = sandbox.stub(Team, 'findOne').returns(false);
+        let teamObjID = new ObjectID('5e682d0d580b5a6fb795b842') //the id does not match any of the seeded team
 
-      const teamService = new TeamService();
+        const teamService = new TeamService();
 
-      await expect(teamService.adminGetTeam(teamObjID)).to.be.rejectedWith(Error, "no record found")
-
-      expect(getStub.calledOnce).to.be.true;
-     
+        await teamService.adminGetTeam(teamObjID)
+      } catch (e) {
+        expect(e.message).toMatch('no record found');
+      }
     });
 
     it('should get an admin team', async () => {
 
-      const stubValue = {
-        _id: "5e682d0d580b5a6fb795b842",
-        name: faker.name.findName(),
-      };
-
-      let teamObjID = new ObjectID("5e682d0d580b5a6fb795b842")
-
-      const teamStub = sandbox.stub(Team, 'findOne').returns(stubValue);
+      const firstTeam = seededTeams[0]
 
       const teamService = new TeamService();
-      const team = await teamService.adminGetTeam(teamObjID);
+      const team = await teamService.adminGetTeam(firstTeam._id);
 
-      expect(teamStub.calledOnce).to.be.true;
-      expect(team._id).to.equal(stubValue._id);
-      expect(team.name).to.equal(stubValue.name);
+      expect(team._id).toBeDefined()
+      expect(team._id).toEqual(firstTeam._id);
+      expect(team.name).toBe(firstTeam.name);
+      expect(team.admin).toEqual(firstTeam.admin);
     });
   });
 
@@ -104,120 +110,41 @@ describe('TeamService', () => {
 
     it('should not get a team if record does not exists', async () => {
 
-      //any id, fields that the service accepts is assumed to have been  checkedin the controller. That is, only valid data can find there way here. So the "teamId" must be valid
-      let teamObjID = new ObjectID("5e682d0d580b5a6fb795b842")
+      try {
 
-      var mockFindOne = {
-        select() {
-          return this;
-        },
-        exec() {
-          return Promise.resolve(false);
-        }
-      };
+        let teamObjID = new ObjectID('5e682d0d580b5a6fb795b842') //the id does not match any of the seeded team
 
-      const getStub = sandbox.stub(Team, 'findOne').returns(mockFindOne);
+        const teamService = new TeamService();
 
-      const teamService = new TeamService();
-
-      await expect(teamService.getTeam(teamObjID)).to.be.rejectedWith(Error, "no record found")
-
-      expect(getStub.calledOnce).to.be.true;
-     
+        await teamService.getTeam(teamObjID)
+      } catch (e) {
+        expect(e.message).toMatch('no record found');
+      }
     });
 
     it('should get a team', async () => {
 
-      const stubValue = {
-        _id: "5e682d0d580b5a6fb795b842",
-        name: faker.name.findName(),
-      };
-
-      let teamObjID = new ObjectID("5e682d0d580b5a6fb795b842")
-
-      var mockFindOne = {
-        select() {
-          return this;
-        },
-        sort() {
-          return this;
-        },
-        exec() {
-          return Promise.resolve(stubValue);
-        }
-      };
-
-      const teamStub = sandbox.stub(Team, 'findOne').returns(mockFindOne);
+      const secondTeam = seededTeams[1]
 
       const teamService = new TeamService();
-      const team = await teamService.getTeam(teamObjID);
+      const team = await teamService.getTeam(secondTeam._id);
 
-      expect(teamStub.calledOnce).to.be.true;
-      expect(team._id).to.equal(stubValue._id);
-      expect(team.name).to.equal(stubValue.name);
+      expect(team._id).toBeDefined()
+      expect(team._id).toEqual(secondTeam._id);
+      expect(team.name).toBe(secondTeam.name);
     });
   });
 
 
   describe('getTeams', () => {
 
-    it('should not get a team if record does not exists', async () => {
-
-      var mockFind = {
-        select() {
-          return this;
-        },
-        sort() {
-          return this;
-        },
-        exec() {
-          return Promise.resolve(false);
-        }
-      };
-
-      const getStubs = sandbox.stub(Team, 'find').returns(mockFind);
-
-      const teamService = new TeamService();
-
-      await expect(teamService.getTeams()).to.be.rejectedWith(Error, "no record found")
-
-      expect(getStubs.calledOnce).to.be.true;
-     
-    });
-
     it('should get teams', async () => {
 
-      const stubValues = [ 
-        {
-          _id: "5e682d0d580b5a6fb795b842",
-          name: faker.name.findName(),
-        },
-        {
-          _id: "5e6976e61ec9d7a2d58662a8",
-          name: faker.name.findName(),
-        }
-      ]
-
-      var mockFind = {
-        select() {
-          return this;
-        },
-        sort() {
-          return this;
-        },
-        exec() {
-          return Promise.resolve(stubValues);
-        }
-      };
-
-      const teamStubs = sandbox.stub(Team, 'find').returns(mockFind);
-
       const teamService = new TeamService();
-      const teams = await teamService.getTeams();
 
-      expect(teamStubs.calledOnce).to.be.true;
-      expect(teams).to.equal(stubValues);
-      expect(teams.length).to.equal(2);
+      const teams = await teamService.getTeams()
+
+      expect(teams.length).toEqual(2); //we have two teams in our seeded db
     });
   });
 
@@ -225,40 +152,40 @@ describe('TeamService', () => {
 
     it('should not update a new team if record already exists, to avoid duplicate', async () => {
 
-      const record = {
-        _id: faker.random.uuid(),
-        name: faker.name.findName(),
-      };
+      try {
 
-      const checkStub = sandbox.stub(Team, 'findOne').returns(record);
-  
-      const teamService = new TeamService();
+        const firstTeam = seededTeams[0]
+        const secondTeam = seededTeams[1]
 
-      await expect(teamService.updateTeam(record)).to.be.rejectedWith(Error, "record already exist")
+        const update = {
+          _id: firstTeam._id,
+          name: secondTeam.name,
+        };
 
-      expect(checkStub.calledOnce).to.be.true;
+        const teamService = new TeamService();
 
+        await teamService.updateTeam(update)
+      } catch (e) {
+        expect(e.message).toMatch('record already exist');
+      }
     });
 
     it('should update a team successfully', async () => {
 
-      const stubValue = {
-        _id: faker.random.uuid(),
-        name: faker.name.findName(),
+      const firstTeam = seededTeams[0]
+
+      const update = {
+        _id: firstTeam._id,
+        name: 'Manchester United',
       };
 
-      const checkStub = sandbox.stub(Team, 'findOne').returns(false);
-
-      const createStub = sandbox.stub(Team, 'findOneAndUpdate').returns(stubValue);
-
       const teamService = new TeamService();
-      const team = await teamService.updateTeam(stubValue);
 
-      expect(checkStub.calledOnce).to.be.true;
-      expect(createStub.calledOnce).to.be.true;
-      expect(team._id).to.equal(stubValue._id);
-      expect(team.name).to.equal(stubValue.name);
+      const updated = await teamService.updateTeam(update)
 
+      expect(updated._id).toBeDefined()
+      expect(updated._id).toEqual(update._id);
+      expect(updated.name).toBe(update.name);
     });
   });
 
@@ -266,32 +193,28 @@ describe('TeamService', () => {
 
     it('should return no record found if the team does not exist', async () => {
 
-      //any id, fields that the service accepts is assumed to have been  checkedin the controller. That is, only valid data can find there way here. So the "teamId" must be valid
-      let teamObjID = new ObjectID("5e682d0d580b5a6fb795b842")
+      try {
 
-      const deleteStub = sandbox.stub(Team, 'deleteOne').returns(false);
+        let teamObjID = new ObjectID('5e682d0d580b5a6fb795b842')
 
-      const teamService = new TeamService();
+        const teamService = new TeamService();
 
-      await expect(teamService.deleteTeam(teamObjID)).to.be.rejectedWith(Error, "no record found")
-
-      expect(deleteStub.calledOnce).to.be.true;
-     
+        await teamService.deleteTeam(teamObjID)
+      } catch (e) {
+        expect(e.message).toMatch('something went wrong');
+      }
     });
 
     it('should delete a team successfully', async () => {
 
+      const firstTeam = seededTeams[0]
+
       const deleted = { n: 1, ok: 1, deletedCount: 1 }
 
-      let teamObjID = new ObjectID("5e682d0d580b5a6fb795b842")
-
-      const teamStub = sandbox.stub(Team, 'deleteOne').returns(deleted);
-
       const teamService = new TeamService();
-      const deletedData = await teamService.deleteTeam(teamObjID);
+      const deletedData = await teamService.deleteTeam(firstTeam._id);
 
-      expect(teamStub.calledOnce).to.be.true;
-      expect(deletedData).to.equal(deleted);
+      expect(deletedData).toEqual(deleted);
     });
   });
 
@@ -299,68 +222,30 @@ describe('TeamService', () => {
 
     it('should check that both teams dont exist', async () => {
 
-      //any id, fields that the service accepts is assumed to have been checked in the controller. That is, only valid data can find there way here.
-      let homeObjID = new ObjectID("5e682d0d580b5a6fb795b842")
-      let awayObjID = new ObjectID("5e69739d96bdb99f784df32e")
+      try {
 
-      var mockFind = {
-        where() {
-          return this;
-        },
-        in() {
-          return this;
-        },
-        exec() {
-          return Promise.resolve(false);
-        }
-      };
+        let homeObjID = new ObjectID('5e682d0d580b5a6fb795b842')
+        let awayObjID = new ObjectID('5e69739d96bdb99f784df32e')
 
-      const checkStubs = sandbox.stub(Team, 'find').returns(mockFind);
+        const teamService = new TeamService();
 
-      const teamService = new TeamService();
+        await teamService.checkTeams(homeObjID, awayObjID)
 
-      await expect(teamService.checkTeams(homeObjID, awayObjID)).to.be.rejectedWith(Error, "make sure that both teams exist")
-
-      expect(checkStubs.calledOnce).to.be.true;
-     
+      } catch (e) {
+        expect(e.message).toMatch('make sure that both teams exist');
+      }
     });
 
     it('should check that both teams exist', async () => {
 
-      //any id, fields that the service accepts is assumed to have been checked in the controller. That is, only valid data can find there way here.
-      let homeObjID = new ObjectID("5e682d0d580b5a6fb795b842")
-      let awayObjID = new ObjectID("5e69739d96bdb99f784df32e")
-
-      const stubValues = [ 
-        { _id: "5e682d0d580b5a6fb795b842",
-          name: "Manchester United",
-        },
-        { _id: "5e69739d96bdb99f784df32e",
-          name: "Newcastle United",
-        } 
-      ]
-
-      var mockFind = {
-        where() {
-          return this;
-        },
-        in() {
-          return this;
-        },
-        exec() {
-          return Promise.resolve(stubValues);
-        }
-      };
-
-      const checkStubs = sandbox.stub(Team, 'find').returns(mockFind);
+      const firstTeam = seededTeams[0]
+      const secondTeam = seededTeams[1]
 
       const teamService = new TeamService();
 
-      const gottenTeams = await teamService.checkTeams(homeObjID, awayObjID)
+      const gottenTeams = await teamService.checkTeams(firstTeam._id, secondTeam._id)
 
-      expect(checkStubs.calledOnce).to.be.true;
-      expect(gottenTeams.length).to.equal(2);
-     
+      expect(gottenTeams.length).toEqual(2);
     });
   });
 });

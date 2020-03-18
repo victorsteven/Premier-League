@@ -35,9 +35,9 @@ class FixtureService {
 
     try {
 
-      let fixtureIdObj = new ObjectID(fixtureId)
+      // let fixtureIdObj = new ObjectID(fixtureId)
 
-      const gottenFixture = await this.fixture.findOne({ _id: fixtureIdObj })
+      const gottenFixture = await this.fixture.findOne({ _id: fixtureId })
       if (!gottenFixture) {
         throw new Error('no record found');
       }
@@ -111,9 +111,6 @@ class FixtureService {
                                                 .sort('matchday')
                                                 .exec()
 
-      if (!gottenFixtures) {
-        throw new Error('no record found');
-      }
       return gottenFixtures
 
     } catch(error) {
@@ -126,8 +123,8 @@ class FixtureService {
     try {
 
       const deleted = await this.fixture.deleteOne({ _id: fixtureId })
-      if (!deleted) {
-        throw new Error('no record found');
+      if (deleted.deletedCount === 0) {
+        throw new Error('something went wrong');
       }
       return deleted
 

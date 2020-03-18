@@ -1,70 +1,80 @@
-import chai from 'chai'
-import sinon from 'sinon'
-import faker from 'faker'
 import { ObjectID } from 'mongodb'
 import AdminService from './admin.service'
-import User from '../models/user'
 import  password from '../utils/password';
+import { seedAdmin } from '../testsetup/index'
+import  { connect, clearDatabase, closeDatabase  }  from '../testsetup/test-db'
 
-chai.use(require('chai-as-promised'))
-const { expect } = chai
+
+
+let seededAdmin
+/**
+ * Connect to a new in-memory database before running any tests.
+ */
+beforeAll(async () => {
+  await connect();
+});
+
+beforeEach(async () => {
+  seededAdmin = await seedAdmin()
+});
+
+/**
+* Clear all test data after every test.
+*/
+afterEach(async () => {
+  await clearDatabase();
+});
+
+/**
+* Remove and close the db and server.
+*/
+afterAll(async () => {
+  await closeDatabase();
+});
 
 
 describe('AdminService', () => {
-
-  let sandbox = null
-
-  beforeEach(() => {
-    sandbox = sinon.createSandbox();
-  });
-
-  afterEach(() => {
-    sandbox.restore()
-  })
 
   describe('createAdmin', () => {
 
     it('should not create a new admin if record already exists', async () => {
 
-      const record = {
-        _id: faker.random.uuid(),
-        name: faker.name.findName(),
-        role: 'admin',
-      };
+      try {
 
-      const checkStub = sandbox.stub(User, 'findOne').returns(record);
+        let admin = {
+          name: 'frank',
+          email: seededAdmin.email,
+          password: 'password',
+        }
   
-      const adminService = new AdminService();
+        const adminService = new AdminService();
+  
+        await adminService.createAdmin(admin)
 
-      await expect(adminService.createAdmin(record)).to.be.rejectedWith(Error, "record already exist")
-      expect(checkStub.calledOnce).to.be.true;
-
+      } catch (e) {
+        expect(e.message).toMatch('record already exists');
+      }
     });
 
     it('should create a new admin', async () => {
 
-      const stubValue = {
-        _id: faker.random.uuid(),
-        name: faker.name.findName(),
-        role: 'admin',
-      };
+      let adminNew = {
+        name: 'kate',
+        email: 'kate@example.com',
+        password: 'password',
+      }
 
-      const hash = 'jksdnfkjsdnfskdnfklsdjfkjdsf'
-
-      const checkStub = sandbox.stub(User, 'findOne').returns(false);
-      const passStub = sandbox.stub(password, 'hashPassword').returns(hash);
-      const createStub = sandbox.stub(User, 'create').returns(stubValue);
+      //'hashPassword' is a  dependency, so we mock it
+      const hashPass = jest.spyOn(password, 'hashPassword').mockReturnValue('ksjndfklsndflksdmlfksdf')
 
       const adminService = new AdminService();
-      const admin = await adminService.createAdmin(stubValue);
 
-      expect(passStub.calledOnce).to.be.true;
-      expect(checkStub.calledOnce).to.be.true;
-      expect(createStub.calledOnce).to.be.true;
-      expect(admin._id).to.equal(stubValue._id);
-      expect(admin.name).to.equal(stubValue.name);
-      expect(admin.role).to.equal(stubValue.role);
+      const admin = await adminService.createAdmin(adminNew);
 
+      expect(hashPass).toHaveBeenCalled();
+      expect(admin._id).toBeDefined();
+      expect(admin.name).toBe(adminNew.name);
+      expect(admin.role).toBe(adminNew.role);
     });
   });
 
@@ -73,36 +83,28 @@ describe('AdminService', () => {
 
     it('should not get an admin if record does not exists', async () => {
 
-      //any id, fields that the service accepts is assumed to have been  checkedin the controller. That is, only valid data can find there way here. So the "adminId" must be valid
-      let adminObjID = new ObjectID("5e682d0d580b5a6fb795b842")
+      try {
+        
+        //This admin does not exist
+        let adminObjID = new ObjectID("5e682d0d580b5a6fb795b842")
 
-      const getStub = sandbox.stub(User, 'findOne').returns(false);
-      const adminService = new AdminService();
+        const adminService = new AdminService();
 
-      await expect(adminService.getAdmin(adminObjID)).to.be.rejectedWith(Error, "admin does not exist")
-      expect(getStub.calledOnce).to.be.true;
-     
+        await adminService.getAdmin(adminObjID)
+
+      } catch (e) {
+        expect(e.message).toMatch('no record found');
+      }
     });
 
     it('should get an admin', async () => {
 
-      const stubValue = {
-        _id: faker.random.uuid(),
-        name: faker.name.findName(),
-        role: 'admin',
-      };
-
-      let adminObjID = new ObjectID("5e682d0d580b5a6fb795b842")
-
-      const adminStub = sandbox.stub(User, 'findOne').returns(stubValue);
-
       const adminService = new AdminService();
-      const admin = await adminService.getAdmin(adminObjID);
+      const admin = await adminService.getAdmin(seededAdmin._id);
 
-      expect(adminStub.calledOnce).to.be.true;
-      expect(admin._id).to.equal(stubValue._id);
-      expect(admin.name).to.equal(stubValue.name);
-      expect(admin.role).to.equal(stubValue.role);
+      expect(admin._id).toEqual(seededAdmin._id);
+      expect(admin.name).toBe(seededAdmin.name);
+      expect(admin.role).toBe(seededAdmin.role);
 
     });
   });

@@ -13,10 +13,10 @@ class UserService {
 
     try {
 
-      //check if the user already exist
+      //check if the user already exists
       const record = await this.user.findOne({ email: user.email })
       if (record) {
-        throw new Error('record already exist');
+        throw new Error('record already exists');
       }
       //proceed with the user
       user.password = password.hashPassword(user.password)
@@ -53,7 +53,7 @@ class UserService {
 
       const gottenUser = await this.user.findOne({ _id: userObjID })
       if (!gottenUser) {
-        throw new Error('no record found, you are not authenticated');
+        throw new Error('no record found');
       }
 
       const { name, role } = gottenUser;
