@@ -1,4 +1,6 @@
 import mongoose from 'mongoose'
+mongoose.Promise = global.Promise;
+
 
 /**
  * Connect to the in-memory database.
@@ -11,7 +13,7 @@ export const connect = async () => {
     reconnectTries: Number.MAX_VALUE,
     reconnectInterval: 1000
   };
-  await mongoose.connect(global.__MONGO_URI__, mongooseOpts)
+  await mongoose.connect('mongodb://localhost:27017/premier-league-test', mongooseOpts)
 };
 
 /**
