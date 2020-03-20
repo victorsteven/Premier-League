@@ -1,19 +1,23 @@
 import mongoose from 'mongoose'
-mongoose.Promise = global.Promise;
+import { MongoMemoryServer } from 'mongodb-memory-server'
 
+const mongod = new MongoMemoryServer();
 
 /**
  * Connect to the in-memory database.
  */
 export const connect = async () => {
 
-  const mongooseOpts = {
-    useNewUrlParser: true,
-    autoReconnect: true,
-    reconnectTries: Number.MAX_VALUE,
-    reconnectInterval: 1000
-  };
-  await mongoose.connect('mongodb://localhost:27017/premier-league-test', mongooseOpts)
+  const uri = await mongod.getConnectionString();
+
+    const mongooseOpts = {
+        useNewUrlParser: true,
+        autoReconnect: true,
+        reconnectTries: Number.MAX_VALUE,
+        reconnectInterval: 1000
+    };
+
+    await mongoose.connect(uri, mongooseOpts);
 };
 
 /**

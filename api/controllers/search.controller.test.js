@@ -1,13 +1,21 @@
+import chai from 'chai'
+import sinon from 'sinon'
+import sinonChai from 'sinon-chai'
 import SearchController from './search.controller'
 import SearchService from '../services/search.service'
-
 import validate from '../utils/validate'
+
+chai.use(require('chai-as-promised'))
+chai.use(sinonChai)
+
+const { expect } = chai
 
 
 const mockResponse = () => {
   const res = {};
-  res.status = jest.fn().mockReturnValue(res);
-  res.json = jest.fn().mockReturnValue(res);
+  res.status = sinon.stub()
+  res.json = sinon.stub()
+  res.status.returns(res);
   return res;
 };
 
@@ -15,20 +23,17 @@ const mockResponse = () => {
 
 describe('SearchController', () => {
 
-  let res, searchService, searchController
+  let res, searchService, searchController, sandbox = null
 
   beforeEach(() => {
-
     res = mockResponse()
-
+    sandbox = sinon.createSandbox()
     searchService = new SearchService();
-
   });
 
-  afterEach(() => {    
-    jest.clearAllMocks();
-  });
-
+  afterEach(() => {
+    sandbox.restore()
+  })
 
   describe('searchTeam', () => {
 
@@ -47,17 +52,17 @@ describe('SearchController', () => {
         { 'name': 'a valid team name is required, atleast 3 characters' },
       ]
 
-      const stub = jest.spyOn(validate, 'teamSearchValidate').mockReturnValue(errors);
+      const stub = sandbox.stub(validate, 'teamSearchValidate').returns(errors);
 
       searchController = new SearchController(searchService);
 
       await searchController.searchTeam(req, res);
 
-      expect(stub).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledTimes(1);
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ 'status': 400, 'errors': errors});
+      expect(stub.calledOnce).to.be.true;
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(400);
+      expect(res.json).to.have.been.calledWith({ 'status': 400, 'errors': errors});
 
     });
 
@@ -70,21 +75,19 @@ describe('SearchController', () => {
         },
       };
 
-      const stubErr = jest.spyOn(validate, 'teamSearchValidate').mockReturnValue([]); //no validation error
-      const stub = jest.spyOn(searchService, 'searchTeam').mockImplementation(() => {
-        throw new Error('database error')
-      });
+      const stubErr = sandbox.stub(validate, 'teamSearchValidate').returns([]); //no validation error
+      const stub = sandbox.stub(searchService, 'searchTeam').throws(new Error('database error'));
 
       searchController = new SearchController(searchService);
 
       await searchController.searchTeam(req, res);
 
-      expect(stubErr).toHaveBeenCalledTimes(1);
-      expect(stub).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledTimes(1);
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ 'status': 500, 'error': 'database error' });
+      expect(stubErr.calledOnce).to.be.true;
+      expect(stub.calledOnce).to.be.true;
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(500);
+      expect(res.json).to.have.been.calledWith({ 'status': 500, 'error': 'database error' });
 
     });
 
@@ -101,19 +104,19 @@ describe('SearchController', () => {
           'name': 'Chelsea'
         }
 
-      const stubErr = jest.spyOn(validate, 'teamSearchValidate').mockReturnValue([]);
-      const stub = jest.spyOn(searchService, 'searchTeam').mockReturnValue(teamValue);
+      const stubErr = sandbox.stub(validate, 'teamSearchValidate').returns([]);
+      const stub = sandbox.stub(searchService, 'searchTeam').returns(teamValue);
 
       searchController = new SearchController(searchService);
 
       await searchController.searchTeam(req, res);
 
-      expect(stubErr).toHaveBeenCalledTimes(1);
-      expect(stub).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledTimes(1);
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({ 'status': 200, 'data': teamValue });
+      expect(stubErr.calledOnce).to.be.true;
+      expect(stub.calledOnce).to.be.true;
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(200);
+      expect(res.json).to.have.been.calledWith({ 'status': 200, 'data': teamValue });
 
     });
   });
@@ -140,17 +143,17 @@ describe('SearchController', () => {
         { 'matchday': 'can\'t search a fixture in the past'}
       ]
 
-      const stub = jest.spyOn(validate, 'fixtureSearchValidate').mockReturnValue(errors);
+      const stub = sandbox.stub(validate, 'fixtureSearchValidate').returns(errors);
 
       searchController = new SearchController(searchService);
 
       await searchController.searchFixture(req, res);
 
-      expect(stub).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledTimes(1);
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ 'status': 400, 'errors': errors });
+      expect(stub.calledOnce).to.be.true;
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(400);
+      expect(res.json).to.have.been.calledWith({ 'status': 400, 'errors': errors });
 
     });
 
@@ -167,22 +170,20 @@ describe('SearchController', () => {
       };
 
 
-      const stubErr = jest.spyOn(validate, 'fixtureSearchValidate').mockReturnValue([]); //no input error
+      const stubErr = sandbox.stub(validate, 'fixtureSearchValidate').returns([]); //no input error
 
-      const stub = jest.spyOn(searchService, 'searchFixture').mockImplementation(() => {
-        throw new Error('database error')
-      });
+      const stub = sandbox.stub(searchService, 'searchFixture').throws(new Error('database error'));
 
       searchController = new SearchController(searchService);
 
       await searchController.searchFixture(req, res);
 
-      expect(stubErr).toHaveBeenCalledTimes(1);
-      expect(stub).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledTimes(1);
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ 'status': 500, 'error': 'database error' });
+      expect(stubErr.calledOnce).to.be.true;
+      expect(stub.calledOnce).to.be.true;
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(500);
+      expect(res.json).to.have.been.calledWith({ 'status': 500, 'error': 'database error' });
 
     });
 
@@ -211,20 +212,20 @@ describe('SearchController', () => {
         'matchtime': '10:30'
       }
 
-      const stubErr = jest.spyOn(validate, 'fixtureSearchValidate').mockReturnValue([]);
+      const stubErr = sandbox.stub(validate, 'fixtureSearchValidate').returns([]);
 
-      const stub = jest.spyOn(searchService, 'searchFixture').mockReturnValue(fixtureValue);
+      const stub = sandbox.stub(searchService, 'searchFixture').returns(fixtureValue);
 
       searchController = new SearchController(searchService);
 
       await searchController.searchFixture(req, res);
 
-      expect(stubErr).toHaveBeenCalledTimes(1);
-      expect(stub).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledTimes(1);
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({ 'status': 200, 'data': fixtureValue });
+      expect(stubErr.calledOnce).to.be.true;
+      expect(stub.calledOnce).to.be.true;
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(200);
+      expect(res.json).to.have.been.calledWith({ 'status': 200, 'data': fixtureValue });
 
     });
 
@@ -267,20 +268,20 @@ describe('SearchController', () => {
         }
       ]
 
-      const stubErr = jest.spyOn(validate, 'fixtureSearchValidate').mockReturnValue([]);
+      const stubErr = sandbox.stub(validate, 'fixtureSearchValidate').returns([]);
 
-      const stub = jest.spyOn(searchService, 'searchFixture').mockReturnValue(fixtureValues);
+      const stub = sandbox.stub(searchService, 'searchFixture').returns(fixtureValues);
 
       searchController = new SearchController(searchService);
 
       await searchController.searchFixture(req, res);
 
-      expect(stubErr).toHaveBeenCalledTimes(1);
-      expect(stub).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledTimes(1);
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({ 'status': 200, 'data': fixtureValues });
+      expect(stubErr.calledOnce).to.be.true;
+      expect(stub.calledOnce).to.be.true;
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(200);
+      expect(res.json).to.have.been.calledWith({ 'status': 200, 'data': fixtureValues });
 
     });
   });

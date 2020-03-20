@@ -1,3 +1,6 @@
+import chai from 'chai'
+import sinon from 'sinon'
+import sinonChai from 'sinon-chai'
 import FixtureController from './fixture.controller'
 import TeamService from '../services/team.service'
 import AdminService from '../services/admin.service'
@@ -8,10 +11,17 @@ import { ObjectID } from 'mongodb';
 import validate from '../utils/validate'
 
 
+chai.use(require('chai-as-promised'))
+chai.use(sinonChai)
+
+const { expect } = chai
+
+
 const mockResponse = () => {
   const res = {};
-  res.status = jest.fn().mockReturnValue(res);
-  res.json = jest.fn().mockReturnValue(res);
+  res.status = sinon.stub()
+  res.json = sinon.stub()
+  res.status.returns(res);
   return res;
 };
 
@@ -19,20 +29,21 @@ const mockResponse = () => {
 
 describe('FixtureController', () => {
 
-  let res, fixtureController, adminService, userService, teamService, fixtureService
+  let res, fixtureController, adminService, userService, teamService, fixtureService, sandbox = null
 
   beforeEach(() => {
-
     res = mockResponse()
+    sandbox = sinon.createSandbox()
     adminService = new AdminService();
     teamService = new TeamService();
     userService = new UserService();
     fixtureService = new FixtureService();
   });
 
-  afterEach(() => {    
-    jest.clearAllMocks();
-  });
+  afterEach(() => {
+    sandbox.restore()
+  })
+
 
 
   describe('createFixture', () => {
@@ -51,10 +62,10 @@ describe('FixtureController', () => {
 
       await fixtureController.createFixture(req, res);
 
-      expect(res.status).toHaveBeenCalledTimes(1)
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({'status': 401, 'error': 'unauthorized'});
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(401);
+      expect(res.json).to.have.been.calledWith({'status': 401, 'error': 'unauthorized'});
 
     });
 
@@ -77,17 +88,17 @@ describe('FixtureController', () => {
         { 'matchday': 'can\'t create a fixture in the past'}
       ]
 
-      const stub = jest.spyOn(validate, 'fixtureValidate').mockReturnValue(errors);
+      const stub = sandbox.stub(validate, 'fixtureValidate').returns(errors);
 
       fixtureController = new FixtureController(userService, adminService, teamService, fixtureService);
 
       await fixtureController.createFixture(req, res);
 
-      expect(stub).toHaveBeenCalledTimes(1)
-      expect(res.status).toHaveBeenCalledTimes(1)
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({'status': 400, 'errors': errors });
+      expect(stub.calledOnce).to.be.true;
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(400);
+      expect(res.json).to.have.been.calledWith({'status': 400, 'errors': errors });
 
     });
 
@@ -122,26 +133,24 @@ describe('FixtureController', () => {
       }
     
       //the error is empty. We have tested validation in the validate.test.js file, so we will only mock the response to be empty
-      const errorStub = jest.spyOn(validate, 'fixtureValidate').mockReturnValue([]);
+      const errorStub = sandbox.stub(validate, 'fixtureValidate').returns([]);
 
-      const adminStub = jest.spyOn(adminService, 'getAdmin').mockReturnValue(stubAdmin);
-      const checkTeamStub = jest.spyOn(teamService, 'checkTeams').mockReturnValue(gottenTeams);
-      const stub = jest.spyOn(fixtureService, 'createFixture').mockImplementation(() => {
-        throw new Error('database error') //this error can be anything
-      });
+      const adminStub = sandbox.stub(adminService, 'getAdmin').returns(stubAdmin);
+      const checkTeamStub = sandbox.stub(teamService, 'checkTeams').returns(gottenTeams);
+      const stub = sandbox.stub(fixtureService, 'createFixture').throws(new Error('database error')) //this error can be anything
 
       fixtureController = new FixtureController(userService, adminService, teamService, fixtureService);
 
       await fixtureController.createFixture(req, res);
 
-      expect(checkTeamStub).toHaveBeenCalledTimes(1)
-      expect(errorStub).toHaveBeenCalledTimes(1)
-      expect(adminStub).toHaveBeenCalledTimes(1)
-      expect(stub).toHaveBeenCalledTimes(1)
-      expect(res.status).toHaveBeenCalledTimes(1)
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({'status': 500, 'error': 'database error' });
+      expect(checkTeamStub.calledOnce).to.be.true;
+      expect(errorStub.calledOnce).to.be.true;
+      expect(adminStub.calledOnce).to.be.true;
+      expect(stub.calledOnce).to.be.true;
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(500);
+      expect(res.json).to.have.been.calledWith({'status': 500, 'error': 'database error' });
     });
 
 
@@ -181,24 +190,24 @@ describe('FixtureController', () => {
       }
 
       //the error is empty. We have tested validation in the validate.test.js file, so we will only mock the response to be empty
-      const errorStub = jest.spyOn(validate, 'fixtureValidate').mockReturnValue([]);
+      const errorStub = sandbox.stub(validate, 'fixtureValidate').returns([]);
 
-      const adminStub = jest.spyOn(adminService, 'getAdmin').mockReturnValue(stubAdmin);
-      const checkTeamStub = jest.spyOn(teamService, 'checkTeams').mockReturnValue(gottenTeams);
-      const stub = jest.spyOn(fixtureService, 'createFixture').mockReturnValue(stubValue);
+      const adminStub = sandbox.stub(adminService, 'getAdmin').returns(stubAdmin);
+      const checkTeamStub = sandbox.stub(teamService, 'checkTeams').returns(gottenTeams);
+      const stub = sandbox.stub(fixtureService, 'createFixture').returns(stubValue);
 
       fixtureController = new FixtureController(userService, adminService, teamService, fixtureService);
 
       await fixtureController.createFixture(req, res);
 
-      expect(checkTeamStub).toHaveBeenCalledTimes(1)
-      expect(errorStub).toHaveBeenCalledTimes(1)
-      expect(adminStub).toHaveBeenCalledTimes(1)
-      expect(stub).toHaveBeenCalledTimes(1)
-      expect(res.status).toHaveBeenCalledTimes(1)
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(201);
-      expect(res.json).toHaveBeenCalledWith({'status': 201, 'data': stubValue });
+      expect(checkTeamStub.calledOnce).to.be.true;
+      expect(errorStub.calledOnce).to.be.true;
+      expect(adminStub.calledOnce).to.be.true;
+      expect(stub.calledOnce).to.be.true;
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(201);
+      expect(res.json).to.have.been.calledWith({'status': 201, 'data': stubValue });
     });
   });
 
@@ -220,10 +229,10 @@ describe('FixtureController', () => {
 
       await fixtureController.updateFixture(req, res);
 
-      expect(res.status).toHaveBeenCalledTimes(1)
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({'status': 401, 'error': 'unauthorized' });
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(401);
+      expect(res.json).to.have.been.calledWith({'status': 401, 'error': 'unauthorized' });
 
     });
 
@@ -247,10 +256,10 @@ describe('FixtureController', () => {
 
       await fixtureController.updateFixture(req, res);
 
-      expect(res.status).toHaveBeenCalledTimes(1)
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({'status': 400, 'error': 'fixture id is not valid' });
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(400);
+      expect(res.json).to.have.been.calledWith({'status': 400, 'error': 'fixture id is not valid' });
 
     });
 
@@ -276,17 +285,17 @@ describe('FixtureController', () => {
         { 'matchday': 'can\'t update a fixture in the past'}
       ]
 
-      const stub = jest.spyOn(validate, 'fixtureValidate').mockReturnValue(errors);
+      const stub = sandbox.stub(validate, 'fixtureValidate').returns(errors);
 
       fixtureController = new FixtureController(userService, adminService, teamService, fixtureService);
 
       await fixtureController.updateFixture(req, res);
 
-      expect(stub).toHaveBeenCalledTimes(1)
-      expect(res.status).toHaveBeenCalledTimes(1)
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({'status': 400, 'errors': errors });
+      expect(stub.calledOnce).to.be.true;
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(400);
+      expect(res.json).to.have.been.calledWith({'status': 400, 'errors': errors });
 
     });
 
@@ -316,20 +325,20 @@ describe('FixtureController', () => {
       }
 
       //the error is empty. We have tested validation in the validate.test.js file, so we will only mock the response to be empty
-      const errorStub = jest.spyOn(validate, 'fixtureValidate').mockReturnValue([]);
+      const errorStub = sandbox.stub(validate, 'fixtureValidate').returns([]);
 
-      const adminStub = jest.spyOn(fixtureService, 'adminGetFixture').mockReturnValue(formerFixture);
+      const adminStub = sandbox.stub(fixtureService, 'adminGetFixture').returns(formerFixture);
 
       fixtureController = new FixtureController(userService, adminService, teamService, fixtureService);
 
       await fixtureController.updateFixture(req, res);
 
-      expect(errorStub).toHaveBeenCalledTimes(1)
-      expect(adminStub).toHaveBeenCalledTimes(1)
-      expect(res.status).toHaveBeenCalledTimes(1)
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({'status': 401, 'error': 'unauthorized: you are not the owner' });
+      expect(errorStub.calledOnce).to.be.true;
+      expect(adminStub.calledOnce).to.be.true;
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(401);
+      expect(res.json).to.have.been.calledWith({'status': 401, 'error': 'unauthorized: you are not the owner' });
     });
 
     //The DB Error can range from record already exist, etc
@@ -368,25 +377,23 @@ describe('FixtureController', () => {
         }
       }
     
-      const errorStub = jest.spyOn(validate, 'fixtureValidate').mockReturnValue([]);
-      const formerStub = jest.spyOn(fixtureService, 'adminGetFixture').mockReturnValue(formerFixture);
-      const checkTeamStub = jest.spyOn(teamService, 'checkTeams').mockReturnValue(gottenTeams);
-      const stub = jest.spyOn(fixtureService, 'updateFixture').mockImplementation(() => {
-        throw new Error('database error') //this can be anything
-      });
-
+      const errorStub = sandbox.stub(validate, 'fixtureValidate').returns([]);
+      const formerStub = sandbox.stub(fixtureService, 'adminGetFixture').returns(formerFixture);
+      const checkTeamStub = sandbox.stub(teamService, 'checkTeams').returns(gottenTeams);
+      const stub = sandbox.stub(fixtureService, 'updateFixture').throws(new Error('database error')) //this can be anything
+         
       fixtureController = new FixtureController(userService, adminService, teamService, fixtureService);
 
       await fixtureController.updateFixture(req, res);
 
-      expect(checkTeamStub).toHaveBeenCalledTimes(1)
-      expect(formerStub).toHaveBeenCalledTimes(1)
-      expect(errorStub).toHaveBeenCalledTimes(1)
-      expect(stub).toHaveBeenCalledTimes(1)
-      expect(res.status).toHaveBeenCalledTimes(1)
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({'status': 500, 'error': 'database error' });
+      expect(checkTeamStub.calledOnce).to.be.true;
+      expect(formerStub.calledOnce).to.be.true;
+      expect(errorStub.calledOnce).to.be.true;
+      expect(stub.calledOnce).to.be.true;
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(500);
+      expect(res.json).to.have.been.calledWith({'status': 500, 'error': 'database error' });
     });
 
     it('should update a fixture successfully', async () => {
@@ -431,23 +438,23 @@ describe('FixtureController', () => {
         matchtime: '03:30'
       }
 
-      const errorStub = jest.spyOn(validate, 'fixtureValidate').mockReturnValue([]);
-      const formerStub = jest.spyOn(fixtureService, 'adminGetFixture').mockReturnValue(formerFixture);
-      const checkTeamStub = jest.spyOn(teamService, 'checkTeams').mockReturnValue(gottenTeams);
-      const stub = jest.spyOn(fixtureService, 'updateFixture').mockReturnValue(stubValue);
+      const errorStub = sandbox.stub(validate, 'fixtureValidate').returns([]);
+      const formerStub = sandbox.stub(fixtureService, 'adminGetFixture').returns(formerFixture);
+      const checkTeamStub = sandbox.stub(teamService, 'checkTeams').returns(gottenTeams);
+      const stub = sandbox.stub(fixtureService, 'updateFixture').returns(stubValue);
 
       fixtureController = new FixtureController(userService, adminService, teamService, fixtureService);
 
       await fixtureController.updateFixture(req, res);
 
-      expect(checkTeamStub).toHaveBeenCalledTimes(1)
-      expect(formerStub).toHaveBeenCalledTimes(1)
-      expect(errorStub).toHaveBeenCalledTimes(1)
-      expect(stub).toHaveBeenCalledTimes(1)
-      expect(res.status).toHaveBeenCalledTimes(1)
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({'status': 200, 'data': stubValue });
+      expect(checkTeamStub.calledOnce).to.be.true;
+      expect(formerStub.calledOnce).to.be.true;
+      expect(errorStub.calledOnce).to.be.true;
+      expect(stub.calledOnce).to.be.true;
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(200);
+      expect(res.json).to.have.been.calledWith({'status': 200, 'data': stubValue });
     });
   });
 
@@ -465,10 +472,10 @@ describe('FixtureController', () => {
 
       await fixtureController.deleteFixture(req, res);
 
-      expect(res.status).toHaveBeenCalledTimes(1)
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({'status': 401, 'error': 'unauthorized' });
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(401);
+      expect(res.json).to.have.been.calledWith({'status': 401, 'error': 'unauthorized' });
     });
 
 
@@ -486,10 +493,10 @@ describe('FixtureController', () => {
 
       await fixtureController.deleteFixture(req, res);
 
-      expect(res.status).toHaveBeenCalledTimes(1)
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({'status': 400, 'error': 'fixture id is not valid' });
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(400);
+      expect(res.json).to.have.been.calledWith({'status': 400, 'error': 'fixture id is not valid' });
     });
 
 
@@ -512,17 +519,17 @@ describe('FixtureController', () => {
         }
       }
 
-      const formerStub = jest.spyOn(fixtureService, 'adminGetFixture').mockReturnValue(formerFixture);
+      const formerStub = sandbox.stub(fixtureService, 'adminGetFixture').returns(formerFixture);
 
       fixtureController = new FixtureController(userService, adminService, teamService, fixtureService);
 
       await fixtureController.deleteFixture(req, res);
 
-      expect(formerStub).toHaveBeenCalledTimes(1)
-      expect(res.status).toHaveBeenCalledTimes(1)
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({'status': 401, 'error': 'unauthorized: you are not the owner' });
+      expect(formerStub.calledOnce).to.be.true;
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(401);
+      expect(res.json).to.have.been.calledWith({'status': 401, 'error': 'unauthorized: you are not the owner' });
     });
 
     //DB Error, an error can occur in the db
@@ -545,21 +552,20 @@ describe('FixtureController', () => {
         }
       }
 
-      const formerStub = jest.spyOn(fixtureService, 'adminGetFixture').mockReturnValue(formerFixture);
-      const stub = jest.spyOn(fixtureService, 'deleteFixture').mockImplementation(() => {
-        throw new Error('database error')
-      });
+      const formerStub = sandbox.stub(fixtureService, 'adminGetFixture').returns(formerFixture);
+      const stub = sandbox.stub(fixtureService, 'deleteFixture').throws(new Error('database error')) //this can be anything
+       
 
       fixtureController = new FixtureController(userService, adminService, teamService, fixtureService);
 
       await fixtureController.deleteFixture(req, res);
 
-      expect(formerStub).toHaveBeenCalledTimes(1)
-      expect(stub).toHaveBeenCalledTimes(1)
-      expect(res.status).toHaveBeenCalledTimes(1)
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({'status': 500, 'error': 'database error' });
+      expect(formerStub.calledOnce).to.be.true;
+      expect(stub.calledOnce).to.be.true;
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(500);
+      expect(res.json).to.have.been.calledWith({'status': 500, 'error': 'database error' });
     });
 
 
@@ -586,19 +592,19 @@ describe('FixtureController', () => {
         data: 'fixture deleted'
       }
 
-      const formerStub = jest.spyOn(fixtureService, 'adminGetFixture').mockReturnValue(formerFixture);
-      const stub = jest.spyOn(fixtureService, 'deleteFixture').mockReturnValue(stubValue);
+      const formerStub = sandbox.stub(fixtureService, 'adminGetFixture').returns(formerFixture);
+      const stub = sandbox.stub(fixtureService, 'deleteFixture').returns(stubValue);
 
       fixtureController = new FixtureController(userService, adminService, teamService, fixtureService);
 
       await fixtureController.deleteFixture(req, res);
 
-      expect(formerStub).toHaveBeenCalledTimes(1)
-      expect(stub).toHaveBeenCalledTimes(1)
-      expect(res.status).toHaveBeenCalledTimes(1)
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({'status': 200, 'data': stubValue.data });
+      expect(formerStub.calledOnce).to.be.true;
+      expect(stub.calledOnce).to.be.true;
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(200);
+      expect(res.json).to.have.been.calledWith({'status': 200, 'data': stubValue.data });
     });
   });
 
@@ -615,10 +621,10 @@ describe('FixtureController', () => {
 
       await fixtureController.getFixture(req, res);
 
-      expect(res.status).toHaveBeenCalledTimes(1)
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({'status': 401, 'error': 'unauthorized' });
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(401);
+      expect(res.json).to.have.been.calledWith({'status': 401, 'error': 'unauthorized' });
     });
 
     //Validate the request param. 
@@ -635,10 +641,10 @@ describe('FixtureController', () => {
 
       await fixtureController.getFixture(req, res);
 
-      expect(res.status).toHaveBeenCalledTimes(1)
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({'status': 400, 'error': 'fixture id is not valid' });
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(400);
+      expect(res.json).to.have.been.calledWith({'status': 400, 'error': 'fixture id is not valid' });
 
     });
 
@@ -663,21 +669,19 @@ describe('FixtureController', () => {
         away: faker.random.uuid(),
       }
 
-      const userStub = jest.spyOn(userService, 'getUser').mockReturnValue(user); //this user can either be an admin or normal user
-      const stub = jest.spyOn(fixtureService, 'getFixture').mockImplementation(() => {
-        throw new Error('database error') //this can be anything
-      });
+      const userStub = sandbox.stub(userService, 'getUser').returns(user); //this user can either be an admin or normal user
+      const stub = sandbox.stub(fixtureService, 'getFixture').throws(new Error('database error')) //this can be anything
 
       fixtureController = new FixtureController(userService, adminService, teamService, fixtureService);
 
       await fixtureController.getFixture(req, res);
 
-      expect(userStub).toHaveBeenCalledTimes(1)
-      expect(stub).toHaveBeenCalledTimes(1)
-      expect(res.status).toHaveBeenCalledTimes(1)
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({'status': 500, 'error': 'database error' });
+      expect(userStub.calledOnce).to.be.true;
+      expect(stub.calledOnce).to.be.true;
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(500);
+      expect(res.json).to.have.been.calledWith({'status': 500, 'error': 'database error' });
     });
 
     it('should get a fixture successfully', async () => {
@@ -700,19 +704,19 @@ describe('FixtureController', () => {
         away: faker.random.uuid(),
       }
 
-      const userStub = jest.spyOn(userService, 'getUser').mockReturnValue(user); //this user can either be an admin or normal user
-      const stub = jest.spyOn(fixtureService, 'getFixture').mockReturnValue(fixture);
+      const userStub = sandbox.stub(userService, 'getUser').returns(user); //this user can either be an admin or normal user
+      const stub = sandbox.stub(fixtureService, 'getFixture').returns(fixture);
 
       fixtureController = new FixtureController(userService, adminService, teamService, fixtureService);
 
       await fixtureController.getFixture(req, res);
 
-      expect(userStub).toHaveBeenCalledTimes(1)
-      expect(stub).toHaveBeenCalledTimes(1)
-      expect(res.status).toHaveBeenCalledTimes(1)
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({'status': 200, 'data': fixture });
+      expect(userStub.calledOnce).to.be.true;
+      expect(stub.calledOnce).to.be.true;
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(200);
+      expect(res.json).to.have.been.calledWith({'status': 200, 'data': fixture });
     });
   });
 
@@ -727,10 +731,10 @@ describe('FixtureController', () => {
 
       await fixtureController.getFixtures(req, res);
 
-      expect(res.status).toHaveBeenCalledTimes(1)
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({'status': 401, 'error': 'unauthorized' });
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(401);
+      expect(res.json).to.have.been.calledWith({'status': 401, 'error': 'unauthorized' });
 
     });
 
@@ -746,21 +750,19 @@ describe('FixtureController', () => {
         name: faker.name.findName(),
       }
 
-      const userStub = jest.spyOn(userService, 'getUser').mockReturnValue(user); //this user can either be an admin or normal user
-      const stub = jest.spyOn(fixtureService, 'getFixtures').mockImplementation(() => {
-        throw new Error('database error')
-      });
-
+      const userStub = sandbox.stub(userService, 'getUser').returns(user); //this user can either be an admin or normal user
+      const stub = sandbox.stub(fixtureService, 'getFixtures').throws(new Error('database error')) //this can be anything
+       
       fixtureController = new FixtureController(userService, adminService, teamService, fixtureService);
 
       await fixtureController.getFixtures(req, res);
 
-      expect(userStub).toHaveBeenCalledTimes(1)
-      expect(stub).toHaveBeenCalledTimes(1)
-      expect(res.status).toHaveBeenCalledTimes(1)
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({'status': 500, 'error': 'database error' });
+      expect(userStub.calledOnce).to.be.true;
+      expect(stub.calledOnce).to.be.true;
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(500);
+      expect(res.json).to.have.been.calledWith({'status': 500, 'error': 'database error' });
 
     });
 
@@ -789,19 +791,19 @@ describe('FixtureController', () => {
         }
       ]
 
-      const userStub = jest.spyOn(userService, 'getUser').mockReturnValue(user); //this user can either be an admin or normal user
-      const stub = jest.spyOn(fixtureService, 'getFixtures').mockReturnValue(fixtures);
+      const userStub = sandbox.stub(userService, 'getUser').returns(user); //this user can either be an admin or normal user
+      const stub = sandbox.stub(fixtureService, 'getFixtures').returns(fixtures);
 
       fixtureController = new FixtureController(userService, adminService, teamService, fixtureService);
 
       await fixtureController.getFixtures(req, res);
 
-      expect(userStub).toHaveBeenCalledTimes(1)
-      expect(stub).toHaveBeenCalledTimes(1)
-      expect(res.status).toHaveBeenCalledTimes(1)
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({'status': 200, 'data': fixtures });
+      expect(userStub.calledOnce).to.be.true;
+      expect(stub.calledOnce).to.be.true;
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(200);
+      expect(res.json).to.have.been.calledWith({'status': 200, 'data': fixtures });
 
     });
   });

@@ -1,32 +1,39 @@
+import chai from 'chai'
+import sinon from 'sinon'
+import sinonChai from 'sinon-chai'
 import faker from 'faker'
 import LoginController from './login.controller'
 import LoginService from '../services/login.service'
 import validate from '../utils/validate'
 
 
-
 const mockResponse = () => {
   const res = {};
-  res.status = jest.fn().mockReturnValue(res);
-  res.json = jest.fn().mockReturnValue(res);
+  res.status = sinon.stub()
+  res.json = sinon.stub()
+  res.status.returns(res);
   return res;
 };
 
+chai.use(require('chai-as-promised'))
+chai.use(sinonChai)
+
+const { expect } = chai
+
+
 describe('LoginController', () => {
 
-  let res, loginService, loginController
+  let res, loginService, loginController, sandbox = null
 
   beforeEach(() => {
-
     res = mockResponse()
-
+    sandbox = sinon.createSandbox()
     loginService = new LoginService();
-
   });
 
-  afterEach(() => {    
-    jest.clearAllMocks();
-  });
+  afterEach(() => {
+    sandbox.restore()
+  })
 
 
   describe('loginUser', () => {
@@ -42,17 +49,17 @@ describe('LoginController', () => {
         { 'email': 'a valid email is required' },
       ]
       //since validate is foreign, we have to mock it to achieve unit test
-      const errorStub = jest.spyOn(validate, 'loginValidate').mockReturnValue(errors);
+      const errorStub = sandbox.stub(validate, 'loginValidate').returns(errors);
 
       loginController = new LoginController(loginService);
 
       await loginController.login(req, res);
 
-      expect(errorStub).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledTimes(1);
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({'status': 400, 'errors': errors});
+      expect(errorStub.calledOnce).to.be.true;
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(400);
+      expect(res.json).to.have.been.calledWith({'status': 400, 'errors': errors});
     });
 
 
@@ -63,22 +70,20 @@ describe('LoginController', () => {
       };
 
       //since validate is foreign, we have to mock it to achieve unit test
-      const errorStub = jest.spyOn(validate, 'loginValidate').mockReturnValue([]); //no input error
+      const errorStub = sandbox.stub(validate, 'loginValidate').returns([]); //no input error
 
-      const stub = jest.spyOn(loginService, 'login').mockImplementation(() => {
-        throw new Error('email/password is not correct')
-      });
+      const stub = sandbox.stub(loginService, 'login').throws(new Error('email/password is not correct')); //the error can be anything
 
       loginController = new LoginController(loginService);
 
       await loginController.login(req, res);
 
-      expect(stub).toHaveBeenCalledTimes(1);
-      expect(errorStub).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledTimes(1);
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({'status': 500, 'error': 'email/password is not correct' });
+      expect(stub.calledOnce).to.be.true;
+      expect(errorStub.calledOnce).to.be.true;
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(500);
+      expect(res.json).to.have.been.calledWith({'status': 500, 'error': 'email/password is not correct' });
 
     });
 
@@ -91,20 +96,20 @@ describe('LoginController', () => {
       };
 
       //since validate is foreign, we have to mock it to achieve unit test
-      const errorStub = jest.spyOn(validate, 'loginValidate').mockReturnValue([]); //no input error
+      const errorStub = sandbox.stub(validate, 'loginValidate').returns([]); //no input error
 
-      const stub = jest.spyOn(loginService, 'login').mockReturnValue(stubValue);
+      const stub = sandbox.stub(loginService, 'login').returns(stubValue);
 
       loginController = new LoginController(loginService);
 
       await loginController.login(req, res);
 
-      expect(stub).toHaveBeenCalledTimes(1);
-      expect(errorStub).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledTimes(1);
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({'status': 200, 'token': stubValue });
+      expect(stub.calledOnce).to.be.true;
+      expect(errorStub.calledOnce).to.be.true;
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(200);
+      expect(res.json).to.have.been.calledWith({'status': 200, 'token': stubValue });
 
     });
   });

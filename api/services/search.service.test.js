@@ -1,39 +1,36 @@
+import chai from 'chai'
 import SearchService from './search.service'
 import { seedTeamsAndFixtures } from '../testsetup/index'
 import  { connect, clearDatabase, closeDatabase  }  from '../testsetup/test-db'
 
-
-//Define the variable to hold our seeded data
-let seededTeamsFixtures
-
-/**
- * Connect to a new in-memory database before running any tests.
- */
-beforeAll(async () => {
-  await connect();
-});
-
-beforeEach(async () => {
-  seededTeamsFixtures = await seedTeamsAndFixtures()
-});
-
-/**
-* Clear all test data after every test.
-*/
-afterEach(async () => {
-  await clearDatabase();
-});
-
-/**
-* Remove and close the db and server.
-*/
-afterAll(async () => {
-  await closeDatabase();
-});
+chai.use(require('chai-as-promised'))
+const { expect } = chai
 
 
 
 describe('SearchTeamService', () => {
+
+  let seededTeamsFixtures
+
+  //Connect to a new in-memory database before running any tests.
+  before(async () => {
+    await connect();
+  });
+
+  //Seed in-memory db before each test
+  beforeEach(async () => {
+    seededTeamsFixtures = await seedTeamsAndFixtures()
+  });
+
+  //Clear all test data after every test.
+  afterEach(async () => {
+    await clearDatabase();
+  });
+
+  //Remove and close the db and server.
+  after(async () => {
+    await closeDatabase();
+  });
 
   describe('searchTeam', () => {
 
@@ -45,7 +42,7 @@ describe('SearchTeamService', () => {
 
       const teams = await searchService.searchTeam(teamInput)
 
-      expect(teams.length).toBe(0)
+      expect(teams.length).to.equal(0)
      
     });
 
@@ -58,7 +55,7 @@ describe('SearchTeamService', () => {
       const teams = await searchService.searchTeam(teamInput);
 
       //this record can be greater than zero
-      expect(teams.length).toBeGreaterThan(0)
+      expect(teams.length).to.be.greaterThan(0)
 
     });
   });
@@ -67,6 +64,28 @@ describe('SearchTeamService', () => {
 
 
 describe('SearchFixtureService', () => {
+
+  let seededTeamsFixtures
+
+  //Connect to a new in-memory database before running any tests.
+  before(async () => {
+    await connect();
+  });
+
+  //Seed in-memory db before each test
+  beforeEach(async () => {
+    seededTeamsFixtures = await seedTeamsAndFixtures()
+  });
+
+  //Clear all test data after every test.
+  afterEach(async () => {
+    await clearDatabase();
+  });
+
+  //Remove and close the db and server.
+  after(async () => {
+    await closeDatabase();
+  });
 
 
   describe('searchFixture', () => {
@@ -81,7 +100,7 @@ describe('SearchFixtureService', () => {
 
       const result =  await searchService.searchFixture(query)
 
-      expect(result.length).toBe(1)
+      expect(result.length).to.equal(1)
     })
 
     it('should get fixture(s) based on searchAwayFixture', async () => {
@@ -94,7 +113,7 @@ describe('SearchFixtureService', () => {
 
       const result =  await searchService.searchFixture(query)
 
-      expect(result.length).toBe(1)
+      expect(result.length).to.equal(1)
     })
 
     it('should get fixture(s) based on searchMatchDayFixture', async () => {
@@ -107,7 +126,7 @@ describe('SearchFixtureService', () => {
 
       const result =  await searchService.searchFixture(query)
 
-      expect(result.length).toBe(1)
+      expect(result.length).to.equal(1)
     })
 
     it('should get fixture(s) based on searchMatchTimeFixture', async () => {
@@ -120,7 +139,7 @@ describe('SearchFixtureService', () => {
 
       const result =  await searchService.searchFixture(query)
 
-      expect(result.length).toBe(1)
+      expect(result.length).to.equal(1)
     })
 
     it('should get fixture(s) based on searchHomeAndAwayFixture', async () => {
@@ -134,7 +153,7 @@ describe('SearchFixtureService', () => {
 
       const result =  await searchService.searchFixture(query)
 
-      expect(result.length).toBe(1)
+      expect(result.length).to.equal(1)
     })
 
     it('should get fixture(s) based on searchHomeAndMatchDayFixture', async () => {
@@ -148,7 +167,7 @@ describe('SearchFixtureService', () => {
 
       const result =  await searchService.searchFixture(query)
 
-      expect(result.length).toBe(1)
+      expect(result.length).to.equal(1)
     })
 
     it('should get fixture(s) based on searchHomeAndMatchTimeFixture', async () => {
@@ -162,7 +181,7 @@ describe('SearchFixtureService', () => {
 
       const result =  await searchService.searchFixture(query)
 
-      expect(result.length).toBe(1)
+      expect(result.length).to.equal(1)
     })
 
     it('should get fixture(s) based on searchHomeAwayAndMatchDayFixture', async () => {
@@ -177,7 +196,7 @@ describe('SearchFixtureService', () => {
 
       const result =  await searchService.searchFixture(query)
 
-      expect(result.length).toBe(1)
+      expect(result.length).to.equal(1)
 
     })
 
@@ -193,7 +212,7 @@ describe('SearchFixtureService', () => {
 
       const result =  await searchService.searchFixture(query)
 
-      expect(result.length).toBe(1)
+      expect(result.length).to.equal(1)
     })
 
     it('should get fixture(s) based on searchHomeMatchDayAndMatchTimeFixture', async () => {
@@ -208,7 +227,7 @@ describe('SearchFixtureService', () => {
 
       const result =  await searchService.searchFixture(query)
 
-      expect(result.length).toBe(1)
+      expect(result.length).to.equal(1)
     })
 
     it('should get fixture(s) based on searchAwayAndMatchDayFixture', async () => {
@@ -222,7 +241,7 @@ describe('SearchFixtureService', () => {
 
       const result =  await searchService.searchFixture(query)
 
-      expect(result.length).toBe(1)
+      expect(result.length).to.equal(1)
     })
 
     it('should get fixture(s) based on searchAwayAndMatchTimeFixture', async () => {
@@ -236,7 +255,7 @@ describe('SearchFixtureService', () => {
 
       const result =  await searchService.searchFixture(query)
 
-      expect(result.length).toBe(1)
+      expect(result.length).to.equal(1)
     })
 
     it('should get fixture(s) based on searchAwayMatchDayAndMatchTimeFixture', async () => {
@@ -252,7 +271,7 @@ describe('SearchFixtureService', () => {
 
       const result =  await searchService.searchFixture(query)
 
-      expect(result.length).toBe(1)
+      expect(result.length).to.equal(1)
     })
 
     it('should get fixture(s) based on searchMatchDayAndMatchTimeFixture', async () => {
@@ -266,7 +285,7 @@ describe('SearchFixtureService', () => {
 
       const result =  await searchService.searchFixture(query)
 
-      expect(result.length).toBe(1)
+      expect(result.length).to.equal(1)
     })
 
     it('should get fixture(s) based on searchHomeAwayMatchDayAndMatchTimeFixture', async () => {
@@ -282,7 +301,7 @@ describe('SearchFixtureService', () => {
 
       const result =  await searchService.searchFixture(query)
 
-      expect(result.length).toBe(1)
+      expect(result.length).to.equal(1)
     })
 
     it('should get return nothing if no criteria is provided', async () => {
@@ -293,7 +312,7 @@ describe('SearchFixtureService', () => {
 
       const result = await searchService.searchFixture(query)
 
-      expect(result.length).toBe(0)
+      expect(result.length).to.equal(0)
     })
   });
 
@@ -307,7 +326,7 @@ describe('SearchFixtureService', () => {
       const searchService = new SearchService();
 
       //the team table must be searched first, if record not found, it start failing
-      await expect(searchService.searchHomeFixture(homeTeam)).resolves.toBeUndefined()
+      await expect(searchService.searchHomeFixture(homeTeam)).to.be.empty
 
     });
 
@@ -319,7 +338,7 @@ describe('SearchFixtureService', () => {
 
       const fixture =  await searchService.searchHomeFixture(homeTeam)
 
-      expect(fixture.length).toBe(1)
+      expect(fixture.length).to.equal(1)
 
     });
   });
@@ -333,7 +352,7 @@ describe('SearchFixtureService', () => {
       const searchService = new SearchService();
 
       //the team table must be searched first, if record not found, it start failing
-      await expect(searchService.searchAwayFixture(awayTeam)).resolves.toBeUndefined()
+      await expect(searchService.searchAwayFixture(awayTeam)).to.be.empty
 
     });
 
@@ -346,7 +365,7 @@ describe('SearchFixtureService', () => {
 
       const fixture =  await searchService.searchAwayFixture(awayTeam)
 
-      expect(fixture.length).toBe(1)
+      expect(fixture.length).to.equal(1)
 
     });
   });
@@ -362,7 +381,7 @@ describe('SearchFixtureService', () => {
 
       const fixture = await searchService.searchMatchTimeFixture(matchtime)
 
-      expect(fixture.length).toBe(0)
+      expect(fixture.length).to.equal(0)
 
     });
 
@@ -374,7 +393,7 @@ describe('SearchFixtureService', () => {
 
       const fixture =  await searchService.searchMatchTimeFixture(matchtime)
 
-      expect(fixture.length).toBe(1)
+      expect(fixture.length).to.equal(1)
 
     });
   });
@@ -390,7 +409,7 @@ describe('SearchFixtureService', () => {
 
       const fixture = await searchService.searchMatchDayFixture(matchday)
 
-      expect(fixture.length).toBe(0)
+      expect(fixture.length).to.equal(0)
     });
 
     it('should search and a get a fixture based on matchday', async () => {
@@ -401,7 +420,7 @@ describe('SearchFixtureService', () => {
 
       const fixture =  await searchService.searchMatchDayFixture(matchday)
 
-      expect(fixture.length).toBe(1)
+      expect(fixture.length).to.equal(1)
     });
   });
 
@@ -416,7 +435,7 @@ describe('SearchFixtureService', () => {
       const searchService = new SearchService();
 
       //the team table must be searched first, if record not found, it start failing
-      await expect(searchService.searchHomeAndMatchDayFixture(home, matchday)).resolves.toBeUndefined()
+      await expect(searchService.searchHomeAndMatchDayFixture(home, matchday)).to.be.empty
 
     });
 
@@ -430,7 +449,7 @@ describe('SearchFixtureService', () => {
 
       const fixture =  await searchService.searchHomeAndMatchDayFixture(home, matchday)
 
-      expect(fixture.length).toBe(1)
+      expect(fixture.length).to.equal(1)
 
     });
   });
@@ -446,7 +465,7 @@ describe('SearchFixtureService', () => {
       const searchService = new SearchService();
 
       //the team table must be searched first, if record not found, it start failing
-      await expect(searchService.searchHomeAndMatchTimeFixture(home, matchtime)).resolves.toBeUndefined()
+      await expect(searchService.searchHomeAndMatchTimeFixture(home, matchtime)).to.be.empty
 
     });
 
@@ -460,7 +479,7 @@ describe('SearchFixtureService', () => {
 
       const fixture =  await searchService.searchHomeAndMatchTimeFixture(home, matchtime)
 
-      expect(fixture.length).toBe(1)
+      expect(fixture.length).to.equal(1)
 
     });
   });
@@ -477,7 +496,7 @@ describe('SearchFixtureService', () => {
       const searchService = new SearchService();
 
       //the team table must be searched first, if record not found, it start failing
-      await expect(searchService.searchHomeMatchDayAndMatchTimeFixture(home, matchday, matchtime)).resolves.toBeUndefined()
+      await expect(searchService.searchHomeMatchDayAndMatchTimeFixture(home, matchday, matchtime)).to.be.empty
 
     });
 
@@ -491,7 +510,7 @@ describe('SearchFixtureService', () => {
 
       const fixture =  await searchService.searchHomeMatchDayAndMatchTimeFixture(home, matchday, matchtime)
 
-      expect(fixture.length).toBe(1)
+      expect(fixture.length).to.equal(1)
 
     });
   });
@@ -506,7 +525,7 @@ describe('SearchFixtureService', () => {
       const searchService = new SearchService();
 
       //the team table must be searched first, if record not found, it start failing
-       await expect(searchService.searchAwayAndMatchDayFixture(away, matchday)).resolves.toBeUndefined()
+       await expect(searchService.searchAwayAndMatchDayFixture(away, matchday)).to.be.empty
 
     });
 
@@ -519,7 +538,7 @@ describe('SearchFixtureService', () => {
 
         const fixture = await searchService.searchAwayAndMatchDayFixture(away, matchday);
 
-        expect(fixture.length).toBe(1)
+        expect(fixture.length).to.equal(1)
 
     });
   });
@@ -535,7 +554,7 @@ describe('SearchFixtureService', () => {
       const searchService = new SearchService();
 
       //the team table must be searched first, if record not found, it start failing
-      await expect(searchService.searchAwayAndMatchTimeFixture(away, matchtime)).resolves.toBeUndefined()
+      await expect(searchService.searchAwayAndMatchTimeFixture(away, matchtime)).to.be.empty
 
     });
 
@@ -548,7 +567,7 @@ describe('SearchFixtureService', () => {
 
       const fixture = await searchService.searchAwayAndMatchTimeFixture(away, matchtime);
 
-      expect(fixture.length).toBe(1)
+      expect(fixture.length).to.equal(1)
 
     });
   });
@@ -564,7 +583,7 @@ describe('SearchFixtureService', () => {
       const searchService = new SearchService();
 
       //the team table must be searched first, if record not found, it start failing
-      await expect(searchService.searchAwayMatchDayAndMatchTimeFixture(away, matchday, matchtime)).resolves.toBeUndefined()
+      await expect(searchService.searchAwayMatchDayAndMatchTimeFixture(away, matchday, matchtime)).to.be.empty
 
     });
 
@@ -578,7 +597,7 @@ describe('SearchFixtureService', () => {
 
       const fixture = await searchService.searchAwayMatchDayAndMatchTimeFixture(away, matchday, matchtime);
 
-      expect(fixture.length).toBe(1)
+      expect(fixture.length).to.equal(1)
 
     });
   });
@@ -594,7 +613,7 @@ describe('SearchFixtureService', () => {
 
       const homeIds = await searchService.getHomeIds(home);
 
-      expect(homeIds.length).toBeGreaterThan(0)
+      expect(homeIds.length).to.be.greaterThan(0)
 
     });
   });
@@ -610,7 +629,7 @@ describe('SearchFixtureService', () => {
 
       const awayIds = await searchService.getAwayIds(away);
 
-      expect(awayIds.length).toBeGreaterThan(0)
+      expect(awayIds.length).to.be.greaterThan(0)
 
     });
   });
@@ -625,7 +644,7 @@ describe('SearchFixtureService', () => {
       const searchService = new SearchService();
 
       //the team table must be searched first, if record not found, it start failing
-      await expect(searchService.searchHomeAndAwayFixture(home, away)).resolves.toBeUndefined()
+      await expect(searchService.searchHomeAndAwayFixture(home, away)).to.be.empty
 
     });
 
@@ -638,7 +657,7 @@ describe('SearchFixtureService', () => {
 
        const fixture = await searchService.searchHomeAndAwayFixture(home, away)
 
-      expect(fixture.length).toBe(1)
+      expect(fixture.length).to.equal(1)
 
     });
   });
@@ -654,7 +673,7 @@ describe('SearchFixtureService', () => {
       const searchService = new SearchService();
 
       //the team table must be searched first, if record not found, it start failing
-      await expect(searchService.searchHomeAwayAndMatchDayFixture(home, away, matchday)).resolves.toBeUndefined()
+      await expect(searchService.searchHomeAwayAndMatchDayFixture(home, away, matchday)).to.be.empty
 
     });
 
@@ -668,7 +687,7 @@ describe('SearchFixtureService', () => {
 
       const fixture = await searchService.searchHomeAwayAndMatchDayFixture(home, away, matchday);
 
-      expect(fixture.length).toBe(1)
+      expect(fixture.length).to.equal(1)
 
     });
   });
@@ -685,7 +704,7 @@ describe('SearchFixtureService', () => {
       const searchService = new SearchService();
 
       //the team table must be searched first, if record not found, it start failing
-      await expect(searchService.searchHomeAwayAndMatchTimeFixture(home, away, matchtime)).resolves.toBeUndefined()
+      await expect(searchService.searchHomeAwayAndMatchTimeFixture(home, away, matchtime)).to.be.empty
 
     });
 
@@ -699,7 +718,7 @@ describe('SearchFixtureService', () => {
 
       const fixture = await searchService.searchHomeAwayAndMatchTimeFixture(home, away, matchtime);
 
-      expect(fixture.length).toBe(1)
+      expect(fixture.length).to.equal(1)
 
     });
   });
@@ -718,7 +737,7 @@ describe('SearchFixtureService', () => {
       const searchService = new SearchService();
 
       //the team table must be searched first, if record not found, it start failing
-      await expect(searchService.searchHomeAwayMatchDayAndMatchTimeFixture(home, away, matchday, matchtime)).resolves.toBeUndefined()
+      await expect(searchService.searchHomeAwayMatchDayAndMatchTimeFixture(home, away, matchday, matchtime)).to.be.empty
 
     });
 
@@ -733,7 +752,7 @@ describe('SearchFixtureService', () => {
 
       const fixture = await searchService.searchHomeAwayMatchDayAndMatchTimeFixture(home, away, matchday, matchtime);
 
-      expect(fixture.length).toBe(1)
+      expect(fixture.length).to.equal(1)
 
     });
   });
@@ -750,7 +769,7 @@ describe('SearchFixtureService', () => {
 
       const fixture = await searchService.searchMatchDayAndMatchTimeFixture(matchday, matchtime)
 
-      expect(fixture.length).toBe(0)
+      expect(fixture.length).to.equal(0)
 
     });
 
@@ -763,7 +782,7 @@ describe('SearchFixtureService', () => {
 
       const fixture = await searchService.searchMatchDayAndMatchTimeFixture(matchday, matchtime);
 
-      expect(fixture.length).toBe(1)
+      expect(fixture.length).to.equal(1)
 
     });
   });

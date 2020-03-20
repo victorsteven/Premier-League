@@ -1,39 +1,46 @@
+import chai from 'chai'
+import sinon from 'sinon'
 import { ObjectID } from 'mongodb'
 import UserService from './user.service'
 import  password from '../utils/password';
 import { seedUser } from '../testsetup/index'
 import  { connect, clearDatabase, closeDatabase  }  from '../testsetup/test-db'
 
+chai.use(require('chai-as-promised'))
+const { expect } = chai
 
-let seededUser
-/**
- * Connect to a new in-memory database before running any tests.
- */
-beforeAll(async () => {
-  await connect();
-});
-
-beforeEach(async () => {
-  seededUser = await seedUser()
-});
-
-/**
-* Clear all test data after every test.
-*/
-afterEach(async () => {
-  await clearDatabase();
-});
-
-/**
-* Remove and close the db and server.
-*/
-afterAll(async () => {
-  await closeDatabase();
-});
 
 
 
 describe('UserService', () => {
+
+  let seededUser, sandbox = null
+  /**
+   * Connect to a new in-memory database before running any tests.
+   */
+  before(async () => {
+    await connect();
+  });
+
+  beforeEach(async () => {
+    seededUser = await seedUser()
+    sandbox = sinon.createSandbox()
+  });
+
+  /**
+  * Clear all test data after every test.
+  */
+  afterEach(async () => {
+    await clearDatabase();
+    sandbox.restore()
+  });
+
+  /**
+  * Remove and close the db and server.
+  */
+  after(async () => {
+    await closeDatabase();
+  });
 
   describe('createUser', () => {
 
@@ -52,7 +59,7 @@ describe('UserService', () => {
         await userService.createUser(user)
 
       } catch (e) {
-        expect(e.message).toMatch('record already exists');
+        expect(e.message).to.equal('record already exists');
       }
     });
 
@@ -65,16 +72,16 @@ describe('UserService', () => {
       }
 
       //'hashPassword' is a  dependency, so we mock it
-      const hashPass = jest.spyOn(password, 'hashPassword').mockReturnValue('ksjndfklsndflksdmlfksdf')
+      const hashPass = sandbox.stub(password, 'hashPassword').returns('ksjndfklsndflksdmlfksdf')
 
       const userService = new UserService();
 
       const user = await userService.createUser(userNew);
 
-      expect(hashPass).toHaveBeenCalled();
-      expect(user._id).toBeDefined();
-      expect(user.name).toBe(userNew.name);
-      expect(user.role).toBe(userNew.role);
+      expect(hashPass.calledOnce).to.be.true;
+      expect(user._id).to.not.be.undefined
+      expect(user.name).to.equal(userNew.name);
+      expect(user.role).to.equal(userNew.role);
     });
   });
 
@@ -84,7 +91,7 @@ describe('UserService', () => {
     it('should not get an user if record does not exists', async () => {
 
       try {
-
+        
         //This user does not exist
         let userObjID = new ObjectID("5e682d0d580b5a6fb795b842")
 
@@ -93,19 +100,21 @@ describe('UserService', () => {
         await userService.getUser(userObjID)
 
       } catch (e) {
-        expect(e.message).toMatch('no record found');
+        expect(e.message).to.equal('no record found');
       }
     });
 
-    it('should get a user', async () => {
+    it('should get an user', async () => {
 
       const userService = new UserService();
       const user = await userService.getUser(seededUser._id);
 
-      expect(user._id).toEqual(seededUser._id);
-      expect(user.name).toBe(seededUser.name);
-      expect(user.role).toBe(seededUser.role);
+      expect(user._id).to.not.be.undefined
+      expect(user._id).to.deep.equal(seededUser._id);
+      expect(user.name).to.equal(seededUser.name);
+      expect(user.role).to.equal(seededUser.role);
 
     });
   });
 });
+

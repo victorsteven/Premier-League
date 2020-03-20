@@ -1,40 +1,39 @@
+import chai from 'chai'
 import { ObjectID } from 'mongodb'
 import FixtureService from './fixture.service'
-import Fixture from '../models/fixture'
 import { seedFixtures } from '../testsetup/index'
 import  { connect, clearDatabase, closeDatabase  }  from '../testsetup/test-db'
 
 
+chai.use(require('chai-as-promised'))
+const { expect } = chai
 
-//Define the variable to hold our seeded data
-let seededFixtures
-/**
- * Connect to a new in-memory database before running any tests.
- */
-beforeAll(async () => {
-  await connect();
-});
-
-beforeEach(async () => {
-  seededFixtures = await seedFixtures()
-});
-
-/**
-* Clear all test data after every test.
-*/
-afterEach(async () => {
-  await clearDatabase();
-});
-
-/**
-* Remove and close the db and server.
-*/
-afterAll(async () => {
-  await closeDatabase();
-});
 
 
 describe('FixtureService', () => {
+
+  let seededFixtures
+
+  //Connect to a new in-memory database before running any tests.
+  before(async () => {
+    await connect();
+  });
+
+  //Seed in-memory db before each test
+  beforeEach(async () => {
+    seededFixtures = await seedFixtures()
+  });
+
+  //Clear all test data after every test.
+  afterEach(async () => {
+    await clearDatabase();
+  });
+
+  //Remove and close the db and server.
+  after(async () => {
+    await closeDatabase();
+  });
+
 
   describe('createFixture', () => {
 
@@ -57,7 +56,7 @@ describe('FixtureService', () => {
         await fixtureService.createFixture(record)
 
     } catch (e) {
-      expect(e.message).toMatch('record already exist');
+      expect(e.message).to.equal('record already exist');
       }
     });
 
@@ -75,9 +74,9 @@ describe('FixtureService', () => {
 
       const fixture = await fixtureService.createFixture(stubValue);
 
-      expect(fixture.home).toEqual(stubValue.home);
-      expect(fixture.away).toEqual(stubValue.away);
-      expect(fixture.admin).toEqual(stubValue.admin);
+      expect(fixture.home).to.equal(stubValue.home);
+      expect(fixture.away).to.equal(stubValue.away);
+      expect(fixture.admin).to.equal(stubValue.admin);
 
     });
   });
@@ -96,7 +95,7 @@ describe('FixtureService', () => {
         await fixtureService.adminGetFixture(fixtureObjID)
 
       } catch (e) {
-        expect(e.message).toMatch('no record found');
+        expect(e.message).to.equal('no record found');
       }
     });
 
@@ -108,10 +107,10 @@ describe('FixtureService', () => {
 
       const fixture = await fixtureService.adminGetFixture(firstFixture._id);
 
-      expect(fixture._id).toEqual(firstFixture._id);
-      expect(fixture.matchday).toBe(firstFixture.matchday);
-      expect(fixture.matchtime).toBe(firstFixture.matchtime);
-      expect(fixture.admin).toEqual(firstFixture.admin);
+      expect(fixture._id).to.deep.equal(firstFixture._id);
+      expect(fixture.matchday).to.equal(firstFixture.matchday);
+      expect(fixture.matchtime).to.equal(firstFixture.matchtime);
+      expect(fixture.admin).to.deep.equal(firstFixture.admin);
     });
   });
 
@@ -130,7 +129,7 @@ describe('FixtureService', () => {
         await fixtureService.getFixture(fixtureObjID)
 
       } catch (e) {
-        expect(e.message).toMatch('no record found');
+        expect(e.message).to.equal('no record found');
       }
     });
 
@@ -142,9 +141,9 @@ describe('FixtureService', () => {
 
       const fixture = await fixtureService.getFixture(firstFixture._id);
 
-      expect(fixture._id).toEqual(firstFixture._id);
-      expect(fixture.matchday).toBe(firstFixture.matchday);
-      expect(fixture.matchtime).toBe(firstFixture.matchtime);
+      expect(fixture._id).to.deep.equal(firstFixture._id);
+      expect(fixture.matchday).to.equal(firstFixture.matchday);
+      expect(fixture.matchtime).to.equal(firstFixture.matchtime);
     });
   });
 
@@ -172,36 +171,31 @@ describe('FixtureService', () => {
         await fixtureService.updateFixture(stubValue)
 
       } catch (e) {
-        expect(e.message).toMatch('record already exist');
+        expect(e.message).to.equal('record already exist');
       }
     });
 
     it('should update a fixture successfully', async () => {
 
-      try {
+      const firstFixture = seededFixtures[0]
 
-        const firstFixture = seededFixtures[0]
+      const stubValue = {
+        _id:  firstFixture._id,
+        home: new ObjectID('5e6b16bcaf5e1565923d0ac2'),
+        away: new ObjectID('5e69737e96bdb99f784df32d'),
+        matchday: '30-02-2031',
+        matchtime: '09:30'
+      };
 
-        const stubValue = {
-          _id:  firstFixture._id,
-          home: new ObjectID('5e6b16bcaf5e1565923d0ac2'),
-          away: new ObjectID('5e69737e96bdb99f784df32d'),
-          matchday: '30-02-2031',
-          matchtime: '09:30'
-        };
+      const fixtureService = new FixtureService();
 
-        const fixtureService = new FixtureService();
+      const fixture = await fixtureService.updateFixture(stubValue);
 
-        const fixture = await fixtureService.updateFixture(stubValue);
+      expect(fixture.home).to.deep.equal(stubValue.home)
+      expect(fixture.away).to.deep.equal(stubValue.away)
+      expect(fixture.matchday).to.equal(stubValue.matchday)
+      expect(fixture.matchtime).to.equal(stubValue.matchtime)
 
-        expect(fixture.home).toEqual(stubValue.home)
-        expect(fixture.away).toEqual(stubValue.away)
-        expect(fixture.matchday).toEqual(stubValue.matchday)
-        expect(fixture.matchtime).toEqual(stubValue.matchtime)
-
-      } catch (e) {
-        expect(e).toMatch(null);
-      }
     });
   });
 
@@ -218,7 +212,7 @@ describe('FixtureService', () => {
         await fixtureService.deleteFixture(fixtureObjID)
 
       } catch (e) {
-        expect(e.message).toMatch('something went wrong');
+        expect(e.message).to.equal('something went wrong');
       }
     });
 
@@ -231,7 +225,7 @@ describe('FixtureService', () => {
       const fixtureService = new FixtureService();
       const deletedData = await fixtureService.deleteFixture(firstFixture._id);
 
-      expect(deletedData).toEqual(deleted);
+      expect(deletedData).to.deep.equal(deleted);
       
      });
   });
@@ -244,40 +238,39 @@ describe('FixtureService', () => {
       const fixtureService = new FixtureService();
       const fixtures = await fixtureService.getFixtures(); //fixtures coming from our in-memory db
 
-      expect(fixtures.length).toEqual(2);
+      expect(fixtures.length).to.equal(2);
 
     });
 
     //We will need to fake a db error, so as to cover the catch block
-    it('should not get fixtures if db error occurs', async () => {
-      try {
+    // it('should not get fixtures if db error occurs', async () => {
+    //   try {
+    //     var mockFind = {
+    //       select() {
+    //         return this;
+    //       },
+    //       populate(){
+    //         return this;
+    //       },
+    //       sort(){
+    //         return this
+    //       },
+    //       exec() {
+    //         return Promise.reject('database error');
+    //       }
+    //     };
 
-        var mockFind = {
-          select() {
-            return this;
-          },
-          populate(){
-            return this;
-          },
-          sort(){
-            return this
-          },
-          exec() {
-            return Promise.reject('database error');
-          }
-        };
+    //     const fixturesStub = sinon.stub(Fixture, 'find').returns(mockFind);
 
-        const fixturesStub = jest.spyOn(Fixture, 'find').mockReturnValue(mockFind);
+    //     const fixtureService = new FixtureService();
 
-        const fixtureService = new FixtureService();
+    //     await fixtureService.getFixtures()
 
-        await fixtureService.getFixtures()
+    //     expect(fixturesStub).toHaveBeenCalled();
 
-        expect(fixturesStub).toHaveBeenCalled();
-
-      } catch (e) {
-        expect(e).toMatch('database error');
-      }
-    })
+    //   } catch (e) {
+    //     expect(e).to.equal('database error');
+    //   }
+    // })
   });
 });

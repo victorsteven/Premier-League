@@ -1,3 +1,6 @@
+import chai from 'chai'
+import sinon from 'sinon'
+import sinonChai from 'sinon-chai'
 import TeamController from './team.controller'
 import TeamService from '../services/team.service'
 import AdminService from '../services/admin.service'
@@ -6,6 +9,11 @@ import faker from 'faker'
 import { ObjectID } from 'mongodb';
 import validate from '../utils/validate'
 
+chai.use(require('chai-as-promised'))
+chai.use(sinonChai)
+
+const { expect } = chai
+
 
 
 //WE WILL MOCK ALL REQUEST BODY VALIDATION  IN THIS TEST. WE HAVE ALREADY TESTED ALL REQUEST BODY VALIDATIONS IN THE validate.test.js FILE, SO WE WILL ONLY FOCUS ON UNIT TESTING THE CONTROLLER
@@ -13,26 +21,30 @@ import validate from '../utils/validate'
 
 const mockResponse = () => {
   const res = {};
-  res.status = jest.fn().mockReturnValue(res);
-  res.json = jest.fn().mockReturnValue(res);
+  res.status = sinon.stub()
+  res.json = sinon.stub()
+  res.status.returns(res);
   return res;
 };
 
+
+
 describe('TeamController', () => {
 
-  let res, teamController, adminService, userService, teamService
+  let res, teamController, adminService, userService, teamService, sandbox = null
 
   beforeEach(() => {
 
     res = mockResponse()
+    sandbox = sinon.createSandbox()
     adminService = new AdminService();
     teamService = new TeamService();
     userService = new UserService();
   });
 
-  afterEach(() => {    
-    jest.clearAllMocks();
-  });
+  afterEach(() => {
+    sandbox.restore()
+  })
 
 
   describe('createTeam', () => {
@@ -48,10 +60,10 @@ describe('TeamController', () => {
 
       await teamController.createTeam(req, res);
 
-      expect(res.status).toHaveBeenCalledTimes(1)
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({'status': 401, 'error': 'unauthorized'});
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(401);
+      expect(res.json).to.have.been.calledWith({'status': 401, 'error': 'unauthorized'});
 
     });
 
@@ -69,17 +81,17 @@ describe('TeamController', () => {
         { 'name': 'a valid team name is required' },
       ]
 
-      const errorStub = jest.spyOn(validate, 'teamValidate').mockReturnValue(errors);
+      const errorStub = sandbox.stub(validate, 'teamValidate').returns(errors);
 
       teamController = new TeamController(userService, adminService, teamService);
 
       await teamController.createTeam(req, res);
 
-      expect(errorStub).toHaveBeenCalledTimes(1)
-      expect(res.status).toHaveBeenCalledTimes(1);
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({'status': 400, 'errors': errors });
+      expect(errorStub.calledOnce).to.be.true;
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(400);
+      expect(res.json).to.have.been.calledWith({'status': 400, 'errors': errors });
 
     });
 
@@ -96,24 +108,22 @@ describe('TeamController', () => {
         name: faker.name.findName()
       }
 
-      const errorStub = jest.spyOn(validate, 'teamValidate').mockReturnValue([]); //empty error
+      const errorStub = sandbox.stub(validate, 'teamValidate').returns([]); //empty error
 
-      const adminStub = jest.spyOn(adminService, 'getAdmin').mockReturnValue(stubAdmin);
-      const stub = jest.spyOn(teamService, 'createTeam').mockImplementation(() => {
-        throw new Error('record already exists');
-      })
+      const adminStub = sandbox.stub(adminService, 'getAdmin').returns(stubAdmin);
+      const stub = sandbox.stub(teamService, 'createTeam').throws(new Error('record already exists'))
 
       teamController = new TeamController(userService, adminService, teamService);
 
       await teamController.createTeam(req, res);
 
-      expect(adminStub).toHaveBeenCalledTimes(1)
-      expect(stub).toHaveBeenCalledTimes(1)
-      expect(errorStub).toHaveBeenCalledTimes(1)
-      expect(res.status).toHaveBeenCalledTimes(1);
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({'status': 500, 'error': 'record already exists' });
+      expect(adminStub.calledOnce).to.be.true;
+      expect(stub.calledOnce).to.be.true;
+      expect(errorStub.calledOnce).to.be.true;
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(500);
+      expect(res.json).to.have.been.calledWith({'status': 500, 'error': 'record already exists' });
 
     });
 
@@ -132,22 +142,22 @@ describe('TeamController', () => {
         name: faker.name.findName()
       }
 
-      const errorStub = jest.spyOn(validate, 'teamValidate').mockReturnValue([]); //empty error
+      const errorStub = sandbox.stub(validate, 'teamValidate').returns([]); //empty error
 
-      const adminStub = jest.spyOn(adminService, 'getAdmin').mockReturnValue(stubAdmin);
-      const stub = jest.spyOn(teamService, 'createTeam').mockReturnValue(stubValue);
+      const adminStub = sandbox.stub(adminService, 'getAdmin').returns(stubAdmin);
+      const stub = sandbox.stub(teamService, 'createTeam').returns(stubValue);
 
       teamController = new TeamController(userService, adminService, teamService);
 
       await teamController.createTeam(req, res);
 
-      expect(errorStub).toHaveBeenCalledTimes(1)
-      expect(adminStub).toHaveBeenCalledTimes(1)
-      expect(stub).toHaveBeenCalledTimes(1)
-      expect(res.status).toHaveBeenCalledTimes(1);
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(201);
-      expect(res.json).toHaveBeenCalledWith({'status': 201, 'data': stubValue });
+      expect(errorStub.calledOnce).to.be.true;
+      expect(adminStub.calledOnce).to.be.true;
+      expect(stub.calledOnce).to.be.true;
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(201);
+      expect(res.json).to.have.been.calledWith({'status': 201, 'data': stubValue });
     })
   });
 
@@ -164,10 +174,10 @@ describe('TeamController', () => {
       await teamController.updateTeam(req, res);
 
 
-      expect(res.status).toHaveBeenCalledTimes(1)
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({'status': 401, 'error': 'unauthorized'});
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(401);
+      expect(res.json).to.have.been.calledWith({'status': 401, 'error': 'unauthorized'});
     });
 
    
@@ -185,10 +195,10 @@ describe('TeamController', () => {
 
       await teamController.updateTeam(req, res);
 
-      expect(res.status).toHaveBeenCalledTimes(1)
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({'status': 400, 'error': 'team id is not valid'});
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(400);
+      expect(res.json).to.have.been.calledWith({'status': 400, 'error': 'team id is not valid'});
 
     });
 
@@ -210,17 +220,17 @@ describe('TeamController', () => {
         { 'name': 'a valid team name is required' },
       ]
 
-      const errorStub = jest.spyOn(validate, 'teamValidate').mockReturnValue(errors);
+      const errorStub = sandbox.stub(validate, 'teamValidate').returns(errors);
 
       teamController = new TeamController(userService, adminService, teamService);
 
       await teamController.updateTeam(req, res);
 
-      expect(errorStub).toHaveBeenCalledTimes(1)
-      expect(res.status).toHaveBeenCalledTimes(1)
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({'status': 400, 'errors': errors });
+      expect(errorStub.calledOnce).to.be.true;
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(400);
+      expect(res.json).to.have.been.calledWith({'status': 400, 'errors': errors });
     });
 
 
@@ -242,20 +252,20 @@ describe('TeamController', () => {
         }
       }
 
-      const errorStub = jest.spyOn(validate, 'teamValidate').mockReturnValue([]); //no input errors
+      const errorStub = sandbox.stub(validate, 'teamValidate').returns([]); //no input errors
 
-      const formerStub = jest.spyOn(teamService, 'adminGetTeam').mockReturnValue(formerTeam);
+      const formerStub = sandbox.stub(teamService, 'adminGetTeam').returns(formerTeam);
 
       teamController = new TeamController(userService, adminService, teamService);
 
       await teamController.updateTeam(req, res);
 
-      expect(formerStub).toHaveBeenCalledTimes(1)
-      expect(errorStub).toHaveBeenCalledTimes(1)
-      expect(res.status).toHaveBeenCalledTimes(1)
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({'status': 401, 'error': 'unauthorized: you are not the owner' });
+      expect(formerStub.calledOnce).to.be.true;
+      expect(errorStub.calledOnce).to.be.true;
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(401);
+      expect(res.json).to.have.been.calledWith({'status': 401, 'error': 'unauthorized: you are not the owner' });
     });
 
     //DB Error
@@ -277,24 +287,22 @@ describe('TeamController', () => {
           _id: new ObjectID('5e678b4527b990c36ff39dda'), //this id is same as the one in the tokenMetada
         }
       }
-      const errorStub = jest.spyOn(validate, 'teamValidate').mockReturnValue([]); //no input errors
-      const formerStub = jest.spyOn(teamService, 'adminGetTeam').mockReturnValue(formerTeam);
-      const stub = jest.spyOn(teamService, 'updateTeam').mockImplementation(() => {
-        throw new Error('record already exists');
-      })
+      const errorStub = sandbox.stub(validate, 'teamValidate').returns([]); //no input errors
+      const formerStub = sandbox.stub(teamService, 'adminGetTeam').returns(formerTeam);
+      const stub = sandbox.stub(teamService, 'updateTeam').throws(new Error('record already exists'))
 
       teamController = new TeamController(userService, adminService, teamService);
 
       await teamController.updateTeam(req, res);
 
-      expect(formerStub).toHaveBeenCalledTimes(1)
-      expect(errorStub).toHaveBeenCalledTimes(1)
-      expect(stub).toHaveBeenCalledTimes(1)
-      expect(errorStub).toHaveBeenCalledTimes(1)
-      expect(res.status).toHaveBeenCalledTimes(1);
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({'status': 500, 'error': 'record already exists' });
+      expect(formerStub.calledOnce).to.be.true;
+      expect(errorStub.calledOnce).to.be.true;
+      expect(stub.calledOnce).to.be.true;
+      expect(errorStub.calledOnce).to.be.true;
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(500);
+      expect(res.json).to.have.been.calledWith({'status': 500, 'error': 'record already exists' });
     });
 
 
@@ -320,21 +328,21 @@ describe('TeamController', () => {
           _id: new ObjectID('5e678b4527b990c36ff39dda'), //this id is same as the one in the tokenMetada
         }
       }
-      const errorStub = jest.spyOn(validate, 'teamValidate').mockReturnValue([]); //no input errors
-      const formerStub = jest.spyOn(teamService, 'adminGetTeam').mockReturnValue(formerTeam);
-      const stub = jest.spyOn(teamService, 'updateTeam').mockReturnValue(stubValue);
+      const errorStub = sandbox.stub(validate, 'teamValidate').returns([]); //no input errors
+      const formerStub = sandbox.stub(teamService, 'adminGetTeam').returns(formerTeam);
+      const stub = sandbox.stub(teamService, 'updateTeam').returns(stubValue);
 
       teamController = new TeamController(userService, adminService, teamService);
 
       await teamController.updateTeam(req, res);
 
-      expect(formerStub).toHaveBeenCalledTimes(1)
-      expect(errorStub).toHaveBeenCalledTimes(1)
-      expect(stub).toHaveBeenCalledTimes(1)
-      expect(res.status).toHaveBeenCalledTimes(1)
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({'status': 200, 'data': stubValue });
+      expect(formerStub.calledOnce).to.be.true;
+      expect(errorStub.calledOnce).to.be.true;
+      expect(stub.calledOnce).to.be.true;
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(200);
+      expect(res.json).to.have.been.calledWith({'status': 200, 'data': stubValue });
     });
   });
 
@@ -351,10 +359,10 @@ describe('TeamController', () => {
 
       await teamController.deleteTeam(req, res);
 
-      expect(res.status).toHaveBeenCalledTimes(1)
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({'status': 401, 'error': 'unauthorized' });
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(401);
+      expect(res.json).to.have.been.calledWith({'status': 401, 'error': 'unauthorized' });
 
     });
 
@@ -371,10 +379,10 @@ describe('TeamController', () => {
 
       await teamController.deleteTeam(req, res);
 
-      expect(res.status).toHaveBeenCalledTimes(1)
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({'status': 400, 'error': 'team id is not valid' });
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(400);
+      expect(res.json).to.have.been.calledWith({'status': 400, 'error': 'team id is not valid' });
 
     });
 
@@ -396,17 +404,17 @@ describe('TeamController', () => {
         }
       }
 
-      const formerStub = jest.spyOn(teamService, 'adminGetTeam').mockReturnValue(formerTeam);
+      const formerStub = sandbox.stub(teamService, 'adminGetTeam').returns(formerTeam);
 
       teamController = new TeamController(userService, adminService, teamService);
 
       await teamController.deleteTeam(req, res);
 
-      expect(formerStub).toHaveBeenCalledTimes(1)
-      expect(res.status).toHaveBeenCalledTimes(1)
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({'status': 401, 'error': 'unauthorized: you are not the owner' });
+      expect(formerStub.calledOnce).to.be.true;
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(401);
+      expect(res.json).to.have.been.calledWith({'status': 401, 'error': 'unauthorized: you are not the owner' });
     });
 
 
@@ -429,21 +437,19 @@ describe('TeamController', () => {
         }
       }
 
-      const adminStub = jest.spyOn(teamService, 'adminGetTeam').mockReturnValue(formerTeam);
-      const stub = jest.spyOn(teamService, 'deleteTeam').mockImplementation(() => {
-        throw new Error('something went wrong');
-      })
+      const adminStub = sandbox.stub(teamService, 'adminGetTeam').returns(formerTeam);
+      const stub = sandbox.stub(teamService, 'deleteTeam').throws(new Error('something went wrong'));
 
       teamController = new TeamController(userService, adminService, teamService);
 
       await teamController.deleteTeam(req, res);
 
-      expect(adminStub).toHaveBeenCalledTimes(1)
-      expect(stub).toHaveBeenCalledTimes(1)
-      expect(res.status).toHaveBeenCalledTimes(1)
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({'status': 500, 'error': 'something went wrong' });
+      expect(adminStub.calledOnce).to.be.true;
+      expect(stub.calledOnce).to.be.true;
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(500);
+      expect(res.json).to.have.been.calledWith({'status': 500, 'error': 'something went wrong' });
     });
 
 
@@ -469,19 +475,19 @@ describe('TeamController', () => {
         data: 'team deleted'
       }
 
-      const formerStub = jest.spyOn(teamService, 'adminGetTeam').mockReturnValue(formerTeam);
-      const stub = jest.spyOn(teamService, 'deleteTeam').mockReturnValue(stubValue);
+      const formerStub = sandbox.stub(teamService, 'adminGetTeam').returns(formerTeam);
+      const stub = sandbox.stub(teamService, 'deleteTeam').returns(stubValue);
 
       teamController = new TeamController(userService, adminService, teamService);
 
       await teamController.deleteTeam(req, res);
 
-      expect(formerStub).toHaveBeenCalledTimes(1)
-      expect(stub).toHaveBeenCalledTimes(1)
-      expect(res.status).toHaveBeenCalledTimes(1)
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({'status': 200, 'data': stubValue.data });
+      expect(formerStub.calledOnce).to.be.true;
+      expect(stub.calledOnce).to.be.true;
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(200);
+      expect(res.json).to.have.been.calledWith({'status': 200, 'data': stubValue.data });
 
     });
   });
@@ -499,10 +505,10 @@ describe('TeamController', () => {
 
       await teamController.getTeam(req, res);
 
-      expect(res.status).toHaveBeenCalledTimes(1)
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({'status': 401, 'error': 'unauthorized' });
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(401);
+      expect(res.json).to.have.been.calledWith({'status': 401, 'error': 'unauthorized' });
 
     });
 
@@ -519,10 +525,10 @@ describe('TeamController', () => {
 
       await teamController.getTeam(req, res);
 
-      expect(res.status).toHaveBeenCalledTimes(1)
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({'status': 400, 'error': 'team id is not valid' });
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(400);
+      expect(res.json).to.have.been.calledWith({'status': 400, 'error': 'team id is not valid' });
 
     });
 
@@ -542,21 +548,19 @@ describe('TeamController', () => {
         name: faker.name.findName(),
       }
 
-      const userStub = jest.spyOn(userService, 'getUser').mockReturnValue(user); //this user can either be an admin or normal user
-      const stub = jest.spyOn(teamService, 'getTeam').mockImplementation(() => {
-        throw new Error('record not found')
-      });
+      const userStub = sandbox.stub(userService, 'getUser').returns(user); //this user can either be an admin or normal user
+      const stub = sandbox.stub(teamService, 'getTeam').throws(new Error('record not found'));
 
       teamController = new TeamController(userService, adminService, teamService);
 
       await teamController.getTeam(req, res);
 
-      expect(userStub).toHaveBeenCalledTimes(1)
-      expect(stub).toHaveBeenCalledTimes(1)
-      expect(res.status).toHaveBeenCalledTimes(1)
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({'status': 500, 'error': 'record not found' });
+      expect(userStub.calledOnce).to.be.true;
+      expect(stub.calledOnce).to.be.true;
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(500);
+      expect(res.json).to.have.been.calledWith({'status': 500, 'error': 'record not found' });
 
     });
 
@@ -580,19 +584,19 @@ describe('TeamController', () => {
         name: 'the team',
       }
 
-      const userStub = jest.spyOn(userService, 'getUser').mockReturnValue(user); //this user can either be an admin or normal user
-      const stub = jest.spyOn(teamService, 'getTeam').mockReturnValue(team);
+      const userStub = sandbox.stub(userService, 'getUser').returns(user); //this user can either be an admin or normal user
+      const stub = sandbox.stub(teamService, 'getTeam').returns(team);
 
       teamController = new TeamController(userService, adminService, teamService);
 
       await teamController.getTeam(req, res);
 
-      expect(userStub).toHaveBeenCalledTimes(1)
-      expect(stub).toHaveBeenCalledTimes(1)
-      expect(res.status).toHaveBeenCalledTimes(1)
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({'status': 200, 'data': team });
+      expect(userStub.calledOnce).to.be.true;
+      expect(stub.calledOnce).to.be.true;
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(200);
+      expect(res.json).to.have.been.calledWith({'status': 200, 'data': team });
 
     });
   });
@@ -608,10 +612,10 @@ describe('TeamController', () => {
 
       await teamController.getTeams(req, res);
 
-      expect(res.status).toHaveBeenCalledTimes(1)
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({'status': 401, 'error': 'unauthorized' });
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(401);
+      expect(res.json).to.have.been.calledWith({'status': 401, 'error': 'unauthorized' });
 
     });
 
@@ -628,21 +632,19 @@ describe('TeamController', () => {
         name: faker.name.findName()
       }
 
-      const userStub = jest.spyOn(userService, 'getUser').mockReturnValue(user); //this user can either be an admin or normal user
-      const stub = jest.spyOn(teamService, 'getTeams').mockImplementation(() => {
-        throw new Error('database error') //this can be anything
-      });
+      const userStub = sandbox.stub(userService, 'getUser').returns(user); //this user can either be an admin or normal user
+      const stub = sandbox.stub(teamService, 'getTeams').throws(new Error('database error')) //this can be anything
 
       teamController = new TeamController(userService, adminService, teamService);
 
       await teamController.getTeams(req, res);
 
-      expect(userStub).toHaveBeenCalledTimes(1)
-      expect(stub).toHaveBeenCalledTimes(1)
-      expect(res.status).toHaveBeenCalledTimes(1)
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({'status': 500, 'error': 'database error' });
+      expect(userStub.calledOnce).to.be.true;
+      expect(stub.calledOnce).to.be.true;
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(500);
+      expect(res.json).to.have.been.calledWith({'status': 500, 'error': 'database error' });
     });
 
 
@@ -669,19 +671,19 @@ describe('TeamController', () => {
         }
       ]
 
-      const userStub = jest.spyOn(userService, 'getUser').mockReturnValue(user); //this user can either be an admin or normal user
-      const stub = jest.spyOn(teamService, 'getTeams').mockReturnValue(teams);
+      const userStub = sandbox.stub(userService, 'getUser').returns(user); //this user can either be an admin or normal user
+      const stub = sandbox.stub(teamService, 'getTeams').returns(teams);
 
       teamController = new TeamController(userService, adminService, teamService);
 
       await teamController.getTeams(req, res);
 
-      expect(userStub).toHaveBeenCalledTimes(1)
-      expect(stub).toHaveBeenCalledTimes(1)
-      expect(res.status).toHaveBeenCalledTimes(1)
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({'status': 200, 'data': teams });
+      expect(userStub.calledOnce).to.be.true;
+      expect(stub.calledOnce).to.be.true;
+      expect(res.status.calledOnce).to.be.true;
+      expect(res.json.calledOnce).to.be.true;
+      expect(res.status).to.have.been.calledWith(200);
+      expect(res.json).to.have.been.calledWith({'status': 200, 'data': teams });
     });
   });
 });

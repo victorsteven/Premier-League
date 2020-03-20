@@ -1,40 +1,40 @@
+import chai from 'chai'
+import sinon from 'sinon'
 import { ObjectID } from 'mongodb'
 import TeamService from './team.service'
 import { seedTeams } from '../testsetup/index'
 import  { connect, clearDatabase, closeDatabase  }  from '../testsetup/test-db'
 
-
-
-//Define the variable to hold our seeded data
-let seededTeams
-/**
- * Connect to a new in-memory database before running any tests.
- */
-beforeAll(async () => {
-  await connect();
-});
-
-beforeEach(async () => {
-  seededTeams = await seedTeams()
-});
-
-/**
-* Clear all test data after every test.
-*/
-afterEach(async () => {
-  await clearDatabase();
-  jest.clearAllMocks();
-});
-
-/**
-* Remove and close the db and server.
-*/
-afterAll(async () => {
-  await closeDatabase();
-});
+chai.use(require('chai-as-promised'))
+const { expect } = chai
 
 
 describe('TeamService', () => {
+
+  let seededTeams
+
+  //Connect to a new in-memory database before running any tests.
+  before(async () => {
+    await connect();
+  });
+
+  //Seed in-memory db before each test
+  beforeEach(async () => {
+    seededTeams = await seedTeams()
+  });
+
+
+  //Clear all test data after every test.
+  afterEach(async () => {
+    await clearDatabase();
+  });
+
+
+  //Remove and close the db and server.
+  after(async () => {
+    await closeDatabase();
+  });
+
 
   describe('createTeam', () => {
 
@@ -54,7 +54,7 @@ describe('TeamService', () => {
         await teamService.createTeam(record)
 
       } catch (e) {
-        expect(e.message).toMatch('record already exists');
+        expect(e.message).to.equal('record already exists');
       }
     });
 
@@ -69,9 +69,9 @@ describe('TeamService', () => {
 
       const team = await teamService.createTeam(newTeam);
 
-      expect(team._id).toBeDefined();
-      expect(team.name).toBe(newTeam.name);
-      expect(team.admin).toEqual(newTeam.admin);
+      expect(team._id).to.not.be.undefined;
+      expect(team.name).to.equal(newTeam.name);
+      expect(team.admin).to.equal(newTeam.admin);
 
     });
   });
@@ -88,7 +88,7 @@ describe('TeamService', () => {
 
         await teamService.adminGetTeam(teamObjID)
       } catch (e) {
-        expect(e.message).toMatch('no record found');
+        expect(e.message).to.equal('no record found');
       }
     });
 
@@ -99,10 +99,10 @@ describe('TeamService', () => {
       const teamService = new TeamService();
       const team = await teamService.adminGetTeam(firstTeam._id);
 
-      expect(team._id).toBeDefined()
-      expect(team._id).toEqual(firstTeam._id);
-      expect(team.name).toBe(firstTeam.name);
-      expect(team.admin).toEqual(firstTeam.admin);
+      expect(team._id).to.not.be.undefined;
+      expect(team._id).to.deep.equal(firstTeam._id);
+      expect(team.name).to.equal(firstTeam.name);
+      expect(team.admin).to.deep.equal(firstTeam.admin);
     });
   });
 
@@ -118,7 +118,7 @@ describe('TeamService', () => {
 
         await teamService.getTeam(teamObjID)
       } catch (e) {
-        expect(e.message).toMatch('no record found');
+        expect(e.message).to.equal('no record found');
       }
     });
 
@@ -129,9 +129,9 @@ describe('TeamService', () => {
       const teamService = new TeamService();
       const team = await teamService.getTeam(secondTeam._id);
 
-      expect(team._id).toBeDefined()
-      expect(team._id).toEqual(secondTeam._id);
-      expect(team.name).toBe(secondTeam.name);
+      expect(team._id).to.not.be.undefined
+      expect(team._id).to.deep.equal(secondTeam._id);
+      expect(team.name).to.equal(secondTeam.name);
     });
   });
 
@@ -144,7 +144,7 @@ describe('TeamService', () => {
 
       const teams = await teamService.getTeams()
 
-      expect(teams.length).toEqual(2); //we have two teams in our seeded db
+      expect(teams.length).to.equal(2); //we have two teams in our seeded db
     });
   });
 
@@ -166,7 +166,7 @@ describe('TeamService', () => {
 
         await teamService.updateTeam(update)
       } catch (e) {
-        expect(e.message).toMatch('record already exist');
+        expect(e.message).to.equal('record already exist');
       }
     });
 
@@ -183,9 +183,9 @@ describe('TeamService', () => {
 
       const updated = await teamService.updateTeam(update)
 
-      expect(updated._id).toBeDefined()
-      expect(updated._id).toEqual(update._id);
-      expect(updated.name).toBe(update.name);
+      expect(updated._id).to.not.be.undefined
+      expect(updated._id).to.deep.equal(firstTeam._id);
+      expect(updated.name).to.equal(update.name);
     });
   });
 
@@ -201,7 +201,7 @@ describe('TeamService', () => {
 
         await teamService.deleteTeam(teamObjID)
       } catch (e) {
-        expect(e.message).toMatch('something went wrong');
+        expect(e.message).to.equal('something went wrong');
       }
     });
 
@@ -214,7 +214,7 @@ describe('TeamService', () => {
       const teamService = new TeamService();
       const deletedData = await teamService.deleteTeam(firstTeam._id);
 
-      expect(deletedData).toEqual(deleted);
+      expect(deletedData).to.deep.equal(deleted);
     });
   });
 
@@ -232,7 +232,7 @@ describe('TeamService', () => {
         await teamService.checkTeams(homeObjID, awayObjID)
 
       } catch (e) {
-        expect(e.message).toMatch('make sure that both teams exist');
+        expect(e.message).to.equal('make sure that both teams exist');
       }
     });
 
@@ -245,7 +245,7 @@ describe('TeamService', () => {
 
       const gottenTeams = await teamService.checkTeams(firstTeam._id, secondTeam._id)
 
-      expect(gottenTeams.length).toEqual(2);
+      expect(gottenTeams.length).to.equal(2);
     });
   });
 });

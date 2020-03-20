@@ -1,4 +1,9 @@
+import chai from 'chai'
+import sinon from 'sinon'
 import validate from './validate'
+
+const { expect } = chai 
+
 
 describe('Validation', () => {
 
@@ -19,8 +24,8 @@ describe('Validation', () => {
 
       let errors = validate.registerValidate(req)
 
-      expect(errors.length).toBeGreaterThan(0)
-      expect(JSON.stringify(errors)).toEqual(JSON.stringify(errorsResponse)) //since we are comparing the values of two arrays
+      expect(errors.length).to.be.greaterThan(0)
+      expect(JSON.stringify(errors)).to.equal(JSON.stringify(errorsResponse)) //since we are comparing the values of two arrays
     });
 
     it('valid register inputs', () => {
@@ -31,7 +36,7 @@ describe('Validation', () => {
 
       let errors = validate.registerValidate(req)
 
-      expect(errors.length).toBe(0)
+      expect(errors.length).to.equal(0)
       
     });
   });
@@ -53,8 +58,8 @@ describe('Validation', () => {
 
       let errors = validate.loginValidate(req)
 
-      expect(errors.length).toBeGreaterThan(0)
-      expect(JSON.stringify(errors)).toEqual(JSON.stringify(errorsResponse)) //since we are comparing the values of two arrays
+      expect(errors.length).to.be.greaterThan(0)
+      expect(JSON.stringify(errors)).to.equal(JSON.stringify(errorsResponse)) //since we are comparing the values of two arrays
     });
 
     it('valid login inputs', () => {
@@ -65,7 +70,7 @@ describe('Validation', () => {
 
       let errors = validate.loginValidate(req)
 
-      expect(errors.length).toBe(0)
+      expect(errors.length).to.equal(0)
       
     });
   });
@@ -86,8 +91,8 @@ describe('Validation', () => {
 
       let errors = validate.teamValidate(req)
 
-      expect(errors.length).toBeGreaterThan(0)
-      expect(JSON.stringify(errors)).toEqual(JSON.stringify(errorsResponse)) //since we are comparing the values of two arrays
+      expect(errors.length).to.be.greaterThan(0)
+      expect(JSON.stringify(errors)).to.equal(JSON.stringify(errorsResponse)) //since we are comparing the values of two arrays
     });
 
     it('valid team name', () => {
@@ -98,7 +103,7 @@ describe('Validation', () => {
 
       let errors = validate.teamValidate(req)
 
-      expect(errors.length).toBe(0)
+      expect(errors.length).to.equal(0)
       
     });
   });
@@ -122,8 +127,8 @@ describe('Validation', () => {
 
      let errors = validate.fixtureValidate(req)
 
-     expect(errors.length).toBeGreaterThan(0)
-     expect(JSON.stringify(errors)).toEqual(JSON.stringify(errorsResponse)) //since we are comparing the values of two arrays we use stringify
+     expect(errors.length).to.be.greaterThan(0)
+     expect(JSON.stringify(errors)).to.equal(JSON.stringify(errorsResponse)) //since we are comparing the values of two arrays we use stringify
     });
 
     it('cannot create a fixture with past date', () => {
@@ -139,8 +144,8 @@ describe('Validation', () => {
 
      let errors = validate.fixtureValidate(req)
 
-     expect(errors.length).toBeGreaterThan(0)
-     expect(JSON.stringify(errors)).toEqual(JSON.stringify(errorsResponse)) //since we are comparing the values of two arrays we use stringify
+     expect(errors.length).to.be.greaterThan(0)
+     expect(JSON.stringify(errors)).to.equal(JSON.stringify(errorsResponse)) //since we are comparing the values of two arrays we use stringify
     });
 
     it('cannot create a fixture with the same home and away ids', () => {
@@ -156,8 +161,8 @@ describe('Validation', () => {
 
      let errors = validate.fixtureValidate(req)
 
-     expect(errors.length).toBeGreaterThan(0)
-     expect(JSON.stringify(errors)).toEqual(JSON.stringify(errorsResponse)) //since we are comparing the values of two arrays we use stringify
+     expect(errors.length).to.be.greaterThan(0)
+     expect(JSON.stringify(errors)).to.equal(JSON.stringify(errorsResponse)) //since we are comparing the values of two arrays we use stringify
     });
   });
 
@@ -178,8 +183,8 @@ describe('Validation', () => {
 
       let errors = validate.teamSearchValidate(req)
 
-      expect(errors.length).toBeGreaterThan(0)
-      expect(JSON.stringify(errors)).toEqual(JSON.stringify(errorsResponse)) //since we are comparing the values of two arrays
+      expect(errors.length).to.be.greaterThan(0)
+      expect(JSON.stringify(errors)).to.equal(JSON.stringify(errorsResponse)) //since we are comparing the values of two arrays
     });
 
     it('valid team name', () => {
@@ -190,7 +195,7 @@ describe('Validation', () => {
 
       let errors = validate.teamSearchValidate(req)
 
-      expect(errors.length).toBe(0)
+      expect(errors.length).to.equal(0)
       
     });
   });
@@ -214,8 +219,8 @@ describe('Validation', () => {
 
      let errors = validate.fixtureSearchValidate(req)
 
-     expect(errors.length).toBeGreaterThan(0)
-     expect(JSON.stringify(errors)).toEqual(JSON.stringify(errorsResponse)) //since we are comparing the values of two arrays we use stringify
+     expect(errors.length).to.be.greaterThan(0)
+     expect(JSON.stringify(errors)).to.equal(JSON.stringify(errorsResponse)) //since we are comparing the values of two arrays we use stringify
     });
 
     it('cannot search a fixture with past date', () => {
@@ -231,8 +236,8 @@ describe('Validation', () => {
 
      let errors = validate.fixtureSearchValidate(req)
 
-     expect(errors.length).toBeGreaterThan(0)
-     expect(JSON.stringify(errors)).toEqual(JSON.stringify(errorsResponse)) //since we are comparing the values of two arrays we use stringify
+     expect(errors.length).to.be.greaterThan(0)
+     expect(JSON.stringify(errors)).to.equal(JSON.stringify(errorsResponse)) //since we are comparing the values of two arrays we use stringify
     });
 
     it('cannot search a fixture with invalid matchtime', () => {
@@ -247,8 +252,8 @@ describe('Validation', () => {
 
      let errors = validate.fixtureSearchValidate(req)
 
-     expect(errors.length).toBeGreaterThan(0)
-     expect(JSON.stringify(errors)).toEqual(JSON.stringify(errorsResponse)) //since we are comparing the values of two arrays we use stringify
+     expect(errors.length).to.be.greaterThan(0)
+     expect(JSON.stringify(errors)).to.equal(JSON.stringify(errorsResponse)) //since we are comparing the values of two arrays we use stringify
     });
 
     it('cannot search a fixture with the same home and away name', () => {
@@ -264,8 +269,8 @@ describe('Validation', () => {
 
      let errors = validate.fixtureSearchValidate(req)
 
-     expect(errors.length).toBeGreaterThan(0)
-     expect(JSON.stringify(errors)).toEqual(JSON.stringify(errorsResponse)) //since we are comparing the values of two arrays we use stringify
+     expect(errors.length).to.be.greaterThan(0)
+     expect(JSON.stringify(errors)).to.equal(JSON.stringify(errorsResponse)) //since we are comparing the values of two arrays we use stringify
     });
   });
 });
