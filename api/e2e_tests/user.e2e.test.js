@@ -2,13 +2,13 @@ import supertest from 'supertest'
 import app from '../app/app'
 import http from 'http'
 import User from '../models/user'
-import { seedAdmin } from '../test-setup/seed'
+import { seededUser } from '../test-setup/seed'
 import  { clearDatabase, closeDatabase  }  from '../test-setup/unit-test-db'
 import mongoose from '../database/database' //this is important to connect to our test db 
 
 
 
-let server, request, seededAdmin
+let server, request, seededUser
 
 beforeAll(async () => {
   server = http.createServer(app);
@@ -17,7 +17,7 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-    seededAdmin = await seedAdmin()
+    seededUser = await seedAdmin()
 });
 
 /**
@@ -57,17 +57,17 @@ describe('POST /user', () => {
     expect(role).toEqual('user');
 
     //we can query the db to confirm the record
-    const createdAdmin = await User.findOne({email: user.email })
-    expect(createdAdmin).toBeDefined()
-    expect(createdAdmin.email).toEqual(user.email);
+    const createdUser = await User.findOne({email: user.email })
+    expect(createdUser).toBeDefined()
+    expect(createdUser.email).toEqual(user.email);
     //since our password is hashed:
-    expect(createdAdmin.password).not.toEqual(user.password);
+    expect(createdUser.password).not.toEqual(user.password);
   });
 
   it('should not create a user if the record already exist.', async () => {
     let user = {
       name: 'chikodi',
-      email: seededAdmin.email, //a record that already exist
+      email: seededUser.email, //a record that already exist
       password: 'password'
     }
     const res = await request
