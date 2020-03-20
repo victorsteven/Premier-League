@@ -4,7 +4,35 @@ import { ObjectID } from 'mongodb'
 import User from '../models/user'
 import  password from '../utils/password';
 import LoginService from './login.service'
+import { seedUser } from '../test-setup/seed'
+import  { connect, clearDatabase, closeDatabase  }  from '../test-setup/unit-test-db'
 
+
+let seededUser
+/**
+ * Connect to a new in-memory database before running any tests.
+ */
+beforeAll(async () => {
+  await connect();
+});
+
+beforeEach(async () => {
+  seededUser = await seedUser()
+});
+
+/**
+* Clear all test data after every test.
+*/
+afterEach(async () => {
+  await clearDatabase();
+});
+
+/**
+* Remove and close the db and server.
+*/
+afterAll(async () => {
+  await closeDatabase();
+});
 
 
 describe('LoginService', () => {
@@ -13,38 +41,26 @@ describe('LoginService', () => {
 
     it('should not login a user if the user does not exist', async () => {
 
-      const email = 'email@example.com'
+      const email = 'email@example.com' //this user is not found in our in-memory db
       const pass = 'password'
-
-      const checkStub = jest.spyOn(User, 'findOne').mockReturnValue(false)
 
       const loginService = new LoginService();
 
       await expect(loginService.login(email, pass)).rejects.toThrow('record not found');
-
-      expect(checkStub).toHaveBeenCalled();
-
     });
 
     it('should not login a user if password does not match with hash', async () => {
 
-      const email = 'email@example.com'
-      const pass = 'password'
+      const email = seededUser.email
+      const pass = 'non-password' //this password will not match
 
-      const record = {
-        _id:  new ObjectID("5e69748a6e72a1a0793956eb"), //this id is valid
-        name: faker.name.findName(),
-      };
-
-      const checkStub = jest.spyOn(User, 'findOne').mockReturnValue(record)
-
+      //we need to mock external dependencies to achieve unit test
       const passStub = jest.spyOn(password, 'validPassword').mockReturnValue(false)  //return that the passwords do not match
 
       const loginService = new LoginService();
 
       await expect(loginService.login(email, pass)).rejects.toThrow('Invalid user credentials');
 
-      expect(checkStub).toHaveBeenCalled();
       expect(passStub).toHaveBeenCalled();
 
     });
@@ -52,16 +68,10 @@ describe('LoginService', () => {
     it('should login a user successfully', async () => {
 
       //this can either be an admin or a normal user
-      const email = "email@example.com"
+      const email = seededUser.email
       const pass = "password"
 
-      const stubValue = {
-        _id:  new ObjectID("5e682d0d580b5a6fb795b842"), //we need to make sure this is valid
-        name: faker.name.findName(),
-      };
       let stubToken = "jkndndfnskdjnfskjdnfjksdnf"
-
-      const checkStub = jest.spyOn(User, 'findOne').mockReturnValue(stubValue)
 
       const passStub = jest.spyOn(password, 'validPassword').mockReturnValue(true) //the passwords match
 
@@ -70,7 +80,6 @@ describe('LoginService', () => {
       const loginService = new LoginService();
       const token = await loginService.login(email, pass);
 
-      expect(checkStub).toHaveBeenCalled();
       expect(passStub).toHaveBeenCalled();
       expect(jwtStub).toHaveBeenCalled();
       expect(token).not.toBeNull();

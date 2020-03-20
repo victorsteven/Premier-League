@@ -1,7 +1,7 @@
 import { ObjectID } from 'mongodb'
 import TeamService from './team.service'
-import { seedTeams } from '../testsetup/index'
-import  { connect, clearDatabase, closeDatabase  }  from '../testsetup/test-db'
+import { seedTeams } from '../test-setup/seed'
+import  { connect, clearDatabase, closeDatabase  }  from '../test-setup/unit-test-db'
 
 
 

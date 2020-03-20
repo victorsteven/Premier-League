@@ -1,6 +1,6 @@
 import SearchService from './search.service'
-import { seedTeamsAndFixtures } from '../testsetup/index'
-import  { connect, clearDatabase, closeDatabase  }  from '../testsetup/test-db'
+import { seedTeamsAndFixtures } from '../test-setup/seed'
+import  { connect, clearDatabase, closeDatabase  }  from '../test-setup/unit-test-db'
 
 
 //Define the variable to hold our seeded data

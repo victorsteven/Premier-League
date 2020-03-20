@@ -1,8 +1,8 @@
 import mongoose from 'mongoose'
 
-/**
- * Connect to the in-memory database.
- */
+
+//Connect to the in-memory database. This is used for unit testing.
+//Ie, none of the e2e test uses this.
 export const connect = async () => {
 
   const mongooseOpts = {
@@ -14,22 +14,19 @@ export const connect = async () => {
   await mongoose.connect(global.__MONGO_URI__, mongooseOpts)
 };
 
-/**
- * Drop database, close the connection and stop mongod.
- */
+//Drop database, close the connection.
 export const closeDatabase = async () => {
     await mongoose.connection.dropDatabase();
     await mongoose.connection.close();
 };
 
-/**
- * Remove all the data for all db collections.
- */
-export const clearDatabase = async () => {
-    const collections = mongoose.connection.collections;
 
-    for (const key in collections) {
-        const collection = collections[key];
-        await collection.deleteMany();
-    }
+//Remove all the data for all db collections. 
+export const clearDatabase = async () => {
+  const collections = mongoose.connection.collections;
+
+  for (const key in collections) {
+      const collection = collections[key];
+      await collection.deleteMany();
+  }
 };

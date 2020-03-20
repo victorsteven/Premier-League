@@ -117,11 +117,11 @@ export async function seedTeamsAndFixtures () {
     if(seededTeamFixtures) {
 
       const gottenFixtures = await Fixture.find()
-                                                .select('-admin')
-                                                .select('-__v')
-                                                .populate('home', '_id name')
-                                                .populate('away', '_id name')
-                                                .exec()
+                                          .select('-admin')
+                                          .select('-__v')
+                                          .populate('home', '_id name')
+                                          .populate('away', '_id name')
+                                          .exec()
 
 
       if(gottenFixtures) {

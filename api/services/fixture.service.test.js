@@ -1,8 +1,8 @@
 import { ObjectID } from 'mongodb'
 import FixtureService from './fixture.service'
 import Fixture from '../models/fixture'
-import { seedFixtures } from '../testsetup/index'
-import  { connect, clearDatabase, closeDatabase  }  from '../testsetup/test-db'
+import { seedFixtures } from '../test-setup/seed'
+import  { connect, clearDatabase, closeDatabase  }  from '../test-setup/unit-test-db'
 
 
 
