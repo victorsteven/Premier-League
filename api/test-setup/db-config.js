@@ -2,7 +2,7 @@ import mongoose from 'mongoose'
 
 
 //Connect to the in-memory database. This is used for unit testing.
-//Ie, none of the e2e test uses this.
+//ie, none of the e2e test uses this. Our e2e tests uses a real test db, which is defined in ../database/config file
 export const connect = async () => {
 
   const mongooseOpts = {

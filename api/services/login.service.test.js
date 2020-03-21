@@ -5,7 +5,7 @@ import User from '../models/user'
 import  password from '../utils/password';
 import LoginService from './login.service'
 import { seedUser } from '../test-setup/seed'
-import  { connect, clearDatabase, closeDatabase  }  from '../test-setup/unit-test-db'
+import  { connect, clearDatabase, closeDatabase  }  from '../test-setup/db-config'
 
 
 let seededUser

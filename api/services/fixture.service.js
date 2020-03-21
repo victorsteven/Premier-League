@@ -18,7 +18,7 @@ class FixtureService {
         ]
       })
       if (record) {
-        throw new Error('record already exist');
+        throw new Error('record already exists');
       }
 
       const createdFixture = await this.fixture.create(fixture);
@@ -83,7 +83,7 @@ class FixtureService {
 
       //If the same record is passed to be updated for a particular given fixture id, allow it, else throw already exist error
       if (record && (record._id.toHexString() !== fixture._id.toHexString())) {
-        throw new Error('record already exist');
+        throw new Error('record already exists');
       } 
       
       const updatedFixture = await this.fixture.findOneAndUpdate(

@@ -2,7 +2,7 @@ import { ObjectID } from 'mongodb'
 import AdminService from './admin.service'
 import  password from '../utils/password';
 import { seedAdmin } from '../test-setup/seed'
-import  { connect, clearDatabase, closeDatabase  }  from '../test-setup/unit-test-db'
+import  { connect, clearDatabase, closeDatabase  }  from '../test-setup/db-config'
 
 
 

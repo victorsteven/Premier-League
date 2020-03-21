@@ -63,21 +63,28 @@ const validate = {
       errors.push({'away': 'a valid away team is required'})
     }
 
-    let day = /^(0[1-9]|[12][0-9]|3[01])[- /.](0[1-9]|1[012])[- /.](19|20)\d\d$/
-    if(!day.test(matchday)){
-      errors.push({'matchday': `matchday must be of the format: 'dd-mm-yyyy'`})
+    if(!matchday){
+      errors.push({'matchday': 'a valid matchday is required'})
+    } else {
+      let day = /^(0[1-9]|[12][0-9]|3[01])[- /.](0[1-9]|1[012])[- /.](19|20)\d\d$/
+      if(!day.test(matchday)){
+        errors.push({'matchday': `matchday must be of the format: 'dd-mm-yyyy'`})
+      }
+      let date = new Date();
+      let matchdate = matchday.split("-")[2] + "-" + matchday.split("-")[1] + "-" + matchday.split("-")[0] + ":" + matchtime
+      let matchd = new Date(matchdate)
+      if (matchd !== date && matchd < date ){
+        errors.push({'matchday': `can't create a fixture in the past`})
+      }
     }
 
-    let date = new Date();
-    let matchdate = matchday.split("-")[2] + "-" + matchday.split("-")[1] + "-" + matchday.split("-")[0] + ":" + matchtime
-    let matchd = new Date(matchdate)
-    if (matchd !== date && matchd < date ){
-      errors.push({'matchday': `can't create a fixture in the past`})
-    }
-
-    let time = /^$|^(([01][0-9])|(2[0-3])):[0-5][0-9]$/
-    if(!time.test(matchtime)){
-      errors.push({'matchtime': `matchtime must be of the format: '10:30 or 07:00'`})
+    if(!matchday){
+      errors.push({'matchtime': 'a valid matchtime is required'})
+    } else {
+      let time = /^$|^(([01][0-9])|(2[0-3])):[0-5][0-9]$/
+      if(!time.test(matchtime)){
+        errors.push({'matchtime': `matchtime must be of the format: '10:30 or 07:00'`})
+      }
     }
 
     if(home && away && (home === away)){

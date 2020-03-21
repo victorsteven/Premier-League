@@ -1,7 +1,7 @@
 import { ObjectID } from 'mongodb'
 import TeamService from './team.service'
 import { seedTeams } from '../test-setup/seed'
-import  { connect, clearDatabase, closeDatabase  }  from '../test-setup/unit-test-db'
+import  { connect, clearDatabase, closeDatabase  }  from '../test-setup/db-config'
 
 
 
@@ -166,7 +166,7 @@ describe('TeamService', () => {
 
         await teamService.updateTeam(update)
       } catch (e) {
-        expect(e.message).toMatch('record already exist');
+        expect(e.message).toMatch('record already exists');
       }
     });
 

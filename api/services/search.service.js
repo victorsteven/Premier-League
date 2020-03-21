@@ -105,8 +105,7 @@ class SearchService {
                                                             .populate('away', '_id name')
                                                             .exec()
 
-    return awayMatchDayMatchTimeFixtures
-
+      return awayMatchDayMatchTimeFixtures
     } 
   }
 

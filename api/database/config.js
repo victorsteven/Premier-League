@@ -16,8 +16,7 @@ export const dbconn = () => {
   }
 
   if(env === 'test'){
-    // conn = process.env.TEST_MONGO_URI //using test
-    conn = "mongodb://localhost:27017/premier-league-test"
+    conn = process.env.TEST_MONGO_URI //using test
   }
 
   return conn

@@ -1,15 +1,18 @@
 import User from '../models/user'
 import Team from '../models/team'
 import Fixture from '../models/fixture'
+import password from '../utils/password'
+
 
 import { ObjectID } from 'mongodb'
 
 
 export async function seedAdmin () {
   let admin = {
+    _id: new ObjectID('5e6b13809f86ce60e92ff11c'), 
     name: 'steven',
     email: 'steven@example.com',
-    password: 'password',
+    password: password.hashPassword('password'),
     role: 'admin'
   }
   const seededAdmin = await User.create(admin)
@@ -19,9 +22,10 @@ export async function seedAdmin () {
 
 export async function seedUser () {
   let user = {
+    _id: new ObjectID('5e6d19a8e43d8272913a7da5'), 
     name: 'ken',
     email: 'ken@example.com',
-    password: 'password',
+    password: password.hashPassword('password'),
     role: 'user'
   }
   const seededUser = await User.create(user)

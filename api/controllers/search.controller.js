@@ -57,10 +57,17 @@ class SearchController {
 
     try {
       const searchResult = await this.searchService.searchFixture(searchTerm)
-      return res.status(200).json({
-        status: 200,
-        data: searchResult
-      })
+      if(searchResult){
+        return res.status(200).json({
+          status: 200,
+          data: searchResult
+        })
+      } else { //when undefined is returned
+        return res.status(200).json({
+          status: 200,
+          data: []
+        })
+      }
     } catch(error) {
       return res.status(500).json({
         status: 500,

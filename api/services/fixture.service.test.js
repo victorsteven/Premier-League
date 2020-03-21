@@ -2,7 +2,7 @@ import { ObjectID } from 'mongodb'
 import FixtureService from './fixture.service'
 import Fixture from '../models/fixture'
 import { seedFixtures } from '../test-setup/seed'
-import  { connect, clearDatabase, closeDatabase  }  from '../test-setup/unit-test-db'
+import  { connect, clearDatabase, closeDatabase  }  from '../test-setup/db-config'
 
 
 
@@ -57,7 +57,7 @@ describe('FixtureService', () => {
         await fixtureService.createFixture(record)
 
     } catch (e) {
-      expect(e.message).toMatch('record already exist');
+      expect(e.message).toMatch('record already exists');
       }
     });
 
@@ -172,7 +172,7 @@ describe('FixtureService', () => {
         await fixtureService.updateFixture(stubValue)
 
       } catch (e) {
-        expect(e.message).toMatch('record already exist');
+        expect(e.message).toMatch('record already exists');
       }
     });
 

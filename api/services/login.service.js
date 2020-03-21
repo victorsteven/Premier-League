@@ -27,7 +27,7 @@ class LoginService {
           role: user.role
         }
 
-       const token = jwt.sign(userCred, process.env.JWT_SECRET, { expiresIn: '24h' }).toString();
+       const token = jwt.sign(userCred, process.env.JWT_SECRET).toString();
 
         return token;
       } else {
