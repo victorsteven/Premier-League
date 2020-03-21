@@ -55,13 +55,9 @@ describe('Fixture E2E', () => {
 
     it('should not create a fixture if input is invalid', async () => {
 
-      console.log("the seeded: ", seededTeamsAndFixtures)
-
       //this is a jwt that lives for ever, created when the seededAdmin logged in(ie, expiry date was removed when this token was created)
       const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1ZTZiMTM4MDlmODZjZTYwZTkyZmYxMWMiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE1ODQ3ODk1MTl9.DQShCsjw6rvVbvT3DCdENyBeyY5XEWfiF1V8NfLNxI8'
       const authToken = `Bearer ${token}`
-
-      console.log("the token: ", authToken)
 
       let fixture = {
         home: '', 
@@ -78,11 +74,8 @@ describe('Fixture E2E', () => {
         { matchday: 'a valid matchday is required'},
         { matchtime: 'a valid matchtime is required'}
       ]
-
-      console.log("the body: ", res.body)
-
-      // expect(res.status).toBe(400);
-      // expect(res.body.errors).toEqual(errors);
+      expect(res.status).toBe(400);
+      expect(res.body.errors).toEqual(errors);
     });
 
     it('should not create a fixture if the matchday and match time are not formatted correctly', async () => {
