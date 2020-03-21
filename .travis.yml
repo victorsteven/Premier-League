@@ -8,6 +8,7 @@ cache:
 sudo: false
 env:
   JWT_SECRET: jksdflkjsldjfdkf
+  TEST_MONGO_URI: "mongodb://localhost:27017/premier-league-test"
   global:
     - NODE_ENV=test
 install:
