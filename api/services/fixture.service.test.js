@@ -1,8 +1,8 @@
 import chai from 'chai'
 import { ObjectID } from 'mongodb'
 import FixtureService from './fixture.service'
-import { seedFixtures } from '../testsetup/index'
-import  { connect, clearDatabase, closeDatabase  }  from '../testsetup/test-db'
+import { seedFixtures } from '../test-setup/seed'
+import  { connect, clearDatabase, closeDatabase  }  from '../test-setup/db-config'
 
 
 chai.use(require('chai-as-promised'))
@@ -56,7 +56,7 @@ describe('FixtureService', () => {
         await fixtureService.createFixture(record)
 
     } catch (e) {
-      expect(e.message).to.equal('record already exist');
+      expect(e.message).to.equal('record already exists');
       }
     });
 
@@ -171,7 +171,7 @@ describe('FixtureService', () => {
         await fixtureService.updateFixture(stubValue)
 
       } catch (e) {
-        expect(e.message).to.equal('record already exist');
+        expect(e.message).to.equal('record already exists');
       }
     });
 
@@ -241,36 +241,5 @@ describe('FixtureService', () => {
       expect(fixtures.length).to.equal(2);
 
     });
-
-    //We will need to fake a db error, so as to cover the catch block
-    // it('should not get fixtures if db error occurs', async () => {
-    //   try {
-    //     var mockFind = {
-    //       select() {
-    //         return this;
-    //       },
-    //       populate(){
-    //         return this;
-    //       },
-    //       sort(){
-    //         return this
-    //       },
-    //       exec() {
-    //         return Promise.reject('database error');
-    //       }
-    //     };
-
-    //     const fixturesStub = sinon.stub(Fixture, 'find').returns(mockFind);
-
-    //     const fixtureService = new FixtureService();
-
-    //     await fixtureService.getFixtures()
-
-    //     expect(fixturesStub).toHaveBeenCalled();
-
-    //   } catch (e) {
-    //     expect(e).to.equal('database error');
-    //   }
-    // })
   });
 });

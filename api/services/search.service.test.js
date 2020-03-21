@@ -1,7 +1,7 @@
 import chai from 'chai'
 import SearchService from './search.service'
-import { seedTeamsAndFixtures } from '../testsetup/index'
-import  { connect, clearDatabase, closeDatabase  }  from '../testsetup/test-db'
+import { seedTeamsAndFixtures } from '../test-setup/seed'
+import  { connect, clearDatabase, closeDatabase  }  from '../test-setup/db-config'
 
 chai.use(require('chai-as-promised'))
 const { expect } = chai

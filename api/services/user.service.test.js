@@ -3,8 +3,8 @@ import sinon from 'sinon'
 import { ObjectID } from 'mongodb'
 import UserService from './user.service'
 import  password from '../utils/password';
-import { seedUser } from '../testsetup/index'
-import  { connect, clearDatabase, closeDatabase  }  from '../testsetup/test-db'
+import { seedUser } from '../test-setup/seed'
+import  { connect, clearDatabase, closeDatabase  }  from '../test-setup/db-config'
 
 chai.use(require('chai-as-promised'))
 const { expect } = chai

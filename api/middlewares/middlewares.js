@@ -27,6 +27,7 @@ export const auth = (req, res, next) => {
     if (tokenMetadata && (tokenMetadata.role === 'user' || 'admin')){
       req.tokenMetadata = tokenMetadata
       next()
+      setTimeout(next, 1000);
     } else {
       res.status(401).json({
         status: 401,
@@ -64,6 +65,7 @@ export const adminAuth = (req, res, next) => {
     if (tokenMetadata && (tokenMetadata.role === 'admin')){
       req.tokenMetadata = tokenMetadata
       next()
+      setTimeout(next, 1000);
     } else {
       res.status(401).json({
         status: 401,
