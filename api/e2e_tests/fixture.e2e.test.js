@@ -61,6 +61,8 @@ describe('Fixture E2E', () => {
       const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1ZTZiMTM4MDlmODZjZTYwZTkyZmYxMWMiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE1ODQ3ODk1MTl9.DQShCsjw6rvVbvT3DCdENyBeyY5XEWfiF1V8NfLNxI8'
       const authToken = `Bearer ${token}`
 
+      console.log("the token: ", authToken)
+
       let fixture = {
         home: '', 
         away: ''
