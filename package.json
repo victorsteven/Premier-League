@@ -61,7 +61,6 @@
     "eslint-plugin-import": "^2.20.1",
     "faker": "^4.1.0",
     "jest": "^25.1.0",
-    "nyc": "^15.0.0",
     "supertest": "^4.0.2"
   }
 }
