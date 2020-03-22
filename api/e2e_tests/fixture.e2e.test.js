@@ -1,7 +1,7 @@
 import supertest from 'supertest'
 import app from '../app/app'
 import http from 'http'
-import { seedTeamsAndFixtures, seedAdmin, seedUser } from '../test-setup/seed'
+import { seedTeamsAndFixtures, seedAdmin } from '../test-setup/seed'
 import  { clearDatabase, closeDatabase  }  from '../test-setup/db-config'
 
 

@@ -9,8 +9,6 @@ const conn = dbconn()
 
 const mongoDB = process.env.MONGODB_URI || conn;
 
-// mongoose.connect(mongoDB, {poolSize: 10, bufferMaxEntries: 0, reconnectTries: 5000, useNewUrlParser: true,useUnifiedTopology: true});
-
 mongoose.connect(mongoDB, {useNewUrlParser: true});
 
 export default mongoose
