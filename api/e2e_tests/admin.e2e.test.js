@@ -1,29 +1,21 @@
 import chai from 'chai'
-import supertest from 'supertest'
+import chatHttp from 'chai-http';
 import app from '../app/app'
-import http from 'http'
 import User from '../models/user'
 import { seedAdmin } from '../test-setup/seed'
-import  { clearDatabase, closeDatabase  }  from '../test-setup/db-config'
-import mongoose from '../database/database' //this isimportant to connect to our test db 
+import  { clearDatabase }  from '../test-setup/db-config'
 
-chai.use(require('chai-as-promised'))
+chai.use(chatHttp);
 const { expect } = chai
 
 
 
 describe('Admin E2E', () => {
 
-  let server, request, seededAdmin
-
-  before(async () => {
-    server = http.createServer(app);
-    await server.listen();
-    request = supertest(server);
-  });
+  let seededAdmin
 
   beforeEach(async () => {
-      seededAdmin = await seedAdmin()
+    seededAdmin = await seedAdmin()
   });
 
   /**
@@ -33,15 +25,6 @@ describe('Admin E2E', () => {
     await clearDatabase();
   });
 
-  /**
-  * Remove and close the test db and server.
-  */
-  after(async () => {
-    await server.close();
-    await closeDatabase();
-  });
-
-
   describe('POST /admin', () => {
     it('should create a user', async () => {
       let admin = {
@@ -49,7 +32,7 @@ describe('Admin E2E', () => {
         email: 'victor@example.com',
         password: 'password'
       }
-      const res = await request
+      const res = await chai.request(app)
                         .post('/api/v1/admin')
                         .send(admin)
 
@@ -75,7 +58,7 @@ describe('Admin E2E', () => {
         email: seededAdmin.email, //a record that already exist
         password: 'password'
       }
-      const res = await request
+      const res = await chai.request(app)
                         .post('/api/v1/admin')
                         .send(admin)
 
@@ -90,7 +73,7 @@ describe('Admin E2E', () => {
         email: 'victorexample.com', //invalid email
         password: 'pass' //the password should be atleast 6 characters
       }
-      const res = await request
+      const res = await chai.request(app)
                         .post('/api/v1/admin')
                         .send(admin)
 

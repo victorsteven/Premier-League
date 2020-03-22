@@ -1,42 +1,26 @@
 import chai from 'chai'
-import supertest from 'supertest'
+import chatHttp from 'chai-http';
 import app from '../app/app'
-import http from 'http'
 import { seedTeams, seedTeamsAndFixtures } from '../test-setup/seed'
-import  { clearDatabase, closeDatabase  }  from '../test-setup/db-config'
-import mongoose from '../database/database' //this isimportant to connect to our test db 
+import  { clearDatabase }  from '../test-setup/db-config'
+// import mongoose from '../database/database' //this isimportant to connect to our test db 
 
-chai.use(require('chai-as-promised'))
+chai.use(chatHttp);
 const { expect } = chai
 
+
 describe('Search E2E', () => {
-
-  let server, request
-
-  before(async () => {
-    server = http.createServer(app);
-    await server.listen();
-    request = supertest(server);
-  });
 
   beforeEach(async () => {
     await seedTeams()
     await seedTeamsAndFixtures()
   });
-
+  
   /**
   * Clear all test data after every test.
   */
   afterEach(async () => {
     await clearDatabase();
-  });
-
-  /**
-  * Remove and close the test db and server.
-  */
-  after(async () => {
-    await server.close();
-    await closeDatabase();
   });
 
   describe('SeachTeam /search/team', () => {
@@ -45,11 +29,11 @@ describe('Search E2E', () => {
 
       let team = 'Watford'
 
-      const res = await request
+      const res = await chai.request(app)
                         .get(`/api/v1/search/team?name=${team}`)
 
       expect(res.status).to.equal(200);
-      expect(res.body.data.length).toBeGreaterThan(0);
+      expect(res.body.data.length).to.be.greaterThan(0);
 
     });
 
@@ -57,11 +41,11 @@ describe('Search E2E', () => {
 
       let team = 'Ars' //search for anything team that have 'Ars' like Arsenal
 
-      const res = await request
+      const res = await chai.request(app)
                         .get(`/api/v1/search/team?name=${team}`)
 
       expect(res.status).to.equal(200);
-      expect(res.body.data.length).toBeGreaterThan(0);
+      expect(res.body.data.length).to.be.greaterThan(0);
 
     });
 
@@ -69,14 +53,14 @@ describe('Search E2E', () => {
 
       let team = 'Wa'
 
-      const res = await request
+      const res = await chai.request(app)
                         .get(`/api/v1/search/team?name=${team}`)
       
       const errors = [
         {name: 'a valid team name is required, atleast 3 characters'}
       ]                  
       expect(res.status).to.equal(400);
-      expect(res.body.errors).to.equal(errors);
+      expect(res.body.errors).to.deep.equal(errors);
 
     });
 
@@ -84,14 +68,14 @@ describe('Search E2E', () => {
 
       let team = ''
 
-      const res = await request
+      const res = await chai.request(app)
                         .get(`/api/v1/search/team?name=${team}`)
       
       const errors = [
         {name: 'a valid team name is required, atleast 3 characters'}
       ]                  
       expect(res.status).to.equal(400);
-      expect(res.body.errors).to.equal(errors);
+      expect(res.body.errors).to.deep.equal(errors);
 
     });
 
@@ -99,7 +83,7 @@ describe('Search E2E', () => {
 
       let team = 'Reading'
 
-      const res = await request
+      const res = await chai.request(app)
                         .get(`/api/v1/search/team?name=${team}`)
 
       expect(res.status).to.equal(200);
@@ -119,11 +103,11 @@ describe('Search E2E', () => {
       let matchday = '20-10-2050'
       let matchtime = '10:30'
 
-      const res = await request
+      const res = await chai.request(app)
                         .get(`/api/v1/search/fixture?home=${home}&away=${away}&matchday=${matchday}&matchtime=${matchtime}`)
 
       expect(res.status).to.equal(200);
-      expect(res.body.data.length).toBeGreaterThan(0);
+      expect(res.body.data.length).to.be.greaterThan(0);
     });
 
     it('should search a fixture and get result when one query param is provided', async () => {
@@ -131,11 +115,11 @@ describe('Search E2E', () => {
       //we have a seed that matches the below
       let home = 'Liverpool'
 
-      const res = await request
+      const res = await chai.request(app)
                         .get(`/api/v1/search/fixture?home=${home}`)
 
       expect(res.status).to.equal(200);
-      expect(res.body.data.length).toBeGreaterThan(0);
+      expect(res.body.data.length).to.be.greaterThan(0);
     });
 
     it('should search a fixture and get result when two query params are provided', async () => {
@@ -144,11 +128,11 @@ describe('Search E2E', () => {
       let away = 'Arsenal'
       let matchtime = '10:30'
 
-      const res = await request
+      const res = await chai.request(app)
                         .get(`/api/v1/search/fixture?away=${away}&matchtime=${matchtime}`)
 
       expect(res.status).to.equal(200);
-      expect(res.body.data.length).toBeGreaterThan(0);
+      expect(res.body.data.length).to.be.greaterThan(0);
     });
 
 
@@ -160,7 +144,7 @@ describe('Search E2E', () => {
       let matchday = '0-1-2050' //invalid date
       let matchtime = '0:3' //invalid time
 
-      const res = await request
+      const res = await chai.request(app)
                         .get(`/api/v1/search/fixture?home=${home}&away=${away}&matchday=${matchday}&matchtime=${matchtime}`)
 
       const errors =  [ 
@@ -171,7 +155,7 @@ describe('Search E2E', () => {
       ]
       
       expect(res.status).to.equal(400);
-      expect(res.body.errors).to.equal(errors);
+      expect(res.body.errors).to.deep.equal(errors);
     });
 
 
@@ -183,7 +167,7 @@ describe('Search E2E', () => {
       let matchday = '20-10-2050'
       let matchtime = '10:30'
 
-      const res = await request
+      const res = await chai.request(app)
                         .get(`/api/v1/search/fixture?home=${home}&away=${away}&matchday=${matchday}&matchtime=${matchtime}`)
 
       expect(res.status).to.equal(200);

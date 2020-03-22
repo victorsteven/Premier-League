@@ -1,25 +1,17 @@
 import chai from 'chai'
-import supertest from 'supertest'
+import chatHttp from 'chai-http';
 import app from '../app/app'
-import http from 'http'
-import { seedTeams, seedAdmin, seedUser } from '../test-setup/seed'
-import  { clearDatabase, closeDatabase  }  from '../test-setup/db-config'
-import mongoose from '../database/database' //this isimportant to connect to our test db 
+import { seedTeams, seedAdmin } from '../test-setup/seed'
+import  { clearDatabase }  from '../test-setup/db-config'
+// import mongoose from '../database/database' //this isimportant to connect to our test db 
 
-chai.use(require('chai-as-promised'))
+chai.use(chatHttp);
 const { expect } = chai
-
 
 
 describe('Team E2E', () => {
 
-  let server, request, seededTeams, seededAdmin
-
-  before(async () => {
-    server = http.createServer(app);
-    await server.listen();
-    request = supertest(server);
-  });
+  let seededTeams, seededAdmin
 
   beforeEach(async () => {
     seededTeams = await seedTeams()
@@ -33,14 +25,6 @@ describe('Team E2E', () => {
     await clearDatabase();
   });
 
-  /**
-  * Remove and close the test db and server.
-  */
-  after(async () => {
-    await server.close();
-    await closeDatabase();
-  });
-
   describe('POST /team', () => {
 
     it('should not create a team if not authorized', async () => {
@@ -48,7 +32,7 @@ describe('Team E2E', () => {
       let team = {
         name: 'FullHam',
       }
-      const res = await request
+      const res = await chai.request(app)
                         .post('/api/v1/teams')
                         .set('Accept', 'application/json')
                         .send(team)
@@ -67,7 +51,7 @@ describe('Team E2E', () => {
       let team = {
         name: '', //the name is required
       }
-      const res = await request
+      const res = await chai.request(app)
                         .post('/api/v1/teams')
                         .set('Accept', 'application/json')
                         .set('Authorization', authToken)
@@ -89,7 +73,7 @@ describe('Team E2E', () => {
       let team = {
         name: seededTeams[0].name,
       }
-      const res = await request
+      const res = await chai.request(app)
                         .post('/api/v1/teams')
                         .set('Accept', 'application/json')
                         .set('Authorization', authToken)
@@ -109,7 +93,7 @@ describe('Team E2E', () => {
       let team = {
         name: 'FullHam',
       }
-      const res = await request
+      const res = await chai.request(app)
                         .post('/api/v1/teams')
                         .set('Accept', 'application/json')
                         .set('Authorization', authToken)
@@ -133,7 +117,7 @@ describe('Team E2E', () => {
       let team = {
         name:  'Aston Villa'
       }
-      const res = await request
+      const res = await chai.request(app)
                         .put(`/api/v1/teams/${teamId}`)
                         .set('Accept', 'application/json')
                         .send(team)
@@ -154,7 +138,7 @@ describe('Team E2E', () => {
       let team = {
         name: '', 
       }
-      const res = await request
+      const res = await chai.request(app)
                         .put(`/api/v1/teams/${teamId}`)
                         .set('Accept', 'application/json')
                         .set('Authorization', authToken)
@@ -177,7 +161,7 @@ describe('Team E2E', () => {
       let team = {
         name:  seededTeams[1].name
       }
-      const res = await request
+      const res = await chai.request(app)
                         .put(`/api/v1/teams/${teamId}`)
                         .set('Accept', 'application/json')
                         .set('Authorization', authToken)
@@ -199,7 +183,7 @@ describe('Team E2E', () => {
       let team = {
         name: 'Aston Villa',
       }
-      const res = await request
+      const res = await chai.request(app)
                         .put(`/api/v1/teams/${teamId}`)
                         .set('Accept', 'application/json')
                         .set('Authorization', authToken)
@@ -221,7 +205,7 @@ describe('Team E2E', () => {
 
       const teamId = seededTeams[0]._id
 
-      const res = await request
+      const res = await chai.request(app)
                         .get(`/api/v1/teams/${teamId}`)
                         .set('Accept', 'application/json')
 
@@ -238,7 +222,7 @@ describe('Team E2E', () => {
       const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1ZTZiMTM4MDlmODZjZTYwZTkyZmYxMWMiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE1ODQ3ODk1MTl9.DQShCsjw6rvVbvT3DCdENyBeyY5XEWfiF1V8NfLNxI8'
       const authToken = `Bearer ${token}`
 
-      const res = await request
+      const res = await chai.request(app)
                         .get(`/api/v1/teams/${teamId}`)
                         .set('Accept', 'application/json')
                         .set('Authorization', authToken)
@@ -256,7 +240,7 @@ describe('Team E2E', () => {
       const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1ZTZiMTM4MDlmODZjZTYwZTkyZmYxMWMiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE1ODQ3ODk1MTl9.DQShCsjw6rvVbvT3DCdENyBeyY5XEWfiF1V8NfLNxI8'
       const authToken = `Bearer ${token}`
 
-      const res = await request
+      const res = await chai.request(app)
                         .get(`/api/v1/teams/${teamId}`)
                         .set('Accept', 'application/json')
                         .set('Authorization', authToken)
@@ -276,7 +260,7 @@ describe('Team E2E', () => {
 
     it('should not get teams if not authorized', async () => {
 
-      const res = await request
+      const res = await chai.request(app)
                         .get(`/api/v1/teams`)
                         .set('Accept', 'application/json')
 
@@ -291,7 +275,7 @@ describe('Team E2E', () => {
 
       const authToken = `Bearer ${token}`
 
-      const res = await request
+      const res = await chai.request(app)
                         .get(`/api/v1/teams`)
                         .set('Accept', 'application/json')
                         .set('Authorization', authToken)
@@ -309,7 +293,7 @@ describe('Team E2E', () => {
 
       const teamId = seededTeams[0]._id
 
-      const res = await request
+      const res = await chai.request(app)
                         .delete(`/api/v1/teams/${teamId}`)
                         .set('Accept', 'application/json')
 
@@ -326,7 +310,7 @@ describe('Team E2E', () => {
       const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1ZTZiMTM4MDlmODZjZTYwZTkyZmYxMWMiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE1ODQ3ODk1MTl9.DQShCsjw6rvVbvT3DCdENyBeyY5XEWfiF1V8NfLNxI8'
       const authToken = `Bearer ${token}`
 
-      const res = await request
+      const res = await chai.request(app)
                         .delete(`/api/v1/teams/${teamId}`)
                         .set('Accept', 'application/json')
                         .set('Authorization', authToken)
@@ -344,7 +328,7 @@ describe('Team E2E', () => {
       const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1ZTZiMTM4MDlmODZjZTYwZTkyZmYxMWMiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE1ODQ3ODk1MTl9.DQShCsjw6rvVbvT3DCdENyBeyY5XEWfiF1V8NfLNxI8'
       const authToken = `Bearer ${token}`
 
-      const res = await request
+      const res = await chai.request(app)
                         .delete(`/api/v1/teams/${teamId}`)
                         .set('Accept', 'application/json')
                         .set('Authorization', authToken)

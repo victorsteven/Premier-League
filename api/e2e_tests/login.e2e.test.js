@@ -1,24 +1,18 @@
 import chai from 'chai'
-import supertest from 'supertest'
+import chatHttp from 'chai-http';
 import app from '../app/app'
-import http from 'http'
 import { seedAdmin } from '../test-setup/seed'
-import  { clearDatabase, closeDatabase  }  from '../test-setup/db-config'
-import mongoose from '../database/database' //this isimportant to connect to our test db 
+import  { clearDatabase }  from '../test-setup/db-config'
+// import mongoose from '../database/database' //this isimportant to connect to our test db 
 
-chai.use(require('chai-as-promised'))
+chai.use(chatHttp);
 const { expect } = chai
+
 
 
 describe('Authenticate E2E', () => {
 
-  let server, request, seededAdmin
-
-  before(async () => {
-    server = http.createServer(app);
-    await server.listen();
-    request = supertest(server);
-  });
+  let seededAdmin
 
   beforeEach(async () => {
       seededAdmin = await seedAdmin()
@@ -31,15 +25,6 @@ describe('Authenticate E2E', () => {
     await clearDatabase();
   });
 
-  /**
-  * Remove and close the test db and server.
-  */
-  after(async () => {
-    await server.close();
-    await closeDatabase();
-  });
-
-
   describe('POST /login', () => {
 
     it('should login an admin', async () => {
@@ -48,7 +33,7 @@ describe('Authenticate E2E', () => {
         email: 'steven@example.com',
         password: 'password'
       }
-      const res = await request
+      const res = await chai.request(app)
                         .post('/api/v1/login')
                         .send(details)
 
@@ -63,7 +48,7 @@ describe('Authenticate E2E', () => {
         email: 'corona@example.com',
         password: 'password'
       }
-      const res = await request
+      const res = await chai.request(app)
                         .post('/api/v1/login')
                         .send(details)
 
@@ -78,7 +63,7 @@ describe('Authenticate E2E', () => {
         email: 'steven@example.com',
         password: 'sdnfjksnfd' //incorrect
       }
-      const res = await request
+      const res = await chai.request(app)
                         .post('/api/v1/login')
                         .send(details)
 
@@ -94,7 +79,7 @@ describe('Authenticate E2E', () => {
         email: 'example.com', //invalid email
         password: '' //empty password
       }
-      const res = await request
+      const res = await chai.request(app)
                         .post('/api/v1/login')
                         .send(details)
 

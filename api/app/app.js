@@ -2,6 +2,8 @@ import config from 'dotenv'
 import express from 'express'
 import bodyParser from 'body-parser'
 import routes from '../routes/routes'
+import mongoose from '../database/database' //this isimportant to connect to our test db 
+
 
 config.config()
 const app = express();
