@@ -21,11 +21,12 @@ describe('UserController', () => {
     let userController, userService, res;
 
     beforeEach(() => {
-      
       res = mockResponse()
-
       userService = new UserService();
+    });
 
+    afterEach(() => {    
+      jest.clearAllMocks();
     });
 
 
@@ -99,7 +100,7 @@ describe('UserController', () => {
 
       await userController.createUser(req, res);
 
-      expect(errorStub).toHaveBeenCalled()
+      expect(errorStub).toHaveBeenCalledTimes(1);
       expect(stub).toHaveBeenCalledTimes(1)
       expect(res.status).toHaveBeenCalledTimes(1);
       expect(res.json).toHaveBeenCalledTimes(1);

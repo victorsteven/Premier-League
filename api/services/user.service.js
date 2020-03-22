@@ -18,7 +18,6 @@ class UserService {
       if (record) {
         throw new Error('record already exists');
       }
-      //proceed with the user
       user.password = password.hashPassword(user.password)
 
       //assign role:
