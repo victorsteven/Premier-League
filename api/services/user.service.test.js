@@ -46,21 +46,16 @@ describe('UserService', () => {
 
     it('should not create a new user if record already exists', async () => {
 
-      try {
-
-        let user = {
-          name: 'frank',
-          email: seededUser.email,
-          password: 'password',
-        }
-  
-        const userService = new UserService();
-  
-        await userService.createUser(user)
-
-      } catch (e) {
-        expect(e.message).to.equal('record already exists');
+      let user = {
+        name: 'frank',
+        email: seededUser.email,
+        password: 'password',
       }
+
+      const userService = new UserService();
+
+      await expect(userService.createUser(user)).to.be.rejectedWith(Error, 'record already exists')
+
     });
 
     it('should create a new user', async () => {
@@ -90,18 +85,13 @@ describe('UserService', () => {
 
     it('should not get an user if record does not exists', async () => {
 
-      try {
-        
-        //This user does not exist
-        let userObjID = new ObjectID("5e682d0d580b5a6fb795b842")
+      //This user does not exist
+      let userObjID = new ObjectID("5e682d0d580b5a6fb795b842")
 
-        const userService = new UserService();
+      const userService = new UserService();
 
-        await userService.getUser(userObjID)
+      await expect(userService.getUser(userObjID)).to.be.rejectedWith(Error, 'no record found')
 
-      } catch (e) {
-        expect(e.message).to.equal('no record found');
-      }
     });
 
     it('should get an user', async () => {

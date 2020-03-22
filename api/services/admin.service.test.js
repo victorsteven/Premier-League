@@ -40,25 +40,21 @@ describe('AdminService', () => {
     await closeDatabase();
   });
 
+
   describe('createAdmin', () => {
 
     it('should not create a new admin if record already exists', async () => {
 
-      try {
-
-        let admin = {
-          name: 'frank',
-          email: seededAdmin.email,
-          password: 'password',
-        }
-  
-        const adminService = new AdminService();
-  
-        await adminService.createAdmin(admin)
-
-      } catch (e) {
-        expect(e.message).to.equal('record already exists');
+      let admin = {
+        name: 'frank',
+        email: seededAdmin.email,
+        password: 'password',
       }
+
+      const adminService = new AdminService();
+
+      await expect(adminService.createAdmin(admin)).to.be.rejectedWith(Error, 'record already exists')
+
     });
 
     it('should create a new admin', async () => {
@@ -88,18 +84,13 @@ describe('AdminService', () => {
 
     it('should not get an admin if record does not exists', async () => {
 
-      try {
-        
-        //This admin does not exist
-        let adminObjID = new ObjectID("5e682d0d580b5a6fb795b842")
+      //This admin does not exist
+      let adminObjID = new ObjectID('5e682d0d580b5a6fb795b842')
 
-        const adminService = new AdminService();
+      const adminService = new AdminService();
 
-        await adminService.getAdmin(adminObjID)
+      await expect(adminService.getAdmin(adminObjID)).to.be.rejectedWith(Error, 'no record found')
 
-      } catch (e) {
-        expect(e.message).to.equal('no record found');
-      }
     });
 
     it('should get an admin', async () => {
