@@ -13,21 +13,14 @@ beforeAll(async () => {
   await server.listen();
   request = supertest(server);
 });
-
 beforeEach(async () => {
     seededUser = await seedUser()
 });
-
-/**
-* Clear all test data after every test.
-*/
+//Clear all test data after every test.
 afterEach(async () => {
   await clearDatabase();
 });
-
-/**
-* Remove and close the test db and server.
-*/
+//Remove and close the test db and server.
 afterAll(async () => {
   await server.close();
   await closeDatabase();
@@ -94,7 +87,6 @@ describe('User E2E', () => {
       ]                  
       expect(res.status).toEqual(400);
       expect(res.body.errors).toEqual(errors);
-
     });
   });
 });

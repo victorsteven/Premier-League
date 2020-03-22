@@ -11,16 +11,13 @@ let seededUser
 beforeAll(async () => {
   await connect();
 });
-
 beforeEach(async () => {
   seededUser = await seedUser()
 });
-
 // Clear all test data after every test.
 afterEach(async () => {
   await clearDatabase();
 });
-
 // Remove and close the db and server.
 afterAll(async () => {
   await closeDatabase();
@@ -33,21 +30,14 @@ describe('UserService', () => {
 
     it('should not create a new user if record already exists', async () => {
 
-      try {
-
-        let user = {
-          name: 'frank',
-          email: seededUser.email,
-          password: 'password',
-        }
-  
-        const userService = new UserService();
-  
-        await userService.createUser(user)
-
-      } catch (e) {
-        expect(e.message).toMatch('record already exists');
+      let user = {
+        name: 'frank',
+        email: seededUser.email,
+        password: 'password',
       }
+      const userService = new UserService();
+
+      await expect(userService.createUser(user)).rejects.toThrow('record already exists'); 
     });
 
     it('should create a new user', async () => {
@@ -62,7 +52,6 @@ describe('UserService', () => {
       const hashPass = jest.spyOn(password, 'hashPassword').mockReturnValue('ksjndfklsndflksdmlfksdf')
 
       const userService = new UserService();
-
       const user = await userService.createUser(userNew);
 
       expect(hashPass).toHaveBeenCalled();
