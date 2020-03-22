@@ -1,8 +1,7 @@
 import mongoose from 'mongoose'
 
 
-//Connect to the in-memory database. This is used for unit testing.
-//ie, none of the e2e test uses this. Our e2e tests uses a real test db, which is defined in ../database/config file
+//in-memory db used only in unit testing
 export const connect = async () => {
   const mongooseOpts = {
     useNewUrlParser: true,
@@ -13,7 +12,8 @@ export const connect = async () => {
   await mongoose.connect(global.__MONGO_URI__, mongooseOpts)
 };
 
-//Drop database, close the connection.
+//Drop database, close the connection. 
+//Used by both unit and e2e tests
 export const closeDatabase = async () => {
     await mongoose.connection.dropDatabase();
     await mongoose.connection.close();
@@ -21,6 +21,7 @@ export const closeDatabase = async () => {
 
 
 //Remove all the data for all db collections. 
+//Used by both unit and e2e tests
 export const clearDatabase = async () => {
   const collections = mongoose.connection.collections;
   for (const key in collections) {
