@@ -11,7 +11,6 @@ import { ObjectID } from 'mongodb';
 import validate from '../utils/validate'
 
 
-chai.use(require('chai-as-promised'))
 chai.use(sinonChai)
 
 const { expect } = chai

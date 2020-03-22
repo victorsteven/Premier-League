@@ -5,7 +5,6 @@ import SearchController from './search.controller'
 import SearchService from '../services/search.service'
 import validate from '../utils/validate'
 
-chai.use(require('chai-as-promised'))
 chai.use(sinonChai)
 
 const { expect } = chai

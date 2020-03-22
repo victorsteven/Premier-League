@@ -6,7 +6,6 @@ import validate from '../utils/validate'
 import AdminController from './admin.controller'
 import AdminService from '../services/admin.service'
 
-chai.use(require('chai-as-promised'))
 chai.use(sinonChai)
 
 const { expect } = chai

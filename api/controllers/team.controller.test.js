@@ -9,12 +9,8 @@ import faker from 'faker'
 import { ObjectID } from 'mongodb';
 import validate from '../utils/validate'
 
-chai.use(require('chai-as-promised'))
 chai.use(sinonChai)
-
 const { expect } = chai
-
-
 
 //WE WILL MOCK ALL REQUEST BODY VALIDATION  IN THIS TEST. WE HAVE ALREADY TESTED ALL REQUEST BODY VALIDATIONS IN THE validate.test.js FILE, SO WE WILL ONLY FOCUS ON UNIT TESTING THE CONTROLLER
 

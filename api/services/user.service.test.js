@@ -10,34 +10,24 @@ chai.use(require('chai-as-promised'))
 const { expect } = chai
 
 
-
-
 describe('UserService', () => {
 
   let seededUser, sandbox = null
-  /**
-   * Connect to a new in-memory database before running any tests.
-   */
+ 
+  //Connect to in-memory db 
   before(async () => {
     await connect();
   });
-
   beforeEach(async () => {
     seededUser = await seedUser()
     sandbox = sinon.createSandbox()
   });
-
-  /**
-  * Clear all test data after every test.
-  */
+  //Clear all test data after every test.
   afterEach(async () => {
     await clearDatabase();
     sandbox.restore()
   });
-
-  /**
-  * Remove and close the db and server.
-  */
+  //Remove and close the db and server.
   after(async () => {
     await closeDatabase();
   });

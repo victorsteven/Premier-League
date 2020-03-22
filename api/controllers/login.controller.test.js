@@ -15,7 +15,6 @@ const mockResponse = () => {
   return res;
 };
 
-chai.use(require('chai-as-promised'))
 chai.use(sinonChai)
 
 const { expect } = chai

@@ -6,11 +6,8 @@ import validate from '../utils/validate'
 import UserController from './user.controller'
 import UserService from '../services/user.service'
 
-chai.use(require('chai-as-promised'))
 chai.use(sinonChai)
-
 const { expect } = chai
-
 
 //WE WILL MOCK ALL REQUEST BODY VALIDATION  IN THIS TEST. WE HAVE ALREADY TESTED ALL REQUEST BODY VALIDATIONS IN THE validate.test.js FILE, SO WE WILL ONLY FOCUS ON UNIT TESTING THE CONTROLLER
 
@@ -103,7 +100,6 @@ describe('UserController', () => {
       const stub = sandbox.stub(userService, 'createUser').returns(stubValue);
 
       userController = new UserController(userService);
-
       await userController.createUser(req, res);
 
       expect(errorStub.calledOnce).to.be.true;
