@@ -9,7 +9,6 @@ chai.use(require('chai-as-promised'))
 const { expect } = chai
 
 
-
 describe('FixtureService', () => {
 
   let seededFixtures

@@ -4,7 +4,6 @@ import app from '../app/app'
 import User from '../models/user'
 import { seedUser } from '../test-setup/seed'
 import  { clearDatabase }  from '../test-setup/db-config'
-// import mongoose from '../database/database' //this is important to connect to our test db 
 
 chai.use(chatHttp);
 const { expect } = chai

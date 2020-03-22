@@ -1,5 +1,4 @@
 import chai from 'chai'
-import sinon from 'sinon'
 import { ObjectID } from 'mongodb'
 import TeamService from './team.service'
 import { seedTeams } from '../test-setup/seed'

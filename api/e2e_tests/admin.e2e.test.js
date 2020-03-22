@@ -9,7 +9,6 @@ chai.use(chatHttp);
 const { expect } = chai
 
 
-
 describe('Admin E2E', () => {
 
   let seededAdmin

@@ -3,11 +3,9 @@ import chatHttp from 'chai-http';
 import app from '../app/app'
 import { seedAdmin } from '../test-setup/seed'
 import  { clearDatabase }  from '../test-setup/db-config'
-// import mongoose from '../database/database' //this isimportant to connect to our test db 
 
 chai.use(chatHttp);
 const { expect } = chai
-
 
 
 describe('Authenticate E2E', () => {

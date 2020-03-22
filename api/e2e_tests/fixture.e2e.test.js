@@ -3,7 +3,7 @@ import chatHttp from 'chai-http';
 import app from '../app/app'
 import { seedTeamsAndFixtures, seedAdmin } from '../test-setup/seed'
 import  { clearDatabase }  from '../test-setup/db-config'
-// import mongoose from '../database/database' //this is important to connect to our test db 
+
 
 chai.use(chatHttp);
 const { expect } = chai
