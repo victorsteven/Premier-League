@@ -9,7 +9,8 @@ Heroku API: https://premier-league-fx.herokuapp.com
 
 Using SSH:
 ```
-git clone https://github.com/victorsteven/Premier-League.git
+git clone --single-branch --branch mocha-chai-sinon https://github.com/victorsteven/Premier-League.git
+
 ```
 
 #### Change to the application directory:
