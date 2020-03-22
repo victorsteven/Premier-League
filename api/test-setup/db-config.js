@@ -11,15 +11,6 @@ export const connect = async () => {
 
   const uri = await mongod.getConnectionString();
 
-  // const mongooseOpts = {
-  //   useNewUrlParser: true,
-  //   autoReconnect: true,
-  //   reconnectTries: Number.MAX_VALUE,
-  //   reconnectInterval: 1000
-  // };
-  // await mongoose.connect(global.__MONGO_URI__, mongooseOpts)
-
-
     const mongooseOpts = {
       useNewUrlParser: true,
       autoReconnect: true,
@@ -32,8 +23,10 @@ export const connect = async () => {
 };
 
 //Drop database, close the connection.
+//if you want to drop the db after a test suite.
+//This works well for the unit test using in-memory db, but not e2e tests(especially using mocha)
 export const closeDatabase = async () => {
-    await mongoose.connection.dropDatabase();
+    // await mongoose.connection.dropDatabase(); //optional
     await mongoose.connection.close();
 };
 

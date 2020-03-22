@@ -1,5 +1,6 @@
 import chai from 'chai'
 import chatHttp from 'chai-http';
+import http from 'http'
 import app from '../app/app'
 import { seedAdmin } from '../test-setup/seed'
 import  { clearDatabase }  from '../test-setup/db-config'
@@ -10,7 +11,13 @@ const { expect } = chai
 
 describe('Authenticate E2E', () => {
 
-  let seededAdmin
+  let server, seededAdmin
+
+  //create a fake server
+  before(async () => {
+    server = http.createServer(app);
+    await server.listen();
+  });
 
   beforeEach(async () => {
       seededAdmin = await seedAdmin()
@@ -23,6 +30,11 @@ describe('Authenticate E2E', () => {
     await clearDatabase();
   });
 
+  after(async () => {
+    await server.close();
+  });
+  
+
   describe('POST /login', () => {
 
     it('should login an admin', async () => {
@@ -31,7 +43,7 @@ describe('Authenticate E2E', () => {
         email: 'steven@example.com',
         password: 'password'
       }
-      const res = await chai.request(app)
+      const res = await chai.request(server)
                         .post('/api/v1/login')
                         .send(details)
 
@@ -46,7 +58,7 @@ describe('Authenticate E2E', () => {
         email: 'corona@example.com',
         password: 'password'
       }
-      const res = await chai.request(app)
+      const res = await chai.request(server)
                         .post('/api/v1/login')
                         .send(details)
 
@@ -61,7 +73,7 @@ describe('Authenticate E2E', () => {
         email: 'steven@example.com',
         password: 'sdnfjksnfd' //incorrect
       }
-      const res = await chai.request(app)
+      const res = await chai.request(server)
                         .post('/api/v1/login')
                         .send(details)
 
@@ -77,7 +89,7 @@ describe('Authenticate E2E', () => {
         email: 'example.com', //invalid email
         password: '' //empty password
       }
-      const res = await chai.request(app)
+      const res = await chai.request(server)
                         .post('/api/v1/login')
                         .send(details)
 

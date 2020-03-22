@@ -1,6 +1,7 @@
 import chai from 'chai'
 import chatHttp from 'chai-http';
 import app from '../app/app'
+import http from 'http'
 import User from '../models/user'
 import { seedUser } from '../test-setup/seed'
 import  { clearDatabase }  from '../test-setup/db-config'
@@ -11,7 +12,13 @@ const { expect } = chai
 
 describe('User E2E', () => {
 
-  let seededUser
+  let server, seededUser
+
+  //create a fake server
+  before(async () => {
+    server = http.createServer(app);
+    await server.listen();
+  });
 
   beforeEach(async () => {
       seededUser = await seedUser()
@@ -24,6 +31,11 @@ describe('User E2E', () => {
     await clearDatabase();
   });
 
+  after(async () => {
+    await server.close();
+  });
+
+
   describe('POST /user', () => {
     it('should create a user', async () => {
       let user = {
@@ -31,7 +43,7 @@ describe('User E2E', () => {
         email: 'victor@example.com',
         password: 'password'
       }
-      const res = await chai.request(app)
+      const res = await chai.request(server)
                         .post('/api/v1/users')
                         .send(user)
 
@@ -56,7 +68,7 @@ describe('User E2E', () => {
         email: seededUser.email, //a record that already exist
         password: 'password'
       }
-      const res = await chai.request(app)
+      const res = await chai.request(server)
                         .post('/api/v1/users')
                         .send(user)
 
@@ -71,7 +83,7 @@ describe('User E2E', () => {
         email: 'victorexample.com', //invalid email
         password: 'pass' //the password should be atleast 6 characters
       }
-      const res = await chai.request(app)
+      const res = await chai.request(server)
                         .post('/api/v1/users')
                         .send(user)
 

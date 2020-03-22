@@ -1,5 +1,6 @@
 import chai from 'chai'
 import chatHttp from 'chai-http';
+import http from 'http'
 import app from '../app/app'
 import { seedTeams, seedTeamsAndFixtures } from '../test-setup/seed'
 import  { clearDatabase }  from '../test-setup/db-config'
@@ -9,6 +10,14 @@ const { expect } = chai
 
 
 describe('Search E2E', () => {
+
+  let server
+
+  //create a fake server
+  before(async () => {
+    server = http.createServer(app);
+    await server.listen();
+  });
 
   beforeEach(async () => {
     await seedTeams()
@@ -22,13 +31,17 @@ describe('Search E2E', () => {
     await clearDatabase();
   });
 
+  after(async () => {
+    await server.close();
+  });
+
   describe('SeachTeam /search/team', () => {
 
     it('should search a team and get result', async () => {
 
       let team = 'Watford'
 
-      const res = await chai.request(app)
+      const res = await chai.request(server)
                         .get(`/api/v1/search/team?name=${team}`)
 
       expect(res.status).to.equal(200);
@@ -40,7 +53,7 @@ describe('Search E2E', () => {
 
       let team = 'Ars' //search for anything team that have 'Ars' like Arsenal
 
-      const res = await chai.request(app)
+      const res = await chai.request(server)
                         .get(`/api/v1/search/team?name=${team}`)
 
       expect(res.status).to.equal(200);
@@ -52,7 +65,7 @@ describe('Search E2E', () => {
 
       let team = 'Wa'
 
-      const res = await chai.request(app)
+      const res = await chai.request(server)
                         .get(`/api/v1/search/team?name=${team}`)
       
       const errors = [
@@ -67,7 +80,7 @@ describe('Search E2E', () => {
 
       let team = ''
 
-      const res = await chai.request(app)
+      const res = await chai.request(server)
                         .get(`/api/v1/search/team?name=${team}`)
       
       const errors = [
@@ -82,7 +95,7 @@ describe('Search E2E', () => {
 
       let team = 'Reading'
 
-      const res = await chai.request(app)
+      const res = await chai.request(server)
                         .get(`/api/v1/search/team?name=${team}`)
 
       expect(res.status).to.equal(200);
@@ -102,7 +115,7 @@ describe('Search E2E', () => {
       let matchday = '20-10-2050'
       let matchtime = '10:30'
 
-      const res = await chai.request(app)
+      const res = await chai.request(server)
                         .get(`/api/v1/search/fixture?home=${home}&away=${away}&matchday=${matchday}&matchtime=${matchtime}`)
 
       expect(res.status).to.equal(200);
@@ -114,7 +127,7 @@ describe('Search E2E', () => {
       //we have a seed that matches the below
       let home = 'Liverpool'
 
-      const res = await chai.request(app)
+      const res = await chai.request(server)
                         .get(`/api/v1/search/fixture?home=${home}`)
 
       expect(res.status).to.equal(200);
@@ -127,7 +140,7 @@ describe('Search E2E', () => {
       let away = 'Arsenal'
       let matchtime = '10:30'
 
-      const res = await chai.request(app)
+      const res = await chai.request(server)
                         .get(`/api/v1/search/fixture?away=${away}&matchtime=${matchtime}`)
 
       expect(res.status).to.equal(200);
@@ -143,7 +156,7 @@ describe('Search E2E', () => {
       let matchday = '0-1-2050' //invalid date
       let matchtime = '0:3' //invalid time
 
-      const res = await chai.request(app)
+      const res = await chai.request(server)
                         .get(`/api/v1/search/fixture?home=${home}&away=${away}&matchday=${matchday}&matchtime=${matchtime}`)
 
       const errors =  [ 
@@ -166,7 +179,7 @@ describe('Search E2E', () => {
       let matchday = '20-10-2050'
       let matchtime = '10:30'
 
-      const res = await chai.request(app)
+      const res = await chai.request(server)
                         .get(`/api/v1/search/fixture?home=${home}&away=${away}&matchday=${matchday}&matchtime=${matchtime}`)
 
       expect(res.status).to.equal(200);

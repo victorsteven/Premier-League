@@ -1,5 +1,6 @@
 import chai from 'chai'
 import chatHttp from 'chai-http';
+import http from 'http'
 import app from '../app/app'
 import { seedTeamsAndFixtures, seedAdmin } from '../test-setup/seed'
 import  { clearDatabase }  from '../test-setup/db-config'
@@ -11,7 +12,13 @@ const { expect } = chai
 
 describe('Fixture E2E', () => {
 
-  let seededAdmin, seededTeamsAndFixtures
+  let server, seededAdmin, seededTeamsAndFixtures
+
+  //create a fake server
+  before(async () => {
+    server = http.createServer(app);
+    await server.listen();
+  });
 
   beforeEach(async () => {
     seededAdmin = await seedAdmin()
@@ -25,6 +32,10 @@ describe('Fixture E2E', () => {
     await clearDatabase();
   });
 
+  after(async () => {
+    await server.close();
+  });
+
   describe('POST /fixture', () => {
 
     it('should not create a fixture if not authorized', async () => {
@@ -33,7 +44,7 @@ describe('Fixture E2E', () => {
         home:  seededTeamsAndFixtures[0].home._id,
         away:  seededTeamsAndFixtures[1].away._id
       }
-      const res = await chai.request(app)
+      const res = await chai.request(server)
                         .post('/api/v1/fixtures')
                         .set('Accept', 'application/json')
                         .send(fixture)
@@ -53,7 +64,7 @@ describe('Fixture E2E', () => {
         home: '', 
         away: ''
       }
-      const res = await chai.request(app)
+      const res = await chai.request(server)
                         .post('/api/v1/fixtures')
                         .set('Accept', 'application/json')
                         .set('Authorization', authToken)
@@ -80,7 +91,7 @@ describe('Fixture E2E', () => {
         matchday: '1-2-2050', //wrong
         matchtime: '5:00' //wrong
       }
-      const res = await chai.request(app)
+      const res = await chai.request(server)
                         .post('/api/v1/fixtures')
                         .set('Accept', 'application/json')
                         .set('Authorization', authToken)
@@ -106,7 +117,7 @@ describe('Fixture E2E', () => {
         matchday: '10-02-2050',
         matchtime: '05:00' 
       }
-      const res = await chai.request(app)
+      const res = await chai.request(server)
                         .post('/api/v1/fixtures')
                         .set('Accept', 'application/json')
                         .set('Authorization', authToken)
@@ -129,7 +140,7 @@ describe('Fixture E2E', () => {
         matchday: '10-02-2050',
         matchtime: '05:00' 
       }
-      const res = await chai.request(app)
+      const res = await chai.request(server)
                         .post('/api/v1/fixtures')
                         .set('Accept', 'application/json')
                         .set('Authorization', authToken)
@@ -157,7 +168,7 @@ describe('Fixture E2E', () => {
         home:  seededTeamsAndFixtures[0].home,
         away:  seededTeamsAndFixtures[1].away
       }
-      const res = await chai.request(app)
+      const res = await chai.request(server)
                         .put(`/api/v1/fixtures/${fixtureId}`)
                         .set('Accept', 'application/json')
                         .send(fixture)
@@ -179,7 +190,7 @@ describe('Fixture E2E', () => {
         home: '', 
         away: ''
       }
-      const res = await chai.request(app)
+      const res = await chai.request(server)
                         .put(`/api/v1/fixtures/${fixtureId}`)
                         .set('Accept', 'application/json')
                         .set('Authorization', authToken)
@@ -208,7 +219,7 @@ describe('Fixture E2E', () => {
         matchday: '1-2-2050', 
         matchtime: '5:00' 
       }
-      const res = await chai.request(app)
+      const res = await chai.request(server)
                         .put(`/api/v1/fixtures/${fixtureId}`)
                         .set('Accept', 'application/json')
                         .set('Authorization', authToken)
@@ -237,7 +248,7 @@ describe('Fixture E2E', () => {
         matchday: '10-02-2050',
         matchtime: '05:00' 
       }
-      const res = await chai.request(app)
+      const res = await chai.request(server)
                         .put(`/api/v1/fixtures/${fixtureId}`)
                         .set('Accept', 'application/json')
                         .set('Authorization', authToken)
@@ -262,7 +273,7 @@ describe('Fixture E2E', () => {
         matchday: '30-07-2052',
         matchtime: '10:15' 
       }
-      const res = await chai.request(app)
+      const res = await chai.request(server)
                         .put(`/api/v1/fixtures/${fixtureId}`)
                         .set('Accept', 'application/json')
                         .set('Authorization', authToken)
@@ -287,7 +298,7 @@ describe('Fixture E2E', () => {
 
       const fixtureId = seededTeamsAndFixtures[0]._id
 
-      const res = await chai.request(app)
+      const res = await chai.request(server)
                         .get(`/api/v1/fixtures/${fixtureId}`)
                         .set('Accept', 'application/json')
 
@@ -304,7 +315,7 @@ describe('Fixture E2E', () => {
       const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1ZTZiMTM4MDlmODZjZTYwZTkyZmYxMWMiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE1ODQ3ODk1MTl9.DQShCsjw6rvVbvT3DCdENyBeyY5XEWfiF1V8NfLNxI8'
       const authToken = `Bearer ${token}`
 
-      const res = await chai.request(app)
+      const res = await chai.request(server)
                         .get(`/api/v1/fixtures/${fixtureId}`)
                         .set('Accept', 'application/json')
                         .set('Authorization', authToken)
@@ -321,7 +332,7 @@ describe('Fixture E2E', () => {
       const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1ZTZiMTM4MDlmODZjZTYwZTkyZmYxMWMiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE1ODQ3ODk1MTl9.DQShCsjw6rvVbvT3DCdENyBeyY5XEWfiF1V8NfLNxI8'
       const authToken = `Bearer ${token}`
 
-      const res = await chai.request(app)
+      const res = await chai.request(server)
                         .get(`/api/v1/fixtures/${fixtureId}`)
                         .set('Accept', 'application/json')
                         .set('Authorization', authToken)
@@ -341,7 +352,7 @@ describe('Fixture E2E', () => {
 
     it('should not get fixtures if not authorized', async () => {
 
-      const res = await chai.request(app)
+      const res = await chai.request(server)
                         .get('/api/v1/fixtures')
                         .set('Accept', 'application/json')
 
@@ -356,7 +367,7 @@ describe('Fixture E2E', () => {
 
       const authToken = `Bearer ${token}`
 
-      const res = await chai.request(app)
+      const res = await chai.request(server)
                         .get('/api/v1/fixtures')
                         .set('Accept', 'application/json')
                         .set('Authorization', authToken)
@@ -374,7 +385,7 @@ describe('Fixture E2E', () => {
 
       const fixtureId = seededTeamsAndFixtures[0]._id
 
-      const res = await chai.request(app)
+      const res = await chai.request(server)
                         .delete(`/api/v1/fixtures/${fixtureId}`)
                         .set('Accept', 'application/json')
 
@@ -391,7 +402,7 @@ describe('Fixture E2E', () => {
       const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1ZTZiMTM4MDlmODZjZTYwZTkyZmYxMWMiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE1ODQ3ODk1MTl9.DQShCsjw6rvVbvT3DCdENyBeyY5XEWfiF1V8NfLNxI8'
       const authToken = `Bearer ${token}`
 
-      const res = await chai.request(app)
+      const res = await chai.request(server)
                         .delete(`/api/v1/fixtures/${fixtureId}`)
                         .set('Accept', 'application/json')
                         .set('Authorization', authToken)
@@ -409,7 +420,7 @@ describe('Fixture E2E', () => {
       const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1ZTZiMTM4MDlmODZjZTYwZTkyZmYxMWMiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE1ODQ3ODk1MTl9.DQShCsjw6rvVbvT3DCdENyBeyY5XEWfiF1V8NfLNxI8'
       const authToken = `Bearer ${token}`
 
-      const res = await chai.request(app)
+      const res = await chai.request(server)
                         .delete(`/api/v1/fixtures/${fixtureId}`)
                         .set('Accept', 'application/json')
                         .set('Authorization', authToken)
