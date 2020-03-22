@@ -3,8 +3,6 @@ import app from '../app/app'
 import http from 'http'
 import { seedTeamsAndFixtures, seedAdmin, seedUser } from '../test-setup/seed'
 import  { clearDatabase, closeDatabase  }  from '../test-setup/db-config'
-import mongoose from '../database/database' //this is important to connect to our test db 
-
 
 
 let server, request, seededAdmin, seededTeamsAndFixtures

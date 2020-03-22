@@ -9,7 +9,7 @@
     "coveralls": "nyc npm test && nyc report --reporter=text-lcov | coveralls",
     "build": "rm -rf ./dist && babel -d ./dist ./api -s",
     "start": "npm run build && node ./dist/index.js",
-    "coverage": "jest --runInBand --coverage"
+    "test:coverage": "jest --runInBand --coverage"
   },
   "jest": {
     "testEnvironment": "node",

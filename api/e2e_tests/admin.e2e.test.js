@@ -4,8 +4,6 @@ import http from 'http'
 import User from '../models/user'
 import { seedAdmin } from '../test-setup/seed'
 import  { clearDatabase, closeDatabase  }  from '../test-setup/db-config'
-import mongoose from '../database/database' //this isimportant to connect to our test db 
-
 
 
 let server, request, seededAdmin
@@ -34,8 +32,6 @@ afterAll(async () => {
   await server.close();
   await closeDatabase();
 });
-
-
 
 
 describe('Admin E2E', () => {
