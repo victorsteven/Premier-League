@@ -309,7 +309,7 @@ describe('FixtureController', () => {
       const formerFixture = {
         _id: faker.random.uuid(),
         home: '5e67f24197392c3415b5cf92',
-        home: '5e6435c01386fbcaba160b89',
+        away: '5e6435c01386fbcaba160b89',
         admin: {
           _id: new ObjectID('5e678d2255ae90c6a097b72f'), //not the same as the looged in admin
         }
@@ -362,7 +362,7 @@ describe('FixtureController', () => {
       const formerFixture = {
         _id: faker.random.uuid(),
         home: '5e67f24197392c3415b5cf92',
-        home: '5e6435c01386fbcaba160b89',
+        away: '5e6435c01386fbcaba160b89',
         admin: {
           _id: new ObjectID('5e678b4527b990c36ff39dda'), //this id is same as the one in the tokenMetada
         }
@@ -418,7 +418,7 @@ describe('FixtureController', () => {
       const formerFixture = {
         _id: faker.random.uuid(),
         home: '5e67f24197392c3415b5cf92',
-        home: '5e6435c01386fbcaba160b89',
+        away: '5e6435c01386fbcaba160b89',
         admin: {
           _id: new ObjectID('5e678b4527b990c36ff39dda'), //this id is same as the one in the tokenMetada
         }
