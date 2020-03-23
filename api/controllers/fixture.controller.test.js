@@ -657,12 +657,6 @@ describe('FixtureController', () => {
         name: faker.name.findName(),
       }
 
-      const fixture = {
-        _id: faker.random.uuid(),
-        home: faker.random.uuid(),
-        away: faker.random.uuid(),
-      }
-
       const userStub = jest.spyOn(userService, 'getUser').mockReturnValue(user); //this user can either be an admin or normal user
       const stub = jest.spyOn(fixtureService, 'getFixture').mockImplementation(() => {
         throw new Error('database error') //this can be anything
